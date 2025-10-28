@@ -1,0 +1,18 @@
+{
+  "title": "Anvel - Share & Discover Code Snippets",
+  "description": "Anvel is a platform for developers to share, discover, and organize code snippets. Browse through thousands of snippets in various programming languages.",
+  "keywords": [
+    "code snippets",
+    "programming",
+    "developer tools",
+    "code sharing",
+    "javascript",
+    "python",
+    "typescript",
+    "react",
+    "code examples"
+  ],
+  "siteName": "Anvel",
+  "author": "An Nguyen",
+  "creator": "Nguyen Van An"
+}

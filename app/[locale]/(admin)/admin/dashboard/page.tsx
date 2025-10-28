@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getCurrentUser, hasPermission, Permissions } from '@/libs/server/rbac';
+import { getCurrentUser, hasMinimumRole } from '@/libs/server/rbac';
 import { PageProps } from '@/types/global';
 import AdminLayout from '@/components/layouts/admin-layout';
 import { DashboardManagement } from '@/components/blocks/admin/dashboard/render';
@@ -16,6 +16,12 @@ export default async function AdminDashboardPage({ params }: PageProps) {
 
   if (!user) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/admin/dashboard`);
+  }
+
+  const isValidRole = hasMinimumRole(50);
+
+  if (!isValidRole) {
+    redirect(`/${locale}/forbidden`);
   }
 
   return (

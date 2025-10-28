@@ -143,7 +143,7 @@ export function LoginForm({
       } else {
         toast.success(translations.loginSuccess);
         await update();
-        const welcomeUrl = `${locale}/welcome?callbackUrl=${encodeURIComponent(callbackUrl)}&rememberMe=${rememberMe}`;
+        const welcomeUrl = `/${locale}/welcome?callbackUrl=${encodeURIComponent(callbackUrl)}&rememberMe=${rememberMe}`;
         router.push(welcomeUrl);
         // router.push(callbackUrl);
         router.refresh();

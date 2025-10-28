@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { PageProps } from '@/types/global';
-import { getCurrentUser } from '@/libs/server/rbac';
+import { getCurrentUser, hasMinimumRole } from '@/libs/server/rbac';
 
 export const metadata: Metadata = {
   title: 'Categories Management | Admin',
@@ -13,7 +13,13 @@ export default async function AdminRootPage({ params }: PageProps) {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect(`/${locale}/login?callbackUrl=/${locale}/admin/categories`);
+    redirect(`/${locale}/login?callbackUrl=/${locale}/admin`);
+  }
+
+  const isValidRole = hasMinimumRole(50);
+
+  if (!isValidRole) {
+    redirect(`/${locale}/forbidden`);
   }
 
   redirect(`/${locale}/admin/dashboard`);

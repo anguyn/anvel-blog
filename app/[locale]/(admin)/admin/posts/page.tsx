@@ -1,6 +1,11 @@
 import { Suspense } from 'react';
 import { prisma } from '@/libs/prisma';
-import { getCurrentUser, hasPermission, Permissions } from '@/libs/server/rbac';
+import {
+  getCurrentUser,
+  hasMinimumRole,
+  hasPermission,
+  Permissions,
+} from '@/libs/server/rbac';
 import { redirect } from 'next/navigation';
 import { PostsListClient } from '@/components/blocks/admin/posts/post-list';
 import { Metadata } from 'next';
@@ -20,12 +25,13 @@ export default async function AdminPostsPage({
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect(`/${locale}/login?callbackUrl=/admin/posts`);
+    redirect(`/${locale}/login?callbackUrl=/${locale}/admin/posts`);
   }
 
+  const isValidRole = hasMinimumRole(50);
   const canViewPosts = await hasPermission(Permissions.POSTS_READ);
 
-  if (!canViewPosts) {
+  if (!canViewPosts || !isValidRole) {
     redirect(`/${locale}/forbidden`);
   }
 

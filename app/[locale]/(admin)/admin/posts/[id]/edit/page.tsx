@@ -4,6 +4,7 @@ import {
   hasPermission,
   Permissions,
   canPerformAction,
+  hasMinimumRole,
 } from '@/libs/server/rbac';
 import { redirect, notFound } from 'next/navigation';
 import { PostForm } from '@/components/blocks/admin/posts/post-form';
@@ -11,12 +12,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import AdminLayout from '@/components/layouts/admin-layout';
-
-interface PageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
+import { PageProps } from '@/types/global';
 
 export async function generateMetadata({
   params,
@@ -34,14 +30,16 @@ export async function generateMetadata({
   };
 }
 
-export default async function EditPostPage({ params }: PageProps) {
-  const { id } = await params;
+export default async function EditPostPage({
+  searchParams,
+  params,
+}: PageProps) {
+  const { locale, id } = await params;
 
-  // Check auth & permissions
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect(`/login?callbackUrl=/admin/posts/${id}/edit`);
+    redirect(`/${locale}/login?callbackUrl=/${locale}/admin/posts/${id}/edit`);
   }
 
   // Get post with all relations
@@ -98,14 +96,14 @@ export default async function EditPostPage({ params }: PageProps) {
     notFound();
   }
 
-  // Check if user can edit this post
+  const isValidRole = hasMinimumRole(50);
   const canEdit = await canPerformAction(
     Permissions.POSTS_UPDATE,
     post.authorId,
   );
 
-  if (!canEdit) {
-    redirect('/admin/posts');
+  if (!canEdit || !isValidRole) {
+    redirect(`/${locale}/admin/posts`);
   }
 
   // Get categories
@@ -139,7 +137,7 @@ export default async function EditPostPage({ params }: PageProps) {
 
   return (
     <AdminLayout>
-      <div className="container mx-auto max-w-6xl px-4 py-2">
+      <div className="container mx-auto max-w-6xl px-4 py-6">
         <div className="mb-6">
           <Link
             href="/admin/posts"

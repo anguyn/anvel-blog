@@ -4,8 +4,10 @@ import {
   setStaticParamsLocale,
   getStaticParams,
 } from '@/i18n/server';
+import { auth } from '@/libs/server/auth';
 import { PageProps } from '@/types/global';
 import { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
 export const generateStaticParams = getStaticParams;
 
@@ -32,7 +34,22 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
 const LoginPage = async (props: PageProps) => {
   const params = await props.params;
+  const searchParams = await props.searchParams;
   const { locale } = params;
+
+  const session = await auth();
+
+  if (session?.user) {
+    const callbackUrl = searchParams?.callbackUrl;
+
+    if (callbackUrl && typeof callbackUrl === 'string') {
+      if (callbackUrl.startsWith('/')) {
+        redirect(callbackUrl);
+      }
+    }
+
+    redirect(`/${locale}`);
+  }
 
   setStaticParamsLocale(locale);
   const { translate } = await getTranslate();

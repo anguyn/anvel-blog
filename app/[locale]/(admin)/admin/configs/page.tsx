@@ -6,6 +6,13 @@ import { Card, CardContent } from '@/components/common/card';
 import { RefreshCw, Database } from 'lucide-react';
 import { ReloadCacheButton } from '@/components/blocks/admin/configs/reload-cache-button';
 import AdminLayout from '@/components/layouts/admin-layout';
+import { PageProps } from '@/types/global';
+import {
+  getCurrentUser,
+  hasMinimumRole,
+  hasPermission,
+  Permissions,
+} from '@/libs/server/rbac';
 
 async function getConfigsData() {
   const [allConfigs, features, metadata] = await Promise.all([
@@ -39,7 +46,20 @@ async function getConfigsData() {
   };
 }
 
-export default async function ConfigsPage() {
+export default async function ConfigsPage({ params }: PageProps) {
+  const { locale } = await params;
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect(`/${locale}/login?callbackUrl=/${locale}/admin/configs`);
+  }
+
+  const isValidRole = hasMinimumRole(100);
+
+  if (!isValidRole) {
+    redirect(`/${locale}/forbidden`);
+  }
+
   const { configs, features, metadata } = await getConfigsData();
 
   return (

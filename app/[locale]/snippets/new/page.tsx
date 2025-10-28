@@ -37,7 +37,9 @@ export default async function NewSnippetPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+
   const session = await auth();
+
   if (!session) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/snippets/new`);
   }

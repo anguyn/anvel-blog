@@ -1,5 +1,10 @@
 import { prisma } from '@/libs/prisma';
-import { getCurrentUser, hasPermission, Permissions } from '@/libs/server/rbac';
+import {
+  getCurrentUser,
+  hasMinimumRole,
+  hasPermission,
+  Permissions,
+} from '@/libs/server/rbac';
 import { redirect } from 'next/navigation';
 import { PostForm } from '@/components/blocks/admin/posts/post-form';
 import { Metadata } from 'next';
@@ -18,11 +23,18 @@ export default async function CreatePostPage({
   params,
 }: PageProps) {
   const { locale } = await params;
-  const canCreate = await hasPermission(Permissions.POSTS_CREATE);
+  const user = await getCurrentUser();
 
-  // if (!canCreate) {
-  //   redirect('/admin/posts');
-  // }
+  if (!user) {
+    redirect(`/${locale}/login?callbackUrl=/${locale}/admin/posts/create`);
+  }
+
+  const canCreate = await hasPermission(Permissions.POSTS_CREATE);
+  const isValidRole = hasMinimumRole(50);
+
+  if (!canCreate || !isValidRole) {
+    redirect(`/${locale}/admin/posts`);
+  }
 
   // Get categories
   const categories = await prisma.category.findMany({

@@ -1,7 +1,3 @@
-// ============================================
-// libs/server/auth.ts - FIXED VERSION (No Type Errors)
-// ============================================
-
 import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/libs/prisma';

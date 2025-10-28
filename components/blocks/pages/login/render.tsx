@@ -36,7 +36,7 @@ interface LoginFormTranslations {
   tos: string;
   pp: string;
   orContinueWith: string;
-
+  resendSuccess: string;
   rememberMe: string;
   accountNotVerified: string;
   accountNotVerifiedMessage: string;
@@ -46,6 +46,8 @@ interface LoginFormTranslations {
   accountBannedMessage: string;
   resendVerification: string;
   resending: string;
+  waitBeforeResend: string;
+  resendError: string;
 }
 
 interface LoginRenderBlockProps {

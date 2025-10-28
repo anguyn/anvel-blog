@@ -1,4 +1,3 @@
-// app/[locale]/(.)terms-of-service/page.tsx
 import { PageModalDialog } from '@/components/custom/page-modal-dialog';
 import { TermsRender } from '@/components/blocks/pages/legal/terms-render';
 import { PageProps } from '@/types/global';

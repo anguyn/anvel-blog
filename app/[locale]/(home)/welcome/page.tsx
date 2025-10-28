@@ -21,7 +21,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect('/not-found'); // replace
+    redirect('/not-found');
   }
 
   const dictionaries = {

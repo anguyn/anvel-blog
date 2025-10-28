@@ -1,4 +1,3 @@
-// app/[locale]/about/page.tsx
 import { MainLayout } from '@/components/layouts/main-layout';
 import {
   getTranslate,

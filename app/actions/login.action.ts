@@ -21,7 +21,6 @@ export async function authenticate(formData: {
   password: string;
   rememberMe?: boolean;
 }) {
-  // ✅ Correct: Use getActionTranslations (no request parameter)
   const { t, locale } = await getActionTranslations();
 
   try {

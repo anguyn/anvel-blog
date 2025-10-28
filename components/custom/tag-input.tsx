@@ -31,7 +31,6 @@ export function TagInput({
       e.preventDefault();
       addTag();
     } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
-      // Remove last tag on backspace if input is empty
       removeTag(value.length - 1);
     }
   };
@@ -41,13 +40,11 @@ export function TagInput({
 
     if (!trimmed) return;
 
-    // Check if already exists
     if (value.includes(trimmed)) {
       setError('Already added');
       return;
     }
 
-    // Custom validation
     if (validate) {
       const result = validate(trimmed);
       if (result !== true) {
@@ -67,7 +64,6 @@ export function TagInput({
 
   return (
     <div className={cn('space-y-2', className)}>
-      {/* Tags Display */}
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {value.map((tag, index) => (
@@ -90,7 +86,6 @@ export function TagInput({
         </div>
       )}
 
-      {/* Input */}
       <div className="space-y-1">
         <Input
           type="text"
@@ -108,7 +103,6 @@ export function TagInput({
         {error && <p className="text-destructive text-sm">{error}</p>}
       </div>
 
-      {/* Helper Text */}
       <p className="text-muted-foreground text-xs">
         Press Enter or comma to add. Backspace to remove last.
       </p>

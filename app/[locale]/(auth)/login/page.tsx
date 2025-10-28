@@ -91,6 +91,9 @@ const LoginPage = async (props: PageProps) => {
     accountBannedMessage: t.login.accountBannedMessage,
     resendVerification: t.login.resendVerification,
     resending: t.login.resending,
+    resendSuccess: t.auth.resendSuccess,
+    waitBeforeResend: t.auth.verifyEmail.waitBeforeResend,
+    resendError: t.auth.verifyEmail.resendError,
   };
 
   return <LoginRenderBlock translations={loginFormTranslations} />;

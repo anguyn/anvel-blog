@@ -58,21 +58,6 @@ export default async function HomePage(props: PageProps) {
 
   const t = await translate(dictionaries);
 
-  // const homeTranslations = {
-  //   heroTitle: t.home.heroTitle,
-  //   heroTitleHighlight: t.home.heroTitleHighlight,
-  //   heroDescription: t.home.heroDescription,
-  //   createSnippet: t.home.createSnippet,
-  //   exploreSnippets: t.home.exploreSnippets,
-  //   instantAnalysisTitle: t.home.instantAnalysisTitle,
-  //   instantAnalysisDesc: t.home.instantAnalysisDesc,
-  //   communityDrivenTitle: t.home.communityDrivenTitle,
-  //   communityDrivenDesc: t.home.communityDrivenDesc,
-  //   ctaTitle: t.home.ctaTitle,
-  //   ctaDescription: t.home.ctaDescription,
-  //   getStartedFree: t.home.getStartedFree,
-  // };
-
   const homeTranslations = {
     badge: t.home.badge,
     heroTitle: t.home.heroTitle,
@@ -83,7 +68,6 @@ export default async function HomePage(props: PageProps) {
     readBlog: t.home.readBlog,
     scrollDown: t.home.scrollDown,
 
-    // Features section
     featuresTitle: t.home.featuresTitle,
     featuresSubtitle: t.home.featuresSubtitle,
     codeSnippetsTitle: t.home.codeSnippetsTitle,
@@ -95,7 +79,6 @@ export default async function HomePage(props: PageProps) {
     instantAnalysisTitle: t.home.instantAnalysisTitle,
     instantAnalysisDesc: t.home.instantAnalysisDesc,
 
-    // How it works
     howItWorksTitle: t.home.howItWorksTitle,
     howItWorksSubtitle: t.home.howItWorksSubtitle,
     step1Title: t.home.step1Title,
@@ -105,19 +88,16 @@ export default async function HomePage(props: PageProps) {
     step3Title: t.home.step3Title,
     step3Desc: t.home.step3Desc,
 
-    // Stats
     statsTitle: t.home.statsTitle,
     snippetsCount: t.home.snippetsCount,
     usersCount: t.home.usersCount,
     articlesCount: t.home.articlesCount,
 
-    // Testimonial
     testimonialTitle: t.home.testimonialTitle,
     testimonialQuote: t.home.testimonialQuote,
     testimonialAuthor: t.home.testimonialAuthor,
     testimonialRole: t.home.testimonialRole,
 
-    // CTA
     ctaTitle: t.home.ctaTitle,
     ctaDescription: t.home.ctaDescription,
     getStarted: t.home.getStarted,

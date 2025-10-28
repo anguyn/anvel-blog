@@ -114,7 +114,6 @@ export default function ResetPasswordBlock({
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  // Watch password for strength indicator
   const watchPassword = watch('password');
 
   useEffect(() => {

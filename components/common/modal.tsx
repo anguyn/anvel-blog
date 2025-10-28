@@ -13,7 +13,6 @@ interface ModalProps {
 export function Modal({ children }: ModalProps) {
   const router = useRouter();
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -21,7 +20,6 @@ export function Modal({ children }: ModalProps) {
     };
   }, []);
 
-  // Close on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -35,7 +33,6 @@ export function Modal({ children }: ModalProps) {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -45,7 +42,6 @@ export function Modal({ children }: ModalProps) {
           onClick={() => router.back()}
         />
 
-        {/* Modal Content */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -58,7 +54,6 @@ export function Modal({ children }: ModalProps) {
           }}
           className="relative z-10 mx-4 h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] shadow-2xl"
         >
-          {/* Close Button */}
           <div className="sticky top-0 z-20 flex items-center justify-end border-b border-[var(--color-border)] bg-[var(--color-background)]/95 p-4 backdrop-blur-sm">
             <Button
               variant="ghost"
@@ -70,7 +65,6 @@ export function Modal({ children }: ModalProps) {
             </Button>
           </div>
 
-          {/* Scrollable Content */}
           <div className="h-[calc(100%-72px)] overflow-y-auto">
             <div className="p-6 md:p-8">{children}</div>
           </div>

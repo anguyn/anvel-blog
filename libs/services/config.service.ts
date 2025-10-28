@@ -2,7 +2,6 @@ import { PrismaClient, ConfigType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Cache để tránh query DB liên tục
 const configCache = new Map<string, { value: any; expiry: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 phút
 

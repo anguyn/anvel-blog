@@ -29,7 +29,6 @@ import Link from 'next/link';
 import { useCurrentUser } from '@/libs/hooks/use-current-user';
 import { useRef } from 'react';
 
-// Animation variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 60 },
   visible: {
@@ -87,7 +86,6 @@ interface HomeTranslations {
   readBlog: string;
   scrollDown: string;
 
-  // Features section
   featuresTitle: string;
   featuresSubtitle: string;
   codeSnippetsTitle: string;
@@ -99,7 +97,6 @@ interface HomeTranslations {
   instantAnalysisTitle: string;
   instantAnalysisDesc: string;
 
-  // How it works
   howItWorksTitle: string;
   howItWorksSubtitle: string;
   step1Title: string;
@@ -109,19 +106,16 @@ interface HomeTranslations {
   step3Title: string;
   step3Desc: string;
 
-  // Stats
   statsTitle: string;
   snippetsCount: string;
   usersCount: string;
   articlesCount: string;
 
-  // Testimonial
   testimonialTitle: string;
   testimonialQuote: string;
   testimonialAuthor: string;
   testimonialRole: string;
 
-  // CTA
   ctaTitle: string;
   ctaDescription: string;
   getStarted: string;
@@ -157,7 +151,6 @@ export function HomeRenderBlock({
 
   return (
     <>
-      {/* Floating Background Elements */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <motion.div
           animate={{
@@ -185,7 +178,6 @@ export function HomeRenderBlock({
         />
       </div>
 
-      {/* Hero Section */}
       <section
         ref={heroRef}
         className="relative min-h-[30rem] overflow-hidden border-b border-[var(--color-border)]"
@@ -197,7 +189,6 @@ export function HomeRenderBlock({
             variants={staggerContainer}
             className="mx-auto text-center"
           >
-            {/* Badge */}
             <motion.div variants={fadeInUp} className="mb-8">
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -213,7 +204,6 @@ export function HomeRenderBlock({
               </motion.div>
             </motion.div>
 
-            {/* Title */}
             <motion.h1
               variants={fadeInUp}
               className="mb-6 text-3xl leading-tight font-bold tracking-tight md:text-5xl lg:text-6xl"
@@ -234,7 +224,6 @@ export function HomeRenderBlock({
               </motion.span>
             </motion.h1>
 
-            {/* Description */}
             <motion.p
               variants={fadeInUp}
               className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-[var(--color-muted-foreground)] md:text-xl"
@@ -242,7 +231,6 @@ export function HomeRenderBlock({
               {translations.heroDescription}
             </motion.p>
 
-            {/* CTAs */}
             <motion.div
               variants={fadeInUp}
               className="flex flex-col items-center justify-center gap-4 sm:flex-row"
@@ -284,7 +272,6 @@ export function HomeRenderBlock({
               </motion.div>
             </motion.div>
 
-            {/* Floating Icons */}
             <div className="relative mt-20 h-40">
               <motion.div
                 animate={{ y: [0, -20, 0] }}
@@ -327,7 +314,6 @@ export function HomeRenderBlock({
           </motion.div>
         </div>
 
-        {/* Scroll Indicator */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -354,7 +340,6 @@ export function HomeRenderBlock({
         </motion.div>
       </section>
 
-      {/* Features Section */}
       <section
         ref={featuresRef}
         className="border-b border-[var(--color-border)] py-20 md:py-32"
@@ -366,7 +351,6 @@ export function HomeRenderBlock({
             variants={staggerContainer}
             className="mx-auto"
           >
-            {/* Section Header */}
             <motion.div variants={fadeInUp} className="mb-16 text-center">
               <motion.div
                 initial={{ scale: 0 }}
@@ -384,7 +368,6 @@ export function HomeRenderBlock({
               </p>
             </motion.div>
 
-            {/* Features Grid */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
               {[
                 {
@@ -445,12 +428,10 @@ export function HomeRenderBlock({
         </div>
       </section>
 
-      {/* How It Works Section */}
       <section
         ref={howItWorksRef}
         className="relative overflow-hidden border-b border-[var(--color-border)] py-20 md:py-32"
       >
-        {/* Background Pattern */}
         <div className="absolute inset-0 -z-10 opacity-30">
           <div
             className="absolute inset-0"
@@ -469,7 +450,6 @@ export function HomeRenderBlock({
             variants={staggerContainer}
             className="mx-auto"
           >
-            {/* Section Header */}
             <motion.div variants={fadeInUp} className="mb-20 text-center">
               <h2 className="mb-4 text-4xl font-bold md:text-4xl">
                 {translations.howItWorksTitle}
@@ -479,9 +459,7 @@ export function HomeRenderBlock({
               </p>
             </motion.div>
 
-            {/* Steps */}
             <div className="relative space-y-20">
-              {/* Connection Line */}
               <motion.div
                 initial={{ scaleY: 0 }}
                 animate={howItWorksInView ? { scaleY: 1 } : { scaleY: 0 }}
@@ -548,7 +526,6 @@ export function HomeRenderBlock({
         </div>
       </section>
 
-      {/* Stats Section */}
       <section
         ref={statsRef}
         className="border-b border-[var(--color-border)] py-20 md:py-32"
@@ -617,7 +594,6 @@ export function HomeRenderBlock({
         </div>
       </section>
 
-      {/* Testimonial Section */}
       <section className="border-b border-[var(--color-border)] py-20 md:py-32">
         <div className="container mx-auto px-4">
           <motion.div
@@ -670,7 +646,6 @@ export function HomeRenderBlock({
         </div>
       </section>
 
-      {/* Final CTA */}
       <section className="py-20 md:py-32">
         <div className="container mx-auto px-4">
           <motion.div

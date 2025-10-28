@@ -9,7 +9,6 @@ export default async function ContactModal(props: PageProps) {
   //   const headersList = await headers();
   //   const referer = headersList.get('referer') || '';
 
-  //   // Nếu đang ở contact page, return null để Next.js fallback sang page
   //   if (referer) {
   //     const refererUrl = new URL(referer);
   //     const refererPath = refererUrl.pathname.replace(/^\/(en|vi)/, '');
@@ -21,7 +20,6 @@ export default async function ContactModal(props: PageProps) {
   //     }
   //   }
 
-  // Import động PageModalDialog để tránh render khi return null
   const { PageModalDialog } = await import(
     '@/components/custom/page-modal-dialog'
   );

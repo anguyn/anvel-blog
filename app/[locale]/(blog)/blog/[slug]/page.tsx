@@ -39,7 +39,6 @@ async function getPost(
 
     if (!res.ok) return null;
 
-    // FIX: Extract 'post' from response
     const data: PostResponse = await res.json();
     return data.post || null;
   } catch (error) {
@@ -73,7 +72,6 @@ async function getRelatedPosts(
   }
 }
 
-// FIX: Safe date parsing helper
 function safeParseDate(
   date: string | Date | null | undefined,
 ): string | undefined {
@@ -129,7 +127,6 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
     authorName,
   ].filter(Boolean);
 
-  // FIX: Safe date parsing
   const publishedTime = safeParseDate(post.publishedAt);
   const modifiedTime = safeParseDate(post.updatedAt || post.createdAt);
 
@@ -237,7 +234,6 @@ export default async function BlogDetailPage({
     notFound();
   }
 
-  // Check password protection
   if (post.isPasswordProtected && post.visibility === 'PASSWORD') {
     const isAuthor = session?.user?.id === post.authorId;
     if (!isAuthor && !password) {
@@ -279,7 +275,6 @@ export default async function BlogDetailPage({
     loginToComment: t.blog.loginToComment,
   };
 
-  // FIX: Safe date parsing for JSON-LD
   const publishedTime = safeParseDate(post.publishedAt);
   const modifiedTime = safeParseDate(post.updatedAt || post.createdAt);
 

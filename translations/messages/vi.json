@@ -108,7 +108,7 @@
     "verifying": "Đang xác minh",
     "successDescription": "Bạn đã đăng nhập thành công.",
     "somethingWrong": "Đã có lỗi xảy ra.",
-    "subtitle": "Đăng nhập vào cổng hệ thống quản lý đặt vé",
+    "subtitle": "Đăng nhập vào hệ thống",
     "securityNote": "Bảo mật với mã hóa cấp doanh nghiệp",
     "protectionNote": "Được bảo vệ bởi bảo mật doanh nghiệp",
     "copyright": "© 2025 Anvel. Bảo lưu mọi quyền.",
@@ -119,7 +119,10 @@
     "signInTitle": "Đăng nhập vào tài khoản",
     "signUpTitle": "Tạo tài khoản mới",
     "alreadyHaveAccount": "Đã có tài khoản?",
-    "dontHaveAccount": "Chưa có tài khoản?"
+    "dontHaveAccount": "Chưa có tài khoản?",
+    "followTerms": "Bằng cách tiếp tục, bạn đồng ý với",
+    "tos": "Điều khoản dịch vụ",
+    "pp": "Chính sách bảo mật"
   },
   "register": {
     "email": "Email",
@@ -210,7 +213,14 @@
     "emailTitle": "Email",
     "emailValue": "contact@anvel.dev",
     "socialTitle": "Theo dõi chúng tôi",
-    "responseTime": "Thông thường, chúng tôi phản hồi trong vòng 24–48 giờ."
+    "responseTime": "Thông thường, chúng tôi phản hồi trong vòng 24–48 giờ.",
+    "nameTooShort": "Tên quá ngắn.",
+    "nameTooLong": "Tên quá dài.",
+    "invalidEmail": "Địa chỉ email không hợp lệ.",
+    "subjectTooShort": "Tiêu đề quá ngắn.",
+    "subjectTooLong": "Tiêu đề quá dài.",
+    "messageTooShort": "Nội dung quá ngắn.",
+    "messageTooLong": "Nội dung quá dài."
   },
   "notFound": {
     "title": "404",
@@ -503,5 +513,12 @@
       "failedToSavePost": "Không thể lưu bài viết",
       "errorOccurredWhileSaving": "Đã xảy ra lỗi khi lưu"
     }
+  },
+  "cookieConsent": {
+    "title": "Thông báo Cookie",
+    "description": "Chúng tôi sử dụng cookie để cải thiện trải nghiệm, phân tích lưu lượng truy cập và cá nhân hóa nội dung. Bằng cách nhấn \"Đồng ý\", bạn cho phép chúng tôi sử dụng cookie.",
+    "learnMore": "Tìm hiểu thêm",
+    "accept": "Đồng ý",
+    "decline": "Từ chối"
   }
 }

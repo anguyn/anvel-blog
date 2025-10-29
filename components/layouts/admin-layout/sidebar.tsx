@@ -532,7 +532,7 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
         </div>
 
         {/* Main content area with fixed height */}
-        <div className="flex min-h-0 flex-1 flex-col border-r border-gray-200/50 dark:border-gray-700/50">
+        <div className="flex min-h-0 flex-1 flex-col border-r">
           {/* User info */}
           {isSidebarOpen && (
             <motion.div

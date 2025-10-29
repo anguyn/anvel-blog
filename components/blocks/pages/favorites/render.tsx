@@ -98,7 +98,7 @@ export function FavoritesRenderBlock({
           </div>
           <div>
             <h1 className="text-3xl font-bold">{translations.title}</h1>
-            <p className="mt-1 text-[var(--color-muted-foreground)]">
+            <p className="mt-1 leading-normal text-[var(--color-muted-foreground)]">
               {pagination.total} {translations.savedSnippet}
               {pagination.total !== 1 ? translations.pluralSuffix : ''}
             </p>

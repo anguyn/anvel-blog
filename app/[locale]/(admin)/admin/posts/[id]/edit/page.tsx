@@ -147,7 +147,9 @@ export default async function EditPostPage({
             Back to Posts
           </Link>
           <h1 className="text-3xl font-bold">Edit Post</h1>
-          <p className="text-muted-foreground mt-1">Update your post content</p>
+          <p className="text-muted-foreground mt-1 leading-normal">
+            Update your post content
+          </p>
         </div>
 
         <PostForm post={post as any} categories={typedCategories} tags={tags} />

@@ -16,7 +16,7 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations('welcome');
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
   const rememberMe = searchParams.get('rememberMe') === 'true';
 
   const { data: session, status } = useSession();

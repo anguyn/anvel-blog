@@ -166,6 +166,7 @@ export async function POST(request: Request) {
     const verificationUrl = `${process.env.NEXTAUTH_URL}/${user.language || 'vi'}/verify-email?token=${verificationToken}`;
 
     const emailResult = await sendVerificationEmail({
+      subject: t.email.verificationEmailSubject,
       email: user.email,
       name: user.name || 'User',
       verificationUrl,

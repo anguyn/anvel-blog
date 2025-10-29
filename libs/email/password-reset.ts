@@ -1,6 +1,7 @@
 import { notificationClient } from '../notification-client';
 
 interface SendPasswordResetEmailParams {
+  subject?: string;
   email: string;
   name: string;
   resetUrl: string;
@@ -13,6 +14,7 @@ export async function sendPasswordResetEmail(
 ) {
   try {
     const result = await notificationClient.sendEmail({
+      subject: params.subject,
       to: params.email,
       template: 'password-reset',
       data: {

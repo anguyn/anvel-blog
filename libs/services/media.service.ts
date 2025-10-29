@@ -1,13 +1,24 @@
 import { prisma } from '@/libs/prisma';
 import { uploadToR2, deleteFromR2 } from '@/libs/server/r2';
 import { MediaType, MediaStatus } from '@prisma/client';
-import sharp from 'sharp';
+import { ImageProcessor } from './processors/image.processor';
 
-// ============================================
-// MEDIA SERVICE
-// ============================================
+export interface UploadMediaOptions {
+  alt?: string;
+  caption?: string;
+  postId?: string;
+  folder?: string;
+}
+
+export interface GetMediaListOptions {
+  type?: MediaType;
+  page?: number;
+  limit?: number;
+}
 
 export class MediaService {
+  private static imageProcessor = new ImageProcessor();
+
   /**
    * Determine media type from MIME type
    */
@@ -31,67 +42,6 @@ export class MediaService {
   }
 
   /**
-   * Process image - resize and optimize
-   */
-  static async processImage(
-    buffer: Buffer,
-    options: {
-      maxWidth?: number;
-      maxHeight?: number;
-      quality?: number;
-    } = {},
-  ): Promise<{ processed: Buffer; width: number; height: number }> {
-    const { maxWidth = 1920, maxHeight = 1080, quality = 85 } = options;
-
-    const image = sharp(buffer);
-    const metadata = await image.metadata();
-
-    let resized = image;
-
-    // Resize if needed
-    if (
-      metadata.width &&
-      metadata.height &&
-      (metadata.width > maxWidth || metadata.height > maxHeight)
-    ) {
-      resized = image.resize(maxWidth, maxHeight, {
-        fit: 'inside',
-        withoutEnlargement: true,
-      });
-    }
-
-    // Optimize
-    const processed = await resized
-      .jpeg({ quality, progressive: true })
-      .toBuffer();
-
-    const processedMetadata = await sharp(processed).metadata();
-
-    return {
-      processed,
-      width: processedMetadata.width || 0,
-      height: processedMetadata.height || 0,
-    };
-  }
-
-  /**
-   * Generate thumbnail for image
-   */
-  static async generateThumbnail(
-    buffer: Buffer,
-    width: number = 400,
-    height: number = 400,
-  ): Promise<Buffer> {
-    return await sharp(buffer)
-      .resize(width, height, {
-        fit: 'cover',
-        position: 'center',
-      })
-      .jpeg({ quality: 80 })
-      .toBuffer();
-  }
-
-  /**
    * Upload media file to R2
    */
   static async uploadMedia(
@@ -99,50 +49,43 @@ export class MediaService {
     filename: string,
     mimeType: string,
     userId: string,
-    options: {
-      alt?: string;
-      caption?: string;
-      postId?: string;
-    } = {},
-  ): Promise<any> {
+    options: UploadMediaOptions = {},
+  ) {
     const mediaType = this.getMediaType(mimeType);
-    const originalName = filename;
-    const safeFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const folder = options.folder || this.getDefaultFolder(mediaType);
 
-    let processedBuffer = file;
     let width: number | null = null;
     let height: number | null = null;
-    let thumbnailUrl: string | null = null;
 
-    // Process images
+    // Upload to R2 with appropriate options
+    const uploadResult = await uploadToR2(file, filename, mimeType, {
+      folder,
+      maxWidth: mediaType === MediaType.IMAGE ? 1920 : undefined,
+      maxHeight: mediaType === MediaType.IMAGE ? 1080 : undefined,
+      quality: 85,
+      convertToWebP: mediaType === MediaType.IMAGE,
+      generateThumbnail: mediaType === MediaType.IMAGE,
+    });
+
+    // Get dimensions from upload result
     if (mediaType === MediaType.IMAGE) {
-      const processed = await this.processImage(file);
-      processedBuffer = processed.processed;
-      width = processed.width;
-      height = processed.height;
-
-      // Generate and upload thumbnail
-      const thumbnail = await this.generateThumbnail(file);
-      const thumbnailFilename = `thumb_${safeFilename}`;
-      thumbnailUrl = await uploadToR2(thumbnail, thumbnailFilename, mimeType);
+      width = uploadResult.width || null;
+      height = uploadResult.height || null;
     }
-
-    // Upload main file to R2
-    const url = await uploadToR2(processedBuffer, safeFilename, mimeType);
 
     // Save to database
     const media = await prisma.media.create({
       data: {
-        filename: safeFilename,
-        originalName,
+        filename: uploadResult.key.split('/').pop() || filename,
+        originalName: filename,
         mimeType,
-        size: processedBuffer.length,
+        size: uploadResult.size,
         width,
         height,
-        url,
-        thumbnailUrl,
-        storageKey: safeFilename,
-        storageProvider: 's3',
+        url: uploadResult.url,
+        thumbnailUrl: uploadResult.thumbnailUrl,
+        storageKey: uploadResult.key,
+        storageProvider: 'r2',
         bucket: process.env.R2_BUCKET_NAME,
         type: mediaType,
         alt: options.alt,
@@ -178,26 +121,15 @@ export class MediaService {
       await deleteFromR2(media.thumbnailUrl);
     }
 
-    // Delete from database
-    await prisma.media.update({
+    await prisma.media.delete({
       where: { id: mediaId },
-      data: {
-        status: MediaStatus.DELETED,
-      },
     });
   }
 
   /**
    * Get media list for user
    */
-  static async getMediaList(
-    userId: string,
-    options: {
-      type?: MediaType;
-      page?: number;
-      limit?: number;
-    } = {},
-  ) {
+  static async getMediaList(userId: string, options: GetMediaListOptions = {}) {
     const { type, page = 1, limit = 20 } = options;
     const skip = (page - 1) * limit;
 
@@ -216,6 +148,16 @@ export class MediaService {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
+        include: {
+          uploadedBy: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              image: true,
+            },
+          },
+        },
       }),
       prisma.media.count({ where }),
     ]);
@@ -232,15 +174,46 @@ export class MediaService {
   }
 
   /**
+   * Get media by ID
+   */
+  static async getMediaById(mediaId: string, userId?: string) {
+    const media = await prisma.media.findUnique({
+      where: { id: mediaId },
+      include: {
+        uploadedBy: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    if (!media) {
+      throw new Error('MEDIA_NOT_FOUND');
+    }
+
+    // Check permission if userId provided
+    if (
+      userId &&
+      media.uploadedById !== userId &&
+      media.status !== MediaStatus.READY
+    ) {
+      throw new Error('UNAUTHORIZED');
+    }
+
+    return media;
+  }
+
+  /**
    * Update media metadata
    */
   static async updateMedia(
     mediaId: string,
     userId: string,
-    data: {
-      alt?: string;
-      caption?: string;
-    },
+    data: { alt?: string; caption?: string },
   ) {
     const media = await prisma.media.findUnique({
       where: { id: mediaId },
@@ -256,7 +229,106 @@ export class MediaService {
 
     return await prisma.media.update({
       where: { id: mediaId },
-      data,
+      data: {
+        ...data,
+        updatedAt: new Date(),
+      },
     });
+  }
+
+  /**
+   * Bulk delete media
+   */
+  static async bulkDeleteMedia(
+    mediaIds: string[],
+    userId: string,
+  ): Promise<void> {
+    const mediaList = await prisma.media.findMany({
+      where: {
+        id: { in: mediaIds },
+        uploadedById: userId,
+      },
+    });
+
+    if (mediaList.length !== mediaIds.length) {
+      throw new Error('SOME_MEDIA_NOT_FOUND_OR_UNAUTHORIZED');
+    }
+
+    // Delete from R2
+    const deletePromises = mediaList.flatMap(media => {
+      const promises = [deleteFromR2(media.url)];
+      if (media.thumbnailUrl) {
+        promises.push(deleteFromR2(media.thumbnailUrl));
+      }
+      return promises;
+    });
+
+    await Promise.all(deletePromises);
+
+    await prisma.media.deleteMany({
+      where: {
+        id: { in: mediaIds },
+      },
+    });
+  }
+
+  /**
+   * Get media statistics for user
+   */
+  static async getMediaStats(userId: string) {
+    const stats = await prisma.media.groupBy({
+      by: ['type'],
+      where: {
+        uploadedById: userId,
+        status: MediaStatus.READY,
+      },
+      _count: {
+        id: true,
+      },
+      _sum: {
+        size: true,
+      },
+    });
+
+    const totalSize = await prisma.media.aggregate({
+      where: {
+        uploadedById: userId,
+        status: MediaStatus.READY,
+      },
+      _sum: {
+        size: true,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    return {
+      byType: stats.map(stat => ({
+        type: stat.type,
+        count: stat._count.id,
+        totalSize: stat._sum.size || 0,
+      })),
+      total: {
+        count: totalSize._count.id,
+        size: totalSize._sum.size || 0,
+      },
+    };
+  }
+
+  /**
+   * Get default folder based on media type
+   */
+  private static getDefaultFolder(mediaType: MediaType): string {
+    const folderMap: Record<MediaType, string> = {
+      [MediaType.IMAGE]: 'images',
+      [MediaType.VIDEO]: 'videos',
+      [MediaType.AUDIO]: 'audio',
+      [MediaType.DOCUMENT]: 'documents',
+      [MediaType.ARCHIVE]: 'archives',
+      [MediaType.OTHER]: 'files',
+    };
+
+    return folderMap[mediaType] || 'uploads';
   }
 }

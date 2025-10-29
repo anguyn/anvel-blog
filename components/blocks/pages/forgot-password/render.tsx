@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { ThemeLocaleControls } from '@/components/common/theme-locale-control';
 
 interface ForgotPasswordBlockProps {
   locale: string;
@@ -36,6 +37,7 @@ interface ForgotPasswordBlockProps {
     backToLogin: string;
     resendIn: string;
     canResendNow: string;
+    resetLinkExprire: string;
   };
 }
 
@@ -128,7 +130,10 @@ export default function ForgotPasswordBlock({
   };
 
   return (
-    <div className="from-background to-secondary/20 flex min-h-screen items-center justify-center bg-gradient-to-br p-4">
+    <div className="from-background to-secondary/20 relative flex min-h-screen items-center justify-center bg-gradient-to-br p-4">
+      <div className="absolute top-2 right-2 z-20 flex justify-center">
+        <ThemeLocaleControls />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link
@@ -208,7 +213,7 @@ export default function ForgotPasswordBlock({
                     <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                     <div className="flex-1">
                       <p className="text-sm text-orange-800 dark:text-orange-200">
-                        Reset link expires in:{' '}
+                        {translations.resetLinkExprire}:{' '}
                         <strong>{formatTime(expiryTimer)}</strong>
                       </p>
                     </div>

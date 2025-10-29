@@ -57,7 +57,7 @@ export function ArticleLayout({
               />
             )}
             <div>
-              <p className="text-foreground font-medium">
+              <p className="text-foreground leading-normal font-medium">
                 {post.author.name || post.author.username}
               </p>
             </div>
@@ -182,7 +182,9 @@ export function ArticleLayout({
               {post.author.name || post.author.username}
             </p>
             {post.author.bio && (
-              <p className="text-muted-foreground">{post.author.bio}</p>
+              <p className="text-muted-foreground leading-normal">
+                {post.author.bio}
+              </p>
             )}
           </div>
         </div>

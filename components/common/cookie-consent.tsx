@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Cookie } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 interface CookieConsentProps {
   locale: string;
 }
 
 export function CookieConsent({ locale }: CookieConsentProps) {
+  const t = useTranslations('cookieConsent');
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -32,22 +34,20 @@ export function CookieConsent({ locale }: CookieConsentProps) {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed right-0 bottom-0 left-0 z-50 border-t border-[var(--color-border)] bg-[var(--color-background)]/95 p-4 shadow-lg backdrop-blur-sm md:p-6">
+    <div className="fixed right-0 bottom-0 left-0 z-50 border-t border-[var(--color-border)] bg-[var(--color-background)]/10 p-4 shadow-lg backdrop-blur-sm md:p-6">
       <div className="container mx-auto">
         <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 items-start gap-3">
             <Cookie className="mt-1 h-5 w-5 flex-shrink-0 text-[var(--color-primary)]" />
             <div className="flex-1">
-              <h3 className="mb-1 font-semibold">Cookie Notice</h3>
+              <h3 className="mb-1 font-semibold">{t('title')}</h3>
               <p className="text-sm text-[var(--color-muted-foreground)]">
-                We use cookies to enhance your experience, analyze site traffic,
-                and personalize content. By clicking "Accept", you consent to
-                our use of cookies.{' '}
+                {t('description')}{' '}
                 <Link
                   href={`/${locale}/cookie-policy`}
                   className="text-[var(--color-primary)] underline hover:no-underline"
                 >
-                  Learn more
+                  {t('learnMore')}
                 </Link>
               </p>
             </div>
@@ -60,14 +60,14 @@ export function CookieConsent({ locale }: CookieConsentProps) {
               onClick={declineCookies}
               className="w-full sm:w-auto"
             >
-              Decline
+              {t('decline')}
             </Button>
             <Button
               size="sm"
               onClick={acceptCookies}
               className="w-full sm:w-auto"
             >
-              Accept
+              {t('accept')}
             </Button>
           </div>
         </div>

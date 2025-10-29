@@ -54,6 +54,8 @@ export const authConfig: NextAuthConfig = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        token2FA: { label: '2FA Token', type: 'text' },
+        backupCode: { label: 'Backup Code', type: 'text' },
         rememberMe: { label: 'Remember Me', type: 'checkbox' },
       },
       async authorize(credentials) {
@@ -74,6 +76,9 @@ export const authConfig: NextAuthConfig = {
                     },
                   },
                 },
+              },
+              backupCodes: {
+                where: { used: false },
               },
             },
           });
@@ -114,6 +119,103 @@ export const authConfig: NextAuthConfig = {
             return null;
           }
 
+          // ============================================
+          // 2FA VERIFICATION
+          // ============================================
+          if (user.twoFactorEnabled && user.twoFactorSecret) {
+            const token2FA = credentials.token2FA as string | undefined;
+            const backupCode = credentials.backupCode as string | undefined;
+
+            // Must provide either 2FA token or backup code
+            if (
+              (!token2FA || token2FA === 'undefined' || token2FA === '') &&
+              (!backupCode || backupCode === 'undefined' || backupCode === '')
+            ) {
+              console.error('[Auth] 2FA required but not provided');
+              throw new Error('2FA_REQUIRED');
+            }
+
+            let is2FAValid = false;
+
+            // Try backup code first (if provided)
+            if (backupCode && user.backupCodes.length > 0) {
+              for (const storedCode of user.backupCodes) {
+                const isValidBackup = await bcrypt.compare(
+                  backupCode,
+                  storedCode.code,
+                );
+
+                if (isValidBackup) {
+                  // Mark backup code as used
+                  await prisma.backupCode.update({
+                    where: { id: storedCode.id },
+                    data: {
+                      used: true,
+                      usedAt: new Date(),
+                    },
+                  });
+
+                  is2FAValid = true;
+
+                  // Log backup code usage
+                  const expiresAt = new Date();
+                  expiresAt.setDate(expiresAt.getDate() + 180);
+
+                  await prisma.activityLog
+                    .create({
+                      data: {
+                        userId: user.id,
+                        action: 'BACKUP_CODE_USED',
+                        entity: 'auth',
+                        metadata: {
+                          backupCodeId: storedCode.id,
+                        },
+                        importance: 'WARNING',
+                        retentionDays: 180,
+                        expiresAt,
+                      },
+                    })
+                    .catch(() => {});
+
+                  break;
+                }
+              }
+            }
+
+            // Try TOTP token (if backup code failed or not provided)
+            if (!is2FAValid && token2FA) {
+              try {
+                // Dynamic import to avoid loading if not needed
+                const { decryptSecret, verify2FAToken } = await import('./2fa');
+
+                const encryptionKey = process.env.ENCRYPTION_KEY;
+                if (!encryptionKey) {
+                  console.error('[Auth] ENCRYPTION_KEY not configured');
+                  throw new Error('2FA_CONFIG_ERROR');
+                }
+
+                const secret = decryptSecret(
+                  user.twoFactorSecret,
+                  encryptionKey,
+                );
+                is2FAValid = verify2FAToken(token2FA, secret);
+
+                if (is2FAValid) {
+                  console.log('[Auth] 2FA token verified successfully');
+                }
+              } catch (error) {
+                console.error('[Auth] 2FA verification error:', error);
+                throw new Error('2FA_VERIFICATION_ERROR');
+              }
+            }
+
+            // If both failed, reject login
+            if (!is2FAValid) {
+              console.error('[Auth] Invalid 2FA code');
+              throw new Error('INVALID_2FA');
+            }
+          }
+
           // Update last login
           await prisma.user
             .update({
@@ -122,7 +224,7 @@ export const authConfig: NextAuthConfig = {
             })
             .catch(() => {});
 
-          // Return user object with rememberMe
+          // Return user object with all necessary fields
           return {
             id: user.id,
             email: user.email!,
@@ -134,18 +236,27 @@ export const authConfig: NextAuthConfig = {
             roleName: user.role?.name,
             permissions:
               user.role?.permissions.map(rp => rp.permission.name) || [],
+            securityStamp: user.securityStamp,
+            twoFactorEnabled: user.twoFactorEnabled,
+            hasPassword: true, // Credentials login always has password
             rememberMe: credentials.rememberMe === 'true',
           } as any;
         } catch (error: any) {
           // Re-throw specific errors for handling in signIn callback
           if (
-            error.message === 'BANNED' ||
-            error.message === 'SUSPENDED' ||
-            error.message === 'UNVERIFIED'
+            [
+              'BANNED',
+              'SUSPENDED',
+              'UNVERIFIED',
+              '2FA_REQUIRED',
+              'INVALID_2FA',
+              '2FA_CONFIG_ERROR',
+              '2FA_VERIFICATION_ERROR',
+            ].includes(error.message)
           ) {
             throw error;
           }
-          console.error('[Auth] Authorize error');
+          console.error('[Auth] Authorize error:', error);
           return null;
         }
       },
@@ -243,6 +354,7 @@ export const authConfig: NextAuthConfig = {
                 metadata: {
                   provider: account?.provider || 'credentials',
                   email: user.email,
+                  twoFactorUsed: (user as any).twoFactorEnabled || false,
                 },
                 importance: 'INFO',
                 retentionDays: 30,
@@ -265,20 +377,50 @@ export const authConfig: NextAuthConfig = {
           const email = (user as any).email || '';
           return `/login?error=unverified&email=${encodeURIComponent(email)}`;
         }
-        console.error('SignIn callback error');
+        if (error.message === '2FA_REQUIRED') {
+          return '/login?error=2fa_required';
+        }
+        if (error.message === 'INVALID_2FA') {
+          return '/login?error=invalid_2fa';
+        }
+        if (
+          error.message === '2FA_CONFIG_ERROR' ||
+          error.message === '2FA_VERIFICATION_ERROR'
+        ) {
+          return '/login?error=2fa_error';
+        }
+        console.error('SignIn callback error:', error);
         return false;
       }
     },
 
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger, session, account }) {
       // Initial sign in
       if (user) {
         token.id = user.id!;
+        token.securityStamp = (user as any).securityStamp;
         token.username = (user as any).username || '';
         token.bio = (user as any).bio || null;
         token.image = user.image || null;
         token.roleId = (user as any).roleId || null;
         token.rememberMe = (user as any).rememberMe || false;
+        token.twoFactorEnabled = (user as any).twoFactorEnabled || false;
+
+        // Set hasPassword based on login method
+        if (account?.provider === 'credentials') {
+          // Credentials login always has password
+          token.hasPassword = true;
+        } else if (account?.provider && account.provider !== 'credentials') {
+          // OAuth login - check if user has password in database
+          const userWithPassword = await prisma.user.findUnique({
+            where: { id: user.id! },
+            select: { password: true },
+          });
+          token.hasPassword = !!userWithPassword?.password;
+        } else {
+          // Fallback - check user object
+          token.hasPassword = (user as any).hasPassword || false;
+        }
 
         if ((user as any).roleId) {
           const userWithRole = await prisma.user.findUnique({
@@ -310,13 +452,65 @@ export const authConfig: NextAuthConfig = {
         }
       }
 
-      // Session update
+      // ============================================
+      // SECURITY VALIDATION - Check on every request
+      // ============================================
+      if (token.id) {
+        const currentUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: {
+            securityStamp: true,
+            status: true,
+            twoFactorEnabled: true,
+            password: true, // Check password status
+          },
+        });
+
+        // User not found - invalidate session
+        if (!currentUser) {
+          console.error('[Auth] User not found during JWT validation');
+          throw new Error('SESSION_INVALIDATED');
+        }
+
+        // Security stamp changed - force re-login
+        if (currentUser.securityStamp !== token.securityStamp) {
+          console.error('[Auth] Security stamp mismatch - session invalidated');
+          throw new Error('SESSION_INVALIDATED');
+        }
+
+        // User banned or suspended - force re-login
+        if (
+          currentUser.status === 'BANNED' ||
+          currentUser.status === 'SUSPENDED'
+        ) {
+          console.error(
+            '[Auth] User status changed to',
+            currentUser.status,
+            '- session invalidated',
+          );
+          throw new Error('SESSION_INVALIDATED');
+        }
+
+        // Update 2FA status in token if changed
+        if (currentUser.twoFactorEnabled !== token.twoFactorEnabled) {
+          token.twoFactorEnabled = currentUser.twoFactorEnabled;
+        }
+
+        // Update hasPassword status if changed (e.g., user added/removed password)
+        const hasPassword = !!currentUser.password;
+        if (hasPassword !== token.hasPassword) {
+          token.hasPassword = hasPassword;
+        }
+      }
+
+      // Session update from client
       if (trigger === 'update' && session) {
         if (session.username !== undefined) token.username = session.username;
         if (session.bio !== undefined) token.bio = session.bio || null;
         if (session.name !== undefined) token.name = session.name;
         if (session.image !== undefined) token.image = session.image || null;
 
+        // If role changed, refresh permissions
         if (session.roleId !== undefined) {
           const userWithRole = await prisma.user.findUnique({
             where: { id: token.id as string },
@@ -340,6 +534,8 @@ export const authConfig: NextAuthConfig = {
             token.permissions = userWithRole.role.permissions.map(
               rp => rp.permission.name,
             );
+            // Update security stamp to reflect latest state
+            token.securityStamp = userWithRole.securityStamp;
           }
         }
       }
@@ -368,6 +564,9 @@ export const authConfig: NextAuthConfig = {
         session.user.roleName = (token.roleName as string) || undefined;
         session.user.roleLevel = (token.roleLevel as number) || 0;
         session.user.permissions = (token.permissions as string[]) || [];
+        session.user.twoFactorEnabled =
+          (token.twoFactorEnabled as boolean) || false;
+        session.user.hasPassword = (token.hasPassword as boolean) || false;
       }
 
       // Don't override session.expires - let NextAuth handle it
@@ -377,6 +576,11 @@ export const authConfig: NextAuthConfig = {
     },
 
     async redirect({ url, baseUrl }) {
+      // Handle error redirects
+      if (url.includes('error=')) {
+        return url;
+      }
+
       if (url.startsWith('/')) return `${baseUrl}${url}`;
       if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
@@ -469,4 +673,31 @@ export async function getCurrentUserId() {
 export async function isAuthenticated() {
   const session = await auth();
   return !!session?.user;
+}
+
+/**
+ * Check if user has specific permission
+ */
+export async function hasPermission(permission: string): Promise<boolean> {
+  const session = await auth();
+  return session?.user?.permissions?.includes(permission) || false;
+}
+
+/**
+ * Check if user has minimum role level
+ */
+export async function hasMinimumRoleLevel(level: number): Promise<boolean> {
+  const session = await auth();
+  return (session?.user?.roleLevel || 0) >= level;
+}
+
+/**
+ * Require specific permission or throw error
+ */
+export async function requirePermission(permission: string) {
+  const session = await requireAuth();
+  if (!session.user.permissions?.includes(permission)) {
+    throw new Error('FORBIDDEN');
+  }
+  return session;
 }

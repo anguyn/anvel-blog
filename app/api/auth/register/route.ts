@@ -124,6 +124,7 @@ export async function POST(request: Request) {
         roleId: defaultRole?.id,
         status: 'PENDING', // User pending until email verified
         language: locale,
+        securityStamp: crypto.randomUUID(),
       },
       select: {
         id: true,
@@ -148,6 +149,7 @@ export async function POST(request: Request) {
 
     try {
       const emailResult = await sendVerificationEmail({
+        subject: t.email.verificationEmailSubject,
         email: user.email,
         name: user.name || 'User',
         verificationUrl,

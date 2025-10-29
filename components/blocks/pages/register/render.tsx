@@ -52,6 +52,7 @@ interface RegisterFormTranslations {
   resendVerificationEmail: string;
   resending: string;
   closeDialog: string;
+  resendIn: string;
 }
 
 interface RegisterRenderBlockProps {

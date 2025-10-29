@@ -60,7 +60,7 @@ export function ConfigHistoryDialog({
             </div>
           ) : history.length === 0 ? (
             <div className="text-muted-foreground py-12 text-center">
-              <p>No history available</p>
+              <p className="leading-normal">No history available</p>
             </div>
           ) : (
             <div className="space-y-4">

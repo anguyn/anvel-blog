@@ -48,6 +48,19 @@ interface LoginFormTranslations {
   resending: string;
   waitBeforeResend: string;
   resendError: string;
+  twoFactorTitle: string;
+  twoFactorDescription: string;
+  twoFactorCode: string;
+  twoFactorCodePlaceholder: string;
+  backupCode: string;
+  backupCodePlaceholder: string;
+  useBackupCode: string;
+  useAuthenticatorCode: string;
+  backToLogin: string;
+  verify: string;
+  invalid2FACode: string;
+  twoFactorRequired: string;
+  twoFactorError: string;
 }
 
 interface LoginRenderBlockProps {

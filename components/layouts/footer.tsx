@@ -57,7 +57,7 @@ export function Footer({ locale, translations }: FooterProps) {
 
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-background)]">
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto p-4 pt-10">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand */}
           <div className="lg:col-span-2">
@@ -136,6 +136,7 @@ export function Footer({ locale, translations }: FooterProps) {
                   <Link
                     href={item.href}
                     className="text-sm text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-foreground)]"
+                    prefetch
                   >
                     {item.name}
                   </Link>
@@ -146,7 +147,7 @@ export function Footer({ locale, translations }: FooterProps) {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-[var(--color-border)] pt-8 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-[var(--color-border)] pt-4 sm:flex-row">
           <p className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
             © {currentYear} Anvel. {translations.copyright}
             <Heart className="h-3 w-3 fill-red-500 text-red-500" />

@@ -94,6 +94,19 @@ const LoginPage = async (props: PageProps) => {
     resendSuccess: t.auth.resendSuccess,
     waitBeforeResend: t.auth.verifyEmail.waitBeforeResend,
     resendError: t.auth.verifyEmail.resendError,
+    twoFactorTitle: t.login.twoFactorTitle,
+    twoFactorDescription: t.login.twoFactorDescription,
+    twoFactorCode: t.login.twoFactorCode,
+    twoFactorCodePlaceholder: t.login.twoFactorCodePlaceholder,
+    backupCode: t.login.backupCode,
+    backupCodePlaceholder: t.login.backupCodePlaceholder,
+    useBackupCode: t.login.useBackupCode,
+    useAuthenticatorCode: t.login.useAuthenticatorCode,
+    backToLogin: t.login.backToLogin,
+    verify: t.login.verify,
+    invalid2FACode: t.login.invalid2FACode,
+    twoFactorRequired: t.login.twoFactorRequired,
+    twoFactorError: t.login.twoFactorError,
   };
 
   return <LoginRenderBlock translations={loginFormTranslations} />;

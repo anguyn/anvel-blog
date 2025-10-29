@@ -71,6 +71,7 @@ export default async function ForgotPasswordPage(props: PageProps) {
     backToLogin: t.auth.forgotPassword.backToLogin,
     resendIn: t.auth.forgotPassword.resendIn,
     canResendNow: t.auth.forgotPassword.canResendNow,
+    resetLinkExprire: t.auth.forgotPassword.resetLinkExprire,
   };
 
   return (

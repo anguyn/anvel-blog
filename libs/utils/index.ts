@@ -83,3 +83,86 @@ export function titleCase(str: string): string {
     })
     .join(' ');
 }
+
+/**
+ * Convert R2 public URL to proxied URL through our API
+ * This hides the actual R2 URL from users
+ */
+export function getProxiedImageUrl(r2Url: string): string {
+  if (!r2Url) return '';
+
+  // If already a proxied URL, return as is
+  if (r2Url.startsWith('/api/images/') || r2Url.startsWith('/images/')) {
+    return r2Url;
+  }
+
+  // Extract path from R2 URL
+  const r2PublicUrl =
+    process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL;
+  if (!r2PublicUrl) {
+    console.warn('R2_PUBLIC_URL not configured');
+    return r2Url;
+  }
+
+  const path = r2Url.replace(r2PublicUrl + '/', '');
+
+  // Return proxied URL
+  return `/api/images/${path}`;
+}
+
+/**
+ * Get avatar URL (proxied)
+ */
+export function getAvatarUrl(avatarPath: string | null | undefined): string {
+  if (!avatarPath) {
+    return '/images/default-avatar.png'; // Fallback avatar
+  }
+
+  return getProxiedImageUrl(avatarPath);
+}
+
+/**
+ * Get image URL with optional transformations
+ * Note: Transformations are done on upload, this just returns the URL
+ */
+export function getImageUrl(
+  imagePath: string | null | undefined,
+  options?: {
+    thumbnail?: boolean;
+  },
+): string {
+  if (!imagePath) {
+    return '/images/placeholder.png';
+  }
+
+  let url = imagePath;
+
+  // If thumbnail requested and path doesn't already point to thumbnail
+  if (options?.thumbnail && !url.includes('/thumbnails/')) {
+    // Try to construct thumbnail path
+    const parts = url.split('/');
+    const filename = parts.pop();
+    const folder = parts.join('/');
+    url = `${folder}/thumbnails/${filename?.replace(/\.(jpg|jpeg|png|webp)$/, '-thumb.webp')}`;
+  }
+
+  return getProxiedImageUrl(url);
+}
+
+/**
+ * Extract R2 key from URL (for deletion)
+ */
+export function extractR2Key(url: string): string {
+  const r2PublicUrl =
+    process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL;
+
+  if (url.startsWith('/api/images/')) {
+    return url.replace('/api/images/', '');
+  }
+
+  if (r2PublicUrl && url.startsWith(r2PublicUrl)) {
+    return url.replace(r2PublicUrl + '/', '');
+  }
+
+  return url;
+}

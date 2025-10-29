@@ -124,10 +124,10 @@ export function UserMenu({ locale }: UserMenuProps) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <div className="cursor-not-allowed">
+          <Link href={`/${locale}/settings`} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             {t('settings')}
-          </div>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>

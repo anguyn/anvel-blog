@@ -195,6 +195,8 @@ export async function getCurrentUser() {
     roleName: session.user.roleName || null,
     roleLevel: session.user.roleLevel || 0,
     permissions: session.user.permissions || [],
+    hasPassword: session.user.hasPassword,
+    twoFactorEnabled: session.user.twoFactorEnabled,
   };
 }
 

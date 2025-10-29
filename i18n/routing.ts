@@ -61,6 +61,7 @@ export interface DictionaryStructure {
     favoriteAdded: string;
     favoriteRemoved: string;
     favoriteError: string;
+    logoutSuccess: string;
   };
   home: {
     title: string;
@@ -373,6 +374,7 @@ export interface DictionaryStructure {
       backToLogin: string;
       resendIn: string;
       canResendNow: string;
+      resetLinkExprire: string;
     };
     resetPassword: {
       title: string;
@@ -405,6 +407,10 @@ export interface DictionaryStructure {
       requestNewLink: string;
       requestNewLinkDes: string;
     };
+    oauthPasswordError: string;
+    invalidCurrentPassword: string;
+    samePassword: string;
+    passwordUpdated: string;
   };
   login: {
     title: string;
@@ -438,6 +444,22 @@ export interface DictionaryStructure {
     accountBannedMessage: string;
     resendVerification: string;
     resending: string;
+    resendSuccess: string;
+    waitBeforeResend: string;
+    resendError: string;
+    twoFactorTitle: string;
+    twoFactorDescription: string;
+    twoFactorCode: string;
+    twoFactorCodePlaceholder: string;
+    backupCode: string;
+    backupCodePlaceholder: string;
+    useBackupCode: string;
+    useAuthenticatorCode: string;
+    backToLogin: string;
+    verify: string;
+    invalid2FACode: string;
+    twoFactorRequired: string;
+    twoFactorError: string;
   };
   register: {
     title: string;
@@ -569,6 +591,7 @@ export interface DictionaryStructure {
     createNew: string;
     noSnippetsYet: string;
     noPublicSnippets: string;
+    settings: string;
   };
   user: {
     notFound: string;
@@ -591,6 +614,95 @@ export interface DictionaryStructure {
     invalidName: string;
     passwordTooWeak: string;
     registerSuccessButEmailRateLimit: string;
+  };
+  settings: {
+    pageTitle: string;
+    pageDescription: string;
+    settings: string;
+    profile: string;
+    account: string;
+    security: string;
+    notifications: string;
+    appearance: string;
+    profileInfo: string;
+    profileDescription: string;
+    name: string;
+    username: string;
+    email: string;
+    bio: string;
+    bioPlaceholder: string;
+    location: string;
+    website: string;
+    twitter: string;
+    github: string;
+    linkedin: string;
+    save: string;
+    saving: string;
+    cancel: string;
+    saveSuccess: string;
+    saveError: string;
+    securitySettings: string;
+    securityDescription: string;
+    changePassword: string;
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+    passwordRequirements: string;
+    updatePassword: string;
+    updating: string;
+    passwordUpdated: string;
+    passwordError: string;
+    passwordMismatch: string;
+    twoFactor: string;
+    twoFactorDescription: string;
+    enable: string;
+    disable: string;
+    enabled: string;
+    disabled: string;
+    confirm2FADisable: string;
+    twoFactorDisabled: string;
+    twoFactorError: string;
+    backupCodesWarning: string;
+    backupCodesDescription: string;
+    activeSessions: string;
+    activeSessionsDescription: string;
+    currentSession: string;
+    revokeSession: string;
+    revokeAll: string;
+    setup2FA: string;
+    scan2FAQR: string;
+    manualEntry: string;
+    next: string;
+    back: string;
+    enter2FACode: string;
+    verificationCode: string;
+    verify: string;
+    verifying: string;
+    invalid2FACode: string;
+    twoFactorEnabled: string;
+    saveBackupCodes: string;
+    copied: string;
+    copy: string;
+    download: string;
+    done: string;
+    oauthPasswordNotAvailable: string;
+    backupCodesTitle: string;
+    backupCodesNote: string;
+    disableTwoFactor: string;
+    disableTwoFactorDescription: string;
+    password: string;
+    enterPassword: string;
+    enterCodeFromApp: string;
+    warning: string;
+    disableTwoFactorWarning: string;
+    disabling: string;
+    passwordRequired: string;
+    currentDevice: string;
+    lastActiveNow: string;
+    success: string;
+    error: string;
+    ok: string;
+    qrCodeError: string;
   };
   posts: {
     title: string;
@@ -934,6 +1046,10 @@ export interface DictionaryStructure {
       failedToUpload: string;
       uploadSuccess: string;
     };
+  };
+  email: {
+    verificationEmailSubject: string;
+    resetEmailSubject: string;
   };
 }
 

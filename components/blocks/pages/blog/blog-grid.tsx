@@ -34,7 +34,7 @@ export function BlogGrid({
         <h3 className="mb-2 text-xl font-semibold">
           {translations.noPostsFound}
         </h3>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground leading-normal">
           Try adjusting your search or filters
         </p>
       </div>

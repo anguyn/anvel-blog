@@ -1,6 +1,7 @@
 import { notificationClient } from '../notification-client';
 
 interface SendVerificationEmailParams {
+  subject?: string;
   email: string;
   name: string;
   verificationUrl: string;
@@ -13,6 +14,7 @@ export async function sendVerificationEmail(
 ) {
   try {
     const result = await notificationClient.sendEmail({
+      subject: params.subject,
       to: params.email,
       template: 'verify-email',
       data: {

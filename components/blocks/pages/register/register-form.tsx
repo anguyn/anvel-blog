@@ -58,6 +58,7 @@ interface RegisterFormTranslations {
   resendVerificationEmail: string;
   resending: string;
   closeDialog: string;
+  resendIn: string;
 }
 
 interface RegisterFormProps {
@@ -412,7 +413,7 @@ export function RegisterForm({ locale, translations }: RegisterFormProps) {
             <div className="space-y-2">
               {resendTimer > 0 ? (
                 <Button variant="outline" className="w-full" disabled>
-                  Resend in {formatTime(resendTimer)}
+                  {translations.resendIn} {formatTime(resendTimer)}
                 </Button>
               ) : (
                 <Button

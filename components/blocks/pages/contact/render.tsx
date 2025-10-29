@@ -34,10 +34,16 @@ export function ContactRender({ locale }: ContactRenderProps) {
   });
 
   const contactSchema = z.object({
-    name: z.string().min(2, 'Name too short').max(100),
-    email: z.string().email('Invalid email'),
-    subject: z.string().min(5, 'Subject too short').max(200),
-    message: z.string().min(20, 'Message too short').max(2000),
+    name: z.string().min(2, t('nameTooShort')).max(100, t('nameTooLong')),
+    email: z.string().email(t('invalidEmail')),
+    subject: z
+      .string()
+      .min(5, t('subjectTooShort'))
+      .max(200, t('subjectTooLong')),
+    message: z
+      .string()
+      .min(20, t('messageTooShort'))
+      .max(2000, t('messageTooLong')),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

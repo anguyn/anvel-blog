@@ -18,6 +18,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import '@/styles/globals.css';
 import { getServerLocale } from '@/libs/server/utils';
 import { NavigationProgress } from '@/components/common/navigation-progress';
+import { Analytics } from '@vercel/analytics/next';
 
 interface LocaleLayoutProps extends PropsWithChildren {
   params: Promise<{ locale: string }>;
@@ -193,6 +194,7 @@ const LocaleLayout = async (props: LocaleLayoutProps) => {
             {props.modal}
           </Providers>
         </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   );

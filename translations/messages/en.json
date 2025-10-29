@@ -118,7 +118,10 @@
     "signInTitle": "Sign in to your account",
     "signUpTitle": "Create a new account",
     "alreadyHaveAccount": "Already have an account?",
-    "dontHaveAccount": "Don't have an account?"
+    "dontHaveAccount": "Don't have an account?",
+    "followTerms": "By continuing, you agree to our",
+    "tos": "Terms of Service",
+    "pp": "Privacy Policy"
   },
   "register": {
     "email": "Email",
@@ -209,7 +212,14 @@
     "emailTitle": "Email",
     "emailValue": "contact@anvel.dev",
     "socialTitle": "Follow Us",
-    "responseTime": "We typically respond within 24-48 hours"
+    "responseTime": "We typically respond within 24-48 hours",
+    "nameTooShort": "Name is too short.",
+    "nameTooLong": "Name is too long.",
+    "invalidEmail": "Invalid email address.",
+    "subjectTooShort": "Subject is too short.",
+    "subjectTooLong": "Subject is too long.",
+    "messageTooShort": "Message is too short.",
+    "messageTooLong": "Message is too long."
   },
   "notFound": {
     "title": "404",
@@ -503,5 +513,12 @@
       "failedToSavePost": "Post could not be saved",
       "errorOccurredWhileSaving": "An error occurred while saving"
     }
+  },
+  "cookieConsent": {
+    "title": "Cookie Notice",
+    "description": "We use cookies to enhance your experience, analyze site traffic, and personalize content. By clicking \"Accept\", you consent to our use of cookies.",
+    "learnMore": "Learn more",
+    "accept": "Accept",
+    "decline": "Decline"
   }
 }

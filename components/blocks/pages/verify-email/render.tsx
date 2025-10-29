@@ -196,7 +196,7 @@ export default function VerifyEmailBlock({
             </div>
           </Link>
           <h1 className="text-2xl font-bold">Anvel</h1>
-          <p className="text-muted-foreground">{t('subTitle')}</p>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
 
         <Card>

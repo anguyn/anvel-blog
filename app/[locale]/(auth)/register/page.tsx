@@ -98,6 +98,7 @@ const RegisterPage = async (props: PageProps) => {
     resendVerificationEmail: t.register.resendVerificationEmail,
     resending: t.register.resending,
     closeDialog: t.register.closeDialog,
+    resendIn: t.auth.forgotPassword.resendIn,
   };
 
   return <RegisterRenderBlock translations={registerFormTranslations} />;

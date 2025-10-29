@@ -65,6 +65,7 @@ export async function POST(request: Request) {
     const resetUrl = `${process.env.NEXTAUTH_URL}/${user.language || 'vi'}/reset-password?token=${resetToken}`;
 
     const emailResult = await sendPasswordResetEmail({
+      subject: t.email.resetEmailSubject,
       email: user.email,
       name: user.name || 'User',
       resetUrl,

@@ -97,9 +97,17 @@ model User {
 
   status UserStatus @default(ACTIVE)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  lastLoginAt DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLoginAt       DateTime?
+  passwordChangedAt DateTime?
+  securityStamp     String    @default(cuid()) // Thay đổi khi cần invalidate sessions
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String? // Encrypted TOTP secret
+  pending2FASecret  String?  // Temporary secret during setup (plain text)
+
+  // Backup codes cho 2FA
+  backupCodes BackupCode[]
 
   // Relations
   accounts            Account[]
@@ -119,6 +127,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   ContactMessage      ContactMessage[]
 
+  @@index([securityStamp])
   @@index([username])
   @@index([email])
   @@index([roleId])
@@ -148,6 +157,33 @@ model PasswordResetToken {
   @@index([userId])
   @@index([token])
   @@index([expires])
+}
+
+model BackupCode {
+  id        String    @id @default(cuid())
+  userId    String
+  code      String    @unique // Hashed backup code
+  used      Boolean   @default(false)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+}
+
+model RevokedSession {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique // Token hash hoặc jti
+  reason       String? // "PASSWORD_CHANGE", "ROLE_CHANGE", "MANUAL_LOGOUT"
+  revokedAt    DateTime @default(now())
+  expiresAt    DateTime // Tự động cleanup sau khi hết hạn
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([expiresAt])
 }
 
 model Account {

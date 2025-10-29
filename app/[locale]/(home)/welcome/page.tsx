@@ -18,12 +18,6 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   setStaticParamsLocale(locale);
   const { translate } = await getTranslate();
 
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect('/not-found');
-  }
-
   const dictionaries = {
     en: (await import('@/translations/dictionaries/en.json')).default,
     vi: (await import('@/translations/dictionaries/vi.json')).default,
@@ -32,27 +26,21 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const t = await translate(dictionaries);
 
   return {
-    title: t.home.title,
-    description: t.home.pageDescription,
-    keywords:
-      'code snippets, programming, collaboration, developer community, technical blog, AI code analysis',
-    openGraph: {
-      title: t.home.title,
-      description: t.home.pageDescription,
-      type: 'website',
-      locale: locale === 'vi' ? 'vi_VN' : 'en_US',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: t.home.title,
-      description: t.home.pageDescription,
-    },
+    title: t.login.title || 'Login',
+    description: t.login.pageDescription || 'Please login to your account',
+    keywords: 'login, signin, authentication, welcome',
   };
 }
 
 export default async function WelcomePage(props: PageProps) {
   const params = await props.params;
   const { locale } = params;
+
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect(`/${locale}/not-found`);
+  }
 
   setStaticParamsLocale(locale);
 

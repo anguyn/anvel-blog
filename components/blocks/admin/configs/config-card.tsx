@@ -53,7 +53,7 @@ export function ConfigCard({ config }: ConfigCardProps) {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm">Current Value</p>
-              <p className="font-medium">{config.value}</p>
+              <p className="leading-normal font-medium">{config.value}</p>
               <p className="text-muted-foreground text-xs">
                 Updated {new Date(config.updatedAt).toLocaleDateString()}
               </p>

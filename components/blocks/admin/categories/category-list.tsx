@@ -90,7 +90,9 @@ export function CategoryList({
     return (
       <Card className="pt-6">
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">{t('noResults')}</p>
+          <p className="text-muted-foreground leading-normal">
+            {t('noResults')}
+          </p>
         </CardContent>
       </Card>
     );
@@ -217,7 +219,9 @@ export function CategoryList({
               {categoryToDelete && (
                 <div className="bg-muted mt-2 rounded p-2">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold">{categoryToDelete.name}</p>
+                    <p className="leading-normal font-semibold">
+                      {categoryToDelete.name}
+                    </p>
                     <span>{getLanguageIcon(categoryToDelete.language)}</span>
                   </div>
                   <p className="text-muted-foreground text-xs">

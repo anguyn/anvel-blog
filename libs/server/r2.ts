@@ -2,8 +2,10 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  HeadObjectCommand,
 } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import sharp from 'sharp';
+import crypto from 'crypto';
 
 const r2Client = new S3Client({
   region: 'auto',
@@ -14,34 +16,275 @@ const r2Client = new S3Client({
   },
 });
 
+export interface UploadOptions {
+  folder?: string; // e.g., 'avatars', 'posts', 'media'
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number; // 1-100 for webp
+  convertToWebP?: boolean; // Default true for images
+  generateThumbnail?: boolean;
+  thumbnailSize?: { width: number; height: number };
+}
+
+export interface UploadResult {
+  url: string;
+  key: string;
+  thumbnailUrl?: string;
+  thumbnailKey?: string;
+  size: number;
+  width?: number;
+  height?: number;
+  format: string;
+}
+
+/**
+ * Upload file to R2 with image optimization
+ */
 export async function uploadToR2(
   file: Buffer,
-  fileName: string,
+  originalFileName: string,
   contentType: string,
-): Promise<string> {
-  const key = `uploads/${Date.now()}-${fileName}`;
+  options: UploadOptions = {},
+): Promise<UploadResult> {
+  const {
+    folder = 'uploads',
+    maxWidth = 2000,
+    maxHeight = 2000,
+    quality = 85,
+    convertToWebP = true,
+    generateThumbnail = false,
+    thumbnailSize = { width: 150, height: 150 },
+  } = options;
 
+  const isImage = contentType.startsWith('image/');
+  let processedBuffer = file;
+  let finalContentType = contentType;
+  let fileExtension = originalFileName.split('.').pop() || 'bin';
+  let metadata: { width?: number; height?: number } = {};
+
+  // Process images
+  if (isImage) {
+    try {
+      let image = sharp(file);
+      const imageMetadata = await image.metadata();
+
+      metadata.width = imageMetadata.width;
+      metadata.height = imageMetadata.height;
+
+      // Resize if needed
+      if (
+        (imageMetadata.width && imageMetadata.width > maxWidth) ||
+        (imageMetadata.height && imageMetadata.height > maxHeight)
+      ) {
+        image = image.resize(maxWidth, maxHeight, {
+          fit: 'inside',
+          withoutEnlargement: true,
+        });
+      }
+
+      // Convert to WebP for better compression (except GIF)
+      if (convertToWebP && imageMetadata.format !== 'gif') {
+        processedBuffer = await image.webp({ quality, effort: 6 }).toBuffer();
+
+        finalContentType = 'image/webp';
+        fileExtension = 'webp';
+
+        // Update dimensions after processing
+        const processedMetadata = await sharp(processedBuffer).metadata();
+        metadata.width = processedMetadata.width;
+        metadata.height = processedMetadata.height;
+      } else {
+        // Keep original format but still apply resize
+        processedBuffer = await image.toBuffer();
+      }
+    } catch (error) {
+      console.error('Image processing error:', error);
+      // If processing fails, use original buffer
+    }
+  }
+
+  // Generate unique filename
+  const timestamp = Date.now();
+  const randomStr = crypto.randomBytes(8).toString('hex');
+  const sanitizedName = originalFileName
+    .replace(/\.[^/.]+$/, '') // Remove extension
+    .replace(/[^a-zA-Z0-9-_]/g, '-')
+    .toLowerCase()
+    .slice(0, 50);
+
+  const fileName = `${sanitizedName}-${timestamp}-${randomStr}.${fileExtension}`;
+  const key = `${folder}/${fileName}`;
+
+  // Upload main file
   await r2Client.send(
     new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME!,
       Key: key,
-      Body: file,
-      ContentType: contentType,
+      Body: processedBuffer,
+      ContentType: finalContentType,
+      CacheControl: 'public, max-age=31536000', // 1 year
+      Metadata: {
+        originalName: originalFileName,
+        uploadedAt: new Date().toISOString(),
+      },
     }),
   );
 
-  return `${process.env.R2_PUBLIC_URL}/${key}`;
+  const result: UploadResult = {
+    url: `${process.env.R2_PUBLIC_URL}/${key}`,
+    key,
+    size: processedBuffer.length,
+    format: fileExtension,
+    ...metadata,
+  };
+
+  // Generate thumbnail if requested and is image
+  if (generateThumbnail && isImage) {
+    try {
+      const thumbnailBuffer = await sharp(file)
+        .resize(thumbnailSize.width, thumbnailSize.height, {
+          fit: 'cover',
+          position: 'center',
+        })
+        .webp({ quality: 80 })
+        .toBuffer();
+
+      const thumbnailKey = `${folder}/thumbnails/${fileName.replace(`.${fileExtension}`, '-thumb.webp')}`;
+
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME!,
+          Key: thumbnailKey,
+          Body: thumbnailBuffer,
+          ContentType: 'image/webp',
+          CacheControl: 'public, max-age=31536000',
+        }),
+      );
+
+      result.thumbnailUrl = `${process.env.R2_PUBLIC_URL}/${thumbnailKey}`;
+      result.thumbnailKey = thumbnailKey;
+    } catch (error) {
+      console.error('Thumbnail generation error:', error);
+    }
+  }
+
+  return result;
 }
 
-export async function deleteFromR2(url: string): Promise<void> {
-  const key = url.replace(`${process.env.R2_PUBLIC_URL}/`, '');
-
-  await r2Client.send(
-    new DeleteObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME!,
-      Key: key,
-    }),
+/**
+ * Upload avatar with specific optimizations
+ */
+export async function uploadAvatar(
+  file: Buffer,
+  userId: string,
+  originalFileName: string,
+): Promise<UploadResult> {
+  return uploadToR2(
+    file,
+    `avatar-${userId}-${originalFileName}`,
+    'image/jpeg',
+    {
+      folder: 'avatars',
+      maxWidth: 500,
+      maxHeight: 500,
+      quality: 90,
+      convertToWebP: true,
+      generateThumbnail: true,
+      thumbnailSize: { width: 150, height: 150 },
+    },
   );
+}
+
+/**
+ * Delete file from R2
+ */
+export async function deleteFromR2(keyOrUrl: string): Promise<void> {
+  let key = keyOrUrl;
+
+  // If full URL provided, extract key
+  if (keyOrUrl.startsWith('http')) {
+    key = keyOrUrl.replace(`${process.env.R2_PUBLIC_URL}/`, '');
+  }
+
+  try {
+    await r2Client.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME!,
+        Key: key,
+      }),
+    );
+  } catch (error) {
+    console.error('Delete from R2 error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete file and its thumbnail
+ */
+export async function deleteFileWithThumbnail(
+  result: UploadResult,
+): Promise<void> {
+  const promises: Promise<void>[] = [deleteFromR2(result.key)];
+
+  if (result.thumbnailKey) {
+    promises.push(deleteFromR2(result.thumbnailKey));
+  }
+
+  await Promise.all(promises);
+}
+
+/**
+ * Check if file exists in R2
+ */
+export async function fileExists(keyOrUrl: string): Promise<boolean> {
+  let key = keyOrUrl;
+
+  if (keyOrUrl.startsWith('http')) {
+    key = keyOrUrl.replace(`${process.env.R2_PUBLIC_URL}/`, '');
+  }
+
+  try {
+    await r2Client.send(
+      new HeadObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME!,
+        Key: key,
+      }),
+    );
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Get file metadata from R2
+ */
+export async function getFileMetadata(keyOrUrl: string) {
+  let key = keyOrUrl;
+
+  if (keyOrUrl.startsWith('http')) {
+    key = keyOrUrl.replace(`${process.env.R2_PUBLIC_URL}/`, '');
+  }
+
+  try {
+    const response = await r2Client.send(
+      new HeadObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME!,
+        Key: key,
+      }),
+    );
+
+    return {
+      contentType: response.ContentType,
+      contentLength: response.ContentLength,
+      lastModified: response.LastModified,
+      metadata: response.Metadata,
+    };
+  } catch (error) {
+    console.error('Get metadata error:', error);
+    return null;
+  }
 }
 
 export { r2Client };

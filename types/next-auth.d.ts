@@ -14,6 +14,8 @@ declare module 'next-auth' {
       roleName?: string | null;
       roleLevel?: number;
       permissions?: string[];
+      twoFactorEnabled: boolean;
+      hasPassword: boolean;
     } & DefaultSession['user'];
   }
 
@@ -27,6 +29,10 @@ declare module 'next-auth' {
     roleId?: string | null;
     roleName?: string | null;
     permissions?: string[];
+    securityStamp?: string;
+    twoFactorEnabled?: boolean;
+    rememberMe?: boolean;
+    hasPassword?: boolean;
   }
 }
 
@@ -40,5 +46,9 @@ declare module 'next-auth/jwt' {
     roleName?: string | null;
     roleLevel?: number;
     permissions?: string[];
+    securityStamp: string;
+    twoFactorEnabled: boolean;
+    rememberMe: boolean;
+    hasPassword: boolean;
   }
 }

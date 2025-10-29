@@ -5,6 +5,12 @@ export interface User {
   username: string | null;
   image: string | null;
   bio: string | null;
+  location: string | null;
+  website: string | null;
+  twitter: string | null;
+  github: string | null;
+  linkedin: string | null;
+
   createdAt: Date;
 }
 

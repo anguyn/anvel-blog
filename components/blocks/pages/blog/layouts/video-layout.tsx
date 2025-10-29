@@ -168,7 +168,9 @@ export function VideoLayout({
                   {post.author.name || post.author.username}
                 </p>
                 {post.author.bio && (
-                  <p className="text-muted-foreground">{post.author.bio}</p>
+                  <p className="text-muted-foregroun leading-normald">
+                    {post.author.bio}
+                  </p>
                 )}
               </div>
             </div>

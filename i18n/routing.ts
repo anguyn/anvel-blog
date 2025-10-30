@@ -464,6 +464,7 @@ export interface DictionaryStructure {
     turnstileExpire: string;
     confirm2FALeave: string;
     invalidBackupCode: string;
+    turnstileWaiting: string;
   };
   register: {
     title: string;
@@ -708,6 +709,25 @@ export interface DictionaryStructure {
     error: string;
     ok: string;
     qrCodeError: string;
+    selectImageFile: string;
+    imageSizeLimit: string;
+    avatarUpdated: string;
+    avatarUploadError: string;
+    noAvatarToDelete: string;
+    confirmDeleteAvatar: string;
+    avatarDeleted: string;
+    avatarDeleteError: string;
+    profilePicture: string;
+    chooseImage: string;
+    uploading: string;
+    upload: string;
+    deleting: string;
+    deleteAvatar: string;
+    imageRequirements: string;
+    clearSelection: string;
+    confirmDeleteAvatarTitle: string;
+    delete: string;
+    processing: string;
   };
   posts: {
     title: string;

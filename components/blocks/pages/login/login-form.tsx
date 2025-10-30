@@ -67,6 +67,7 @@ interface LoginFormTranslations {
   enterBackupCode: string;
   confirm2FALeave: string;
   invalidBackupCode: string;
+  turnstileWaiting: string;
 }
 
 interface LoginFormProps {
@@ -156,7 +157,6 @@ export function LoginForm({
   }, [error, emailParam, credentialsForm, translations]);
 
   const handleTurnstileSuccess = (token: string) => {
-    console.log('Ra nè: ', token);
     setTurnstileToken(token);
     setTurnstileReady(true);
   };
@@ -273,7 +273,7 @@ export function LoginForm({
 
   const handle2FASubmit = async () => {
     if (!storedCredentials) {
-      toast.error('Session expired. Please login again.');
+      // toast.error('Session expired. Please login again.');
       setStep('credentials');
       resetTurnstile();
       return;
@@ -282,20 +282,20 @@ export function LoginForm({
     const codeToVerify = useBackup ? backupCodeValue : otpValue;
 
     if (!codeToVerify || codeToVerify.length < (useBackup ? 8 : 6)) {
-      setOtpError(true);
-      toast.error('Please enter a valid code');
-      // Focus vào input tương ứng
-      if (useBackup) {
-        backupCodeRef.current?.focusIndex(6);
-      } else {
-        otpRef.current?.focusIndex(5);
-      }
+      // setOtpError(true);
+      // toast.error('Please enter a valid code');
+      // // Focus vào input tương ứng
+      // if (useBackup) {
+      //   backupCodeRef.current?.focusIndex(6);
+      // } else {
+      //   otpRef.current?.focusIndex(5);
+      // }
       return;
     }
 
     // Check if turnstile token is still valid, if not get new one
     if (!turnstileToken || !turnstileReady) {
-      toast.warning('Security verification required. Please wait...');
+      toast.warning(translations.turnstileWaiting);
       resetTurnstile();
       return;
     }
@@ -362,6 +362,16 @@ export function LoginForm({
         }
       }, 100);
       setIsLoading(false);
+    }
+  };
+
+  const handleEnterOTP = () => {
+    if (
+      !isLoading &&
+      (otpValue.length >= 6 || backupCodeValue.length >= 8) &&
+      turnstileReady
+    ) {
+      handle2FASubmit();
     }
   };
 
@@ -706,7 +716,7 @@ export function LoginForm({
                 setOtpValue(value);
                 setOtpError(false);
               }}
-              onEnter={handle2FASubmit}
+              onEnter={handleEnterOTP}
               disabled={isLoading}
               error={otpError}
               type="numeric"
@@ -729,7 +739,7 @@ export function LoginForm({
                 setBackupCodeValue(value);
                 setOtpError(false);
               }}
-              onEnter={handle2FASubmit}
+              onEnter={handleEnterOTP}
               disabled={isLoading}
               error={otpError}
               type="numeric"
@@ -744,7 +754,6 @@ export function LoginForm({
           </div>
         )}
 
-        {/* Toggle between TOTP and Backup Code */}
         <div className="flex justify-center">
           <Button
             type="button"
@@ -784,7 +793,9 @@ export function LoginForm({
             !turnstileReady
           }
         >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading && turnstileReady && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
           {translations.verify || 'Verify & Sign In'}
         </Button>
 

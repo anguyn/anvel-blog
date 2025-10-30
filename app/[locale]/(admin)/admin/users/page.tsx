@@ -19,7 +19,7 @@ export default async function AdminUserPage({ params }: PageProps) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/admin/users`);
   }
 
-  const isValidRole = hasMinimumRole(50);
+  const isValidRole = await hasMinimumRole(50);
 
   if (!isValidRole) {
     redirect(`/${locale}/forbidden`);

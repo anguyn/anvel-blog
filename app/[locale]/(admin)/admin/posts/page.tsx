@@ -28,7 +28,7 @@ export default async function AdminPostsPage({
     redirect(`/${locale}/login?callbackUrl=/${locale}/admin/posts`);
   }
 
-  const isValidRole = hasMinimumRole(50);
+  const isValidRole = await hasMinimumRole(50);
   const canViewPosts = await hasPermission(Permissions.POSTS_READ);
 
   if (!canViewPosts || !isValidRole) {

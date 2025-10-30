@@ -30,7 +30,7 @@ export default async function CreatePostPage({
   }
 
   const canCreate = await hasPermission(Permissions.POSTS_CREATE);
-  const isValidRole = hasMinimumRole(50);
+  const isValidRole = await hasMinimumRole(50);
 
   if (!canCreate || !isValidRole) {
     redirect(`/${locale}/admin/posts`);

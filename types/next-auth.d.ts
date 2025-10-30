@@ -10,6 +10,11 @@ declare module 'next-auth' {
       image?: string | null;
       username?: string | null;
       bio?: string | null;
+      location?: string | null;
+      website?: string | null;
+      twitter?: string | null;
+      github?: string | null;
+      linkedin?: string | null;
       roleId?: string | null;
       roleName?: string | null;
       roleLevel?: number;
@@ -25,6 +30,11 @@ declare module 'next-auth' {
     name?: string | null;
     username?: string | null;
     bio?: string | null;
+    location?: string | null;
+    website?: string | null;
+    twitter?: string | null;
+    github?: string | null;
+    linkedin?: string | null;
     image?: string | null;
     roleId?: string | null;
     roleName?: string | null;
@@ -41,6 +51,11 @@ declare module 'next-auth/jwt' {
     id: string;
     username?: string | null;
     bio?: string | null;
+    location?: string | null;
+    website?: string | null;
+    twitter?: string | null;
+    github?: string | null;
+    linkedin?: string | null;
     image?: string | null;
     roleId?: string | null;
     roleName?: string | null;

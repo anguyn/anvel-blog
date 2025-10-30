@@ -231,6 +231,11 @@ export const authConfig: NextAuthConfig = {
             name: user.name || '',
             username: user.username || '',
             bio: user.bio || undefined,
+            location: user.location || undefined,
+            website: user.website || undefined,
+            twitter: user.twitter || undefined,
+            github: user.github || undefined,
+            linkedin: user.linkedin || undefined,
             image: user.image || undefined,
             roleId: user.roleId,
             roleName: user.role?.name,
@@ -401,6 +406,11 @@ export const authConfig: NextAuthConfig = {
         token.securityStamp = (user as any).securityStamp;
         token.username = (user as any).username || '';
         token.bio = (user as any).bio || null;
+        token.location = (user as any).location || null;
+        token.website = (user as any).website || null;
+        token.twitter = (user as any).twitter || null;
+        token.github = (user as any).github || null;
+        token.linkedin = (user as any).linkedin || null;
         token.image = user.image || null;
         token.roleId = (user as any).roleId || null;
         token.rememberMe = (user as any).rememberMe || false;
@@ -509,6 +519,15 @@ export const authConfig: NextAuthConfig = {
         if (session.bio !== undefined) token.bio = session.bio || null;
         if (session.name !== undefined) token.name = session.name;
         if (session.image !== undefined) token.image = session.image || null;
+        if (session.location !== undefined)
+          token.location = session.location || null;
+        if (session.website !== undefined)
+          token.website = session.website || null;
+        if (session.twitter !== undefined)
+          token.twitter = session.twitter || null;
+        if (session.github !== undefined) token.github = session.github || null;
+        if (session.linkedin !== undefined)
+          token.linkedin = session.linkedin || null;
 
         // If role changed, refresh permissions
         if (session.roleId !== undefined) {
@@ -567,6 +586,11 @@ export const authConfig: NextAuthConfig = {
         session.user.twoFactorEnabled =
           (token.twoFactorEnabled as boolean) || false;
         session.user.hasPassword = (token.hasPassword as boolean) || false;
+        session.user.location = (token.location as string) || undefined;
+        session.user.website = (token.website as string) || undefined;
+        session.user.twitter = (token.twitter as string) || undefined;
+        session.user.github = (token.github as string) || undefined;
+        session.user.linkedin = (token.linkedin as string) || undefined;
       }
 
       // Don't override session.expires - let NextAuth handle it

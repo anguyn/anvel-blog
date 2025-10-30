@@ -112,6 +112,7 @@ const LoginPage = async (props: PageProps) => {
     enterBackupCode: t.settings.enterBackupCode,
     confirm2FALeave: t.login.confirm2FALeave,
     invalidBackupCode: t.login.invalidBackupCode,
+    turnstileWaiting: t.login.turnstileWaiting,
   };
 
   return <LoginRenderBlock translations={loginFormTranslations} />;

@@ -96,7 +96,7 @@ export default async function EditPostPage({
     notFound();
   }
 
-  const isValidRole = hasMinimumRole(50);
+  const isValidRole = await hasMinimumRole(50);
   const canEdit = await canPerformAction(
     Permissions.POSTS_UPDATE,
     post.authorId,

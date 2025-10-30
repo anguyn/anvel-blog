@@ -40,13 +40,11 @@ export function MobileMenu({
           exit={{ opacity: 0 }}
           className="fixed inset-0 top-16 z-40 lg:hidden"
         >
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
           />
 
-          {/* Menu Content */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -55,15 +53,22 @@ export function MobileMenu({
             className="absolute right-0 h-full w-full overflow-y-auto border-l border-[var(--color-border)] bg-[var(--color-background)] shadow-xl"
           >
             <div className="container mx-auto space-y-6 p-6">
-              {/* Mobile Navigation */}
-              <NavigationLinks
-                navigation={navigation}
-                pathname={pathname}
-                onItemClick={onClose}
+              {/* User Menu - Mobile variant */}
+              <UserMenu
+                locale={locale}
                 variant="mobile"
+                onItemClick={onClose}
               />
 
-              {/* Mobile CTA */}
+              <div className="border-t border-[var(--color-border)] pt-6">
+                <NavigationLinks
+                  navigation={navigation}
+                  pathname={pathname}
+                  onItemClick={onClose}
+                  variant="mobile"
+                />
+              </div>
+
               <Button asChild className="w-full gap-2" size="lg">
                 <Link href={`/${locale}/snippets/new`}>
                   <Plus className="h-5 w-5" />
@@ -71,10 +76,8 @@ export function MobileMenu({
                 </Link>
               </Button>
 
-              {/* Mobile Controls */}
-              <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-6">
+              <div className="flex items-center justify-center border-t border-[var(--color-border)] pt-6">
                 <ThemeLocaleControls />
-                <UserMenu locale={locale} />
               </div>
             </div>
           </motion.div>

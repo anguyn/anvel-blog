@@ -91,7 +91,6 @@ export function LocaleSelector() {
   if (!isHydrated) {
     return (
       <>
-        {/* Desktop version */}
         <Select disabled>
           <SelectTrigger className="h-9 w-auto min-w-[120px] md:hidden">
             <div className="flex items-center gap-2">
@@ -100,7 +99,6 @@ export function LocaleSelector() {
             </div>
           </SelectTrigger>
         </Select>
-        {/* Mobile version */}
         <Button
           variant="outline"
           size="icon"
@@ -115,7 +113,6 @@ export function LocaleSelector() {
 
   return (
     <>
-      {/* Desktop version - Full select with label */}
       <Select
         value={locale}
         onValueChange={value => changeLocale(value as LocaleProps)}
@@ -145,7 +142,6 @@ export function LocaleSelector() {
         </SelectContent>
       </Select>
 
-      {/* Mobile version - Icon button only */}
       <Select
         value={locale}
         onValueChange={value => changeLocale(value as LocaleProps)}

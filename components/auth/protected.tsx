@@ -1,5 +1,7 @@
 'use client';
 
+// CHƯA SỬ DỤNG, KHÔNG QUAN TÂM
+
 import { usePermissions } from '@/libs/hooks/use-permissions';
 import { ReactNode } from 'react';
 import { useSession } from 'next-auth/react';

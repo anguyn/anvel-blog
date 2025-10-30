@@ -66,6 +66,7 @@ interface LoginFormTranslations {
   enterBackupCode: string;
   confirm2FALeave: string;
   invalidBackupCode: string;
+  turnstileWaiting: string;
 }
 
 interface LoginRenderBlockProps {

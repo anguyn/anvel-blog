@@ -54,7 +54,7 @@ export default async function ConfigsPage({ params }: PageProps) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/admin/configs`);
   }
 
-  const isValidRole = hasMinimumRole(100);
+  const isValidRole = await hasMinimumRole(100);
 
   if (!isValidRole) {
     redirect(`/${locale}/forbidden`);

@@ -74,7 +74,6 @@ function MenuItem({
 }: MenuItemProps) {
   const { locale } = useLocale();
 
-  console.log('Locale nè chèn: ', locale);
   const hasChildren =
     'children' in item && item.children && item.children.length > 0;
   const pathname = usePathname();

@@ -229,6 +229,12 @@
     "home": "Về trang chủ",
     "contact": "Nếu bạn nghĩ đây là lỗi, hãy liên hệ với chúng tôi."
   },
+  "forbidden": {
+    "description": "Bạn không có quyền truy cập vào trang này.",
+    "back": "Quay lại",
+    "home": "Trang chủ",
+    "contact": "Nếu bạn cho rằng đây là lỗi, vui lòng liên hệ với quản trị viên hệ thống."
+  },
   "dashboard": {
     "title": "Bảng điều khiển",
     "blogManagement": "Hệ thống quản lý Anvel",

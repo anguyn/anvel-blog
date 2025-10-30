@@ -228,6 +228,12 @@
     "home": "Go to homepage",
     "contact": "If you believe this is a mistake, please contact us."
   },
+  "forbidden": {
+    "description": "You do not have permission to access this page.",
+    "back": "Go back",
+    "home": "Home",
+    "contact": "If you believe this is a mistake, please contact your system administrator."
+  },
   "dashboard": {
     "title": "Dashboard",
     "blogManagement": "Bus management system",

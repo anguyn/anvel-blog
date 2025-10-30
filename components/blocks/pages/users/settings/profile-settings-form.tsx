@@ -1,14 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Card, CardContent } from '@/components/common/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/common/input';
 import { Textarea } from '@/components/common/textarea';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { Upload, Loader2, X } from 'lucide-react';
+import { Upload, Loader2, X, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/custom/confirm-dialog';
+import { useSession } from 'next-auth/react';
 
 interface ProfileSettingsFormProps {
   user: any;
@@ -20,8 +23,13 @@ export function ProfileSettingsForm({
   translations,
 }: ProfileSettingsFormProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const { update } = useSession();
+
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
   const [imagePreview, setImagePreview] = useState(user.image || '');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
@@ -41,13 +49,15 @@ export function ProfileSettingsForm({
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      toast.warning(translations.selectImageFile || 'Vui lòng chọn file ảnh');
       return;
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image size must be less than 5MB');
+      toast.error(
+        translations.imageSizeLimit || 'Kích thước ảnh phải nhỏ hơn 5MB',
+      );
       return;
     }
 
@@ -86,15 +96,72 @@ export function ProfileSettingsForm({
       setImagePreview(data.image);
       setSelectedFile(null);
 
-      alert(translations.avatarUpdated || 'Avatar updated successfully');
+      toast.success(
+        translations.avatarUpdated || 'Cập nhật ảnh đại diện thành công',
+      );
 
       // Refresh to update avatar everywhere
-      router.refresh();
+      startTransition(async () => {
+        router.refresh();
+        await update();
+      });
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      alert(error.message || 'Failed to upload avatar');
+      toast.error(
+        error.message ||
+          translations.avatarUploadError ||
+          'Không thể tải lên ảnh đại diện',
+      );
     } finally {
       setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    if (!imagePreview || !imagePreview.includes('r2.dev')) {
+      toast.error(
+        translations.noAvatarToDelete || 'Không có ảnh đại diện để xóa',
+      );
+      return;
+    }
+
+    setShowConfirm(true);
+  };
+
+  const confirmDeleteAvatar = async () => {
+    setIsDeletingAvatar(true);
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: null }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete avatar');
+      }
+
+      setImagePreview('');
+      setSelectedFile(null);
+      toast.success(
+        translations.avatarDeleted || 'Đã xóa ảnh đại diện thành công',
+      );
+
+      startTransition(async () => {
+        router.refresh();
+        await update();
+      });
+    } catch (error: any) {
+      console.error('Error deleting avatar:', error);
+      toast.error(
+        error.message ||
+          translations.avatarDeleteError ||
+          'Không thể xóa ảnh đại diện',
+      );
+    } finally {
+      setIsDeletingAvatar(false);
+      setShowConfirm(false);
     }
   };
 
@@ -118,11 +185,17 @@ export function ProfileSettingsForm({
 
       const data = await response.json();
 
-      alert(translations.saveSuccess || 'Profile updated successfully');
-      router.refresh();
+      toast.success(translations.saveSuccess || 'Cập nhật hồ sơ thành công');
+
+      startTransition(async () => {
+        router.refresh();
+        await update();
+      });
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      alert(error.message || translations.saveError);
+      toast.error(
+        error.message || translations.saveError || 'Không thể cập nhật hồ sơ',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -140,29 +213,33 @@ export function ProfileSettingsForm({
     setImagePreview(user.image || '');
   };
 
+  const hasAvatar = imagePreview && imagePreview.includes('r2.dev');
+
   return (
     <Card>
-      <CardContent className="p-6">
+      <CardContent className="p-6 pt-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
           <div className="mb-6">
-            <h2 className="text-2xl font-bold">{translations.profileInfo}</h2>
+            <h2 className="text-2xl font-bold">
+              {translations.profileInfo || 'Thông tin hồ sơ'}
+            </h2>
             <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-              {translations.profileDescription}
+              {translations.profileDescription ||
+                'Cập nhật thông tin cá nhân của bạn'}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Avatar Upload */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
             >
-              <Label>Profile Picture</Label>
+              <Label>{translations.profilePicture || 'Ảnh đại diện'}</Label>
               <div className="mt-2 flex items-center gap-4">
                 <div className="relative">
                   {imagePreview ? (
@@ -177,6 +254,9 @@ export function ProfileSettingsForm({
                           type="button"
                           onClick={clearSelectedImage}
                           className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white transition-colors hover:bg-red-600"
+                          aria-label={
+                            translations.clearSelection || 'Xóa lựa chọn'
+                          }
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -195,18 +275,28 @@ export function ProfileSettingsForm({
                     onChange={handleImageSelect}
                     className="hidden"
                     id="avatar-upload"
-                    disabled={isUploadingAvatar}
+                    disabled={
+                      isUploadingAvatar ||
+                      isDeletingAvatar ||
+                      isLoading ||
+                      isPending
+                    }
                   />
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Label htmlFor="avatar-upload" className="cursor-pointer">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        disabled={isUploadingAvatar}
+                        disabled={
+                          isUploadingAvatar ||
+                          isDeletingAvatar ||
+                          isLoading ||
+                          isPending
+                        }
                         asChild
                       >
-                        <span>Choose Image</span>
+                        <span>{translations.chooseImage || 'Chọn ảnh'}</span>
                       </Button>
                     </Label>
                     {selectedFile && (
@@ -214,33 +304,64 @@ export function ProfileSettingsForm({
                         type="button"
                         size="sm"
                         onClick={handleAvatarUpload}
-                        disabled={isUploadingAvatar}
+                        disabled={
+                          isUploadingAvatar ||
+                          isDeletingAvatar ||
+                          isLoading ||
+                          isPending
+                        }
                       >
                         {isUploadingAvatar ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Uploading...
+                            {translations.uploading || 'Đang tải lên...'}
                           </>
                         ) : (
-                          'Upload'
+                          translations.upload || 'Tải lên'
+                        )}
+                      </Button>
+                    )}
+                    {hasAvatar && !selectedFile && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleAvatarDelete}
+                        disabled={
+                          isUploadingAvatar ||
+                          isDeletingAvatar ||
+                          isLoading ||
+                          isPending
+                        }
+                      >
+                        {isDeletingAvatar ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {translations.deleting || 'Đang xóa...'}
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {translations.deleteAvatar || 'Xóa ảnh'}
+                          </>
                         )}
                       </Button>
                     )}
                   </div>
                   <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                    JPG, PNG or GIF. Max 5MB. Will be converted to WebP.
+                    {translations.imageRequirements ||
+                      'JPG, PNG hoặc GIF. Tối đa 5MB. Sẽ được chuyển sang WebP.'}
                   </p>
                 </div>
               </div>
             </motion.div>
 
-            {/* Name */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.15 }}
             >
-              <Label htmlFor="name">{translations.name}</Label>
+              <Label htmlFor="name">{translations.name || 'Tên'}</Label>
               <Input
                 id="name"
                 name="name"
@@ -260,7 +381,9 @@ export function ProfileSettingsForm({
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
             >
-              <Label htmlFor="username">{translations.username}</Label>
+              <Label htmlFor="username">
+                {translations.username || 'Tên người dùng'}
+              </Label>
               <Input
                 id="username"
                 name="username"
@@ -272,8 +395,8 @@ export function ProfileSettingsForm({
                 className="mt-1"
               />
               <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                3-20 characters, lowercase, numbers, hyphens and underscores
-                only
+                {translations.usernameRequirements ||
+                  '3-20 ký tự, chữ thường, số, gạch ngang và gạch dưới'}
               </p>
             </motion.div>
 
@@ -283,13 +406,15 @@ export function ProfileSettingsForm({
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.25 }}
             >
-              <Label htmlFor="bio">{translations.bio}</Label>
+              <Label htmlFor="bio">{translations.bio || 'Tiểu sử'}</Label>
               <Textarea
                 id="bio"
                 name="bio"
                 value={formData.bio}
                 onChange={handleChange}
-                placeholder={translations.bioPlaceholder}
+                placeholder={
+                  translations.bioPlaceholder || 'Viết vài điều về bản thân...'
+                }
                 rows={4}
                 maxLength={500}
                 className="mt-1"
@@ -299,13 +424,14 @@ export function ProfileSettingsForm({
               </p>
             </motion.div>
 
-            {/* Location */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.3 }}
             >
-              <Label htmlFor="location">{translations.location}</Label>
+              <Label htmlFor="location">
+                {translations.location || 'Địa điểm'}
+              </Label>
               <Input
                 id="location"
                 name="location"
@@ -323,7 +449,9 @@ export function ProfileSettingsForm({
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.35 }}
             >
-              <Label htmlFor="website">{translations.website}</Label>
+              <Label htmlFor="website">
+                {translations.website || 'Website'}
+              </Label>
               <Input
                 id="website"
                 name="website"
@@ -335,16 +463,19 @@ export function ProfileSettingsForm({
               />
             </motion.div>
 
-            {/* Social Links */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Social Links</h3>
+              <h3 className="text-lg font-semibold">
+                {translations.socialLinks || 'Liên kết mạng xã hội'}
+              </h3>
 
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.4 }}
               >
-                <Label htmlFor="github">{translations.github}</Label>
+                <Label htmlFor="github">
+                  {translations.github || 'GitHub'}
+                </Label>
                 <div className="mt-1 flex items-center">
                   <span className="mr-2 text-sm whitespace-nowrap text-[var(--color-muted-foreground)]">
                     github.com/
@@ -354,7 +485,9 @@ export function ProfileSettingsForm({
                     name="github"
                     value={formData.github}
                     onChange={handleChange}
-                    placeholder="username"
+                    placeholder={
+                      translations.usernamePlaceholder || 'tên người dùng'
+                    }
                     maxLength={50}
                     className="flex-1"
                   />
@@ -366,7 +499,9 @@ export function ProfileSettingsForm({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.45 }}
               >
-                <Label htmlFor="twitter">{translations.twitter}</Label>
+                <Label htmlFor="twitter">
+                  {translations.twitter || 'Twitter'}
+                </Label>
                 <div className="mt-1 flex items-center">
                   <span className="mr-2 text-sm whitespace-nowrap text-[var(--color-muted-foreground)]">
                     twitter.com/
@@ -376,7 +511,9 @@ export function ProfileSettingsForm({
                     name="twitter"
                     value={formData.twitter}
                     onChange={handleChange}
-                    placeholder="username"
+                    placeholder={
+                      translations.usernamePlaceholder || 'tên người dùng'
+                    }
                     maxLength={50}
                     className="flex-1"
                   />
@@ -388,7 +525,9 @@ export function ProfileSettingsForm({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 0.5 }}
               >
-                <Label htmlFor="linkedin">{translations.linkedin}</Label>
+                <Label htmlFor="linkedin">
+                  {translations.linkedin || 'LinkedIn'}
+                </Label>
                 <div className="mt-1 flex items-center">
                   <span className="mr-2 text-sm whitespace-nowrap text-[var(--color-muted-foreground)]">
                     linkedin.com/in/
@@ -398,7 +537,9 @@ export function ProfileSettingsForm({
                     name="linkedin"
                     value={formData.linkedin}
                     onChange={handleChange}
-                    placeholder="username"
+                    placeholder={
+                      translations.usernamePlaceholder || 'tên người dùng'
+                    }
                     maxLength={50}
                     className="flex-1"
                   />
@@ -406,35 +547,63 @@ export function ProfileSettingsForm({
               </motion.div>
             </div>
 
-            {/* Actions */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.55 }}
               className="flex items-center gap-3 border-t border-[var(--color-border)] pt-4"
             >
-              <Button type="submit" disabled={isLoading}>
+              <Button
+                type="submit"
+                disabled={
+                  isLoading ||
+                  isPending ||
+                  isUploadingAvatar ||
+                  isDeletingAvatar
+                }
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {translations.saving}
+                    {translations.saving || 'Đang lưu...'}
                   </>
                 ) : (
-                  translations.save
+                  translations.save || 'Lưu'
                 )}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
-                disabled={isLoading}
+                disabled={
+                  isLoading ||
+                  isPending ||
+                  isUploadingAvatar ||
+                  isDeletingAvatar
+                }
               >
-                {translations.cancel}
+                {translations.cancel || 'Hủy'}
               </Button>
             </motion.div>
           </form>
         </motion.div>
       </CardContent>
+      <ConfirmDialog
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        title={translations.confirmDeleteAvatarTitle || 'Xóa ảnh đại diện?'}
+        description={
+          translations.confirmDeleteAvatar ||
+          'Bạn có chắc chắn muốn xóa ảnh đại diện này?'
+        }
+        confirmText={translations.delete || 'Xóa'}
+        cancelText={translations.cancel || 'Hủy'}
+        waitingText={translations.processing || 'Đang xử lý'}
+        variant="destructive"
+        onConfirm={confirmDeleteAvatar}
+        isLoading={isDeletingAvatar}
+        disableClose
+      />
     </Card>
   );
 }

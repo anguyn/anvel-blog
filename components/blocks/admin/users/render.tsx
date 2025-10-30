@@ -230,7 +230,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     setIsFormOpen(true);
   };
 
-  // Handle open edit form
   const handleOpenEditForm = (user: AdminUser) => {
     setEditingUser(user);
     setIsFormOpen(true);
@@ -238,7 +237,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Users</h1>

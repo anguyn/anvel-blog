@@ -4,6 +4,7 @@ import { User } from '@/types';
 import { formatDate } from '@/libs/utils';
 import { Calendar, Code2, Settings } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface UserProfileHeaderProps {
   user: User;
@@ -27,10 +28,10 @@ export function UserProfileHeader({
     <Card className="pt-6">
       <CardContent className="p-6">
         <div className="flex flex-col gap-6 md:flex-row">
-          {/* Avatar */}
           <div className="flex-shrink-0">
             {user.image ? (
-              <img
+              <Image
+                key={user.image}
                 src={user.image}
                 alt={user.name || user.username || 'User'}
                 width={128}
@@ -44,7 +45,6 @@ export function UserProfileHeader({
             )}
           </div>
 
-          {/* User Info */}
           <div className="flex-1 space-y-4">
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
               <div>
@@ -69,7 +69,6 @@ export function UserProfileHeader({
               <p className="text-[var(--color-foreground)]">{user.bio}</p>
             )}
 
-            {/* User Links */}
             {(user.website ||
               user.location ||
               user.github ||

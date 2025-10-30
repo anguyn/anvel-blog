@@ -70,7 +70,6 @@ export default async function SettingsPage({
     notifications: t.settings.notifications || 'Notifications',
     appearance: t.settings.appearance || 'Appearance',
 
-    // Profile form
     profileInfo: t.settings.profileInfo || 'Profile Information',
     profileDescription:
       t.settings.profileDescription || 'Update your profile information',
@@ -85,14 +84,40 @@ export default async function SettingsPage({
     github: t.settings.github || 'GitHub Username',
     linkedin: t.settings.linkedin || 'LinkedIn Username',
 
-    // Actions
     save: t.settings.save || 'Save Changes',
     saving: t.settings.saving || 'Saving...',
     cancel: t.settings.cancel || 'Cancel',
 
-    // Messages
     saveSuccess: t.settings.saveSuccess || 'Settings saved successfully',
     saveError: t.settings.saveError || 'Failed to save settings',
+    selectImageFile:
+      t.settings.selectImageFile || 'Please select an image file',
+    imageSizeLimit:
+      t.settings.imageSizeLimit || 'Image size must be less than 5MB',
+    avatarUpdated: t.settings.avatarUpdated || 'Avatar updated successfully',
+    avatarUploadError:
+      t.settings.avatarUploadError || 'Avatar cannot be uploaded',
+    noAvatarToDelete: t.settings.noAvatarToDelete || 'No avatar to delete',
+    confirmDeleteAvatar:
+      t.settings.confirmDeleteAvatar ||
+      'Are you sure you want to delete the avatar?',
+    avatarDeleted: t.settings.avatarDeleted || 'Avatar successfully deleted',
+    avatarDeleteError:
+      t.settings.avatarDeleteError || 'Avatar cannot be deleted',
+    profilePicture: t.settings.profilePicture || 'Avatar',
+    chooseImage: t.settings.chooseImage || 'Choose an image',
+    uploading: t.settings.uploading || 'Uploading...',
+    upload: t.settings.upload || 'Uploading',
+    deleting: t.settings.deleting || 'Deleting...',
+    deleteAvatar: t.settings.deleteAvatar || 'Delete image',
+    imageRequirements:
+      t.settings.imageRequirements ||
+      'JPG, PNG, or GIF. Maximum 5MB. Will be converted to WebP.',
+    clearSelection: t.settings.clearSelection || 'Clear selection',
+    confirmDeleteAvatarTitle:
+      t.settings.confirmDeleteAvatarTitle || 'Delete avatar?',
+    delete: t.settings.delete || 'Delete',
+    processing: t.settings.processing || 'Processing...',
   };
 
   return (

@@ -457,7 +457,8 @@
     "turnstileError": "Security verification failed. Please try again",
     "turnstileExpire": "Security verification expired. Please verify again",
     "confirm2FALeave": "Entered data will not be saved. Are you sure you want to leave?",
-    "invalidBackupCode": "Invalid backup code"
+    "invalidBackupCode": "Invalid backup code",
+    "turnstileWaiting": "Security verification required. Please wait..."
   },
   "register": {
     "title": "Register",
@@ -715,7 +716,26 @@
     "success": "Success",
     "error": "Error",
     "ok": "OK",
-    "qrCodeError": "Failed to generate QR code"
+    "qrCodeError": "Failed to generate QR code",
+    "selectImageFile": "Please select an image file",
+    "imageSizeLimit": "Image size must be less than 5MB",
+    "avatarUpdated": "Avatar updated successfully",
+    "avatarUploadError": "Avatar cannot be uploaded",
+    "noAvatarToDelete": "No avatar to delete",
+    "confirmDeleteAvatar": "Are you sure you want to delete the avatar?",
+    "avatarDeleted": "Avatar successfully deleted",
+    "avatarDeleteError": "Avatar cannot be deleted",
+    "profilePicture": "Avatar",
+    "chooseImage": "Choose an image",
+    "uploading": "Uploading...",
+    "upload": "Uploading",
+    "deleting": "Deleting...",
+    "deleteAvatar": "Delete image",
+    "imageRequirements": "JPG, PNG, or GIF. Maximum 5MB. Will be converted to WebP.",
+    "clearSelection": "Clear selection",
+    "confirmDeleteAvatarTitle": "Delete avatar?",
+    "delete": "Delete",
+    "processing": "Processing..."
   },
   "posts": {
     "title": "Posts",

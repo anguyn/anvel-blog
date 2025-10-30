@@ -457,7 +457,8 @@
     "turnstileError": "Xác minh bảo mật không thành công. Vui lòng thử lại",
     "turnstileExpire": "Xác minh bảo mật đã hết hạn. Vui lòng xác minh lại",
     "confirm2FALeave": "Dữ liệu đã nhập sẽ không được lưu. Bạn có chắc chắn muốn rời đi không?",
-    "invalidBackupCode": "Mã dự phòng không chính xác"
+    "invalidBackupCode": "Mã dự phòng không chính xác",
+    "turnstileWaiting": "Cần xác minh bảo mật. Vui lòng đợi..."
   },
   "register": {
     "title": "Đăng ký",
@@ -715,7 +716,26 @@
     "success": "Thành Công",
     "error": "Lỗi",
     "ok": "OK",
-    "qrCodeError": "Không thể tạo mã QR"
+    "qrCodeError": "Không thể tạo mã QR",
+    "selectImageFile": "Vui lòng chọn file ảnh",
+    "imageSizeLimit": "Kích thước ảnh phải nhỏ hơn 5MB",
+    "avatarUpdated": "Cập nhật ảnh đại diện thành công",
+    "avatarUploadError": "Không thể tải lên ảnh đại diện",
+    "noAvatarToDelete": "Không có ảnh đại diện để xóa",
+    "confirmDeleteAvatar": "Bạn có chắc chắn muốn xóa ảnh đại diện?",
+    "avatarDeleted": "Đã xóa ảnh đại diện thành công",
+    "avatarDeleteError": "Không thể xóa ảnh đại diện",
+    "profilePicture": "Ảnh đại diện",
+    "chooseImage": "Chọn ảnh",
+    "uploading": "Đang tải lên...",
+    "upload": "Tải lên",
+    "deleting": "Đang xóa...",
+    "deleteAvatar": "Xóa ảnh",
+    "imageRequirements": "JPG, PNG hoặc GIF. Tối đa 5MB. Sẽ được chuyển sang WebP.",
+    "clearSelection": "Xóa lựa chọn",
+    "confirmDeleteAvatarTitle": "Xóa ảnh đại diện?",
+    "delete": "Xóa",
+    "processing": "Đang xử lý..."
   },
   "posts": {
     "title": "Bài viết",

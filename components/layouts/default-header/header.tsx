@@ -22,6 +22,7 @@ interface HeaderProps {
 export function Header({ locale }: HeaderProps) {
   const t = useTranslations('common');
   const pathname = usePathname();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -34,7 +35,7 @@ export function Header({ locale }: HeaderProps) {
     const isAtTop = currentScrollY < 80;
     const scrollingDown = currentScrollY > lastScrollY;
 
-    if (isAtTop) {
+    if (isAtTop || isUserMenuOpen) {
       setIsVisible(true);
     } else {
       setIsVisible(scrollingDown ? false : true);
@@ -45,13 +46,12 @@ export function Header({ locale }: HeaderProps) {
     if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
 
     scrollTimeout.current = setTimeout(() => {
-      if (!isAtTop) {
+      if (!isAtTop && !isUserMenuOpen) {
         setIsVisible(false);
       }
     }, 2500);
   });
 
-  // Hotkeys
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -67,13 +67,11 @@ export function Header({ locale }: HeaderProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isSearchOpen]);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsSearchOpen(false);
   }, [pathname]);
 
-  // Prevent body scroll when modals are open
   useEffect(() => {
     if (isMobileMenuOpen || isSearchOpen) {
       document.body.style.overflow = 'hidden';
@@ -95,7 +93,6 @@ export function Header({ locale }: HeaderProps) {
 
   return (
     <>
-      {/* Main Header */}
       <motion.header
         initial={{ y: 0 }}
         animate={{ y: isVisible ? 0 : -100 }}
@@ -104,7 +101,6 @@ export function Header({ locale }: HeaderProps) {
       >
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
             <div className="flex items-center gap-6">
               <Link
                 href={`/${locale}`}
@@ -122,7 +118,6 @@ export function Header({ locale }: HeaderProps) {
                 </span>
               </Link>
 
-              {/* Desktop Navigation */}
               <NavigationLinks
                 navigation={navigation}
                 pathname={pathname}
@@ -130,9 +125,7 @@ export function Header({ locale }: HeaderProps) {
               />
             </div>
 
-            {/* Right Side Actions */}
             <div className="flex items-center gap-3">
-              {/* Search Button - Desktop */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -146,7 +139,6 @@ export function Header({ locale }: HeaderProps) {
                 </kbd>
               </motion.button>
 
-              {/* Search Button - Mobile */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -166,10 +158,13 @@ export function Header({ locale }: HeaderProps) {
               <ThemeLocaleControls className="hidden lg:flex" />
 
               <div className="hidden lg:block">
-                <UserMenu locale={locale} />
+                <UserMenu
+                  locale={locale}
+                  isOpen={isUserMenuOpen}
+                  onOpenChange={setIsUserMenuOpen}
+                />
               </div>
 
-              {/* Mobile Menu Button */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -187,21 +182,18 @@ export function Header({ locale }: HeaderProps) {
         </div>
       </motion.header>
 
-      {/* Desktop Search Modal */}
       <SearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
         locale={locale}
       />
 
-      {/* Mobile Search Fullscreen */}
       <MobileSearch
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
         locale={locale}
       />
 
-      {/* Mobile Menu Overlay */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}

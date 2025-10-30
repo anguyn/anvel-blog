@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { auth } from '@/libs/server/auth';
 import { prisma } from '@/libs/prisma';
 import { uploadAvatar, deleteFromR2 } from '@/libs/server/r2';
@@ -13,7 +14,6 @@ export async function PATCH(req: NextRequest) {
 
     const contentType = req.headers.get('content-type') || '';
 
-    // Handle multipart form data (with file upload)
     if (contentType.includes('multipart/form-data')) {
       const formData = await req.formData();
       const file = formData.get('avatar') as File | null;
@@ -25,7 +25,6 @@ export async function PATCH(req: NextRequest) {
         );
       }
 
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         return NextResponse.json(
           { error: 'File must be an image' },
@@ -33,7 +32,6 @@ export async function PATCH(req: NextRequest) {
         );
       }
 
-      // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         return NextResponse.json(
           { error: 'File size must be less than 5MB' },
@@ -41,43 +39,35 @@ export async function PATCH(req: NextRequest) {
         );
       }
 
-      // Convert file to buffer
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Get current user
       const currentUser = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { image: true },
       });
 
-      // Delete old avatar if exists (and not default)
       if (currentUser?.image && currentUser.image.includes('r2.dev')) {
         try {
-          // Extract key from R2 URL
           const url = new URL(currentUser.image);
           const key = url.pathname.substring(1); // Remove leading slash
           await deleteFromR2(key);
         } catch (error) {
           console.error('Failed to delete old avatar:', error);
-          // Don't fail the request if deletion fails
         }
       }
 
-      // Upload new avatar
       const uploadResult = await uploadAvatar(
         buffer,
         session.user.id,
         file.name,
       );
 
-      // Update user with direct R2 URL
       await prisma.user.update({
         where: { id: session.user.id },
-        data: { image: uploadResult.url }, // Store R2 public URL directly
+        data: { image: uploadResult.url },
       });
 
-      // Log activity
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 90);
 
@@ -94,18 +84,67 @@ export async function PATCH(req: NextRequest) {
         })
         .catch(() => {});
 
+      revalidatePath('/[locale]/settings', 'page');
+
       return NextResponse.json({
         success: true,
-        image: uploadResult.url, // Return R2 URL directly
+        image: uploadResult.url,
         thumbnailUrl: uploadResult.thumbnailUrl,
       });
     }
 
-    // Handle JSON data (profile info update)
     const data = await req.json();
 
-    // Validate and sanitize data
     const updateData: any = {};
+
+    if (data.image === null) {
+      const currentUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { image: true },
+      });
+
+      if (currentUser?.image && currentUser.image.includes('r2.dev')) {
+        try {
+          const url = new URL(currentUser.image);
+          const key = url.pathname.substring(1);
+          await deleteFromR2(key);
+        } catch (error) {
+          console.error('Failed to delete avatar:', error);
+          return NextResponse.json(
+            { error: 'Failed to delete avatar' },
+            { status: 500 },
+          );
+        }
+      }
+
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { image: null },
+      });
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 90);
+
+      await prisma.activityLog
+        .create({
+          data: {
+            userId: session.user.id,
+            action: 'AVATAR_DELETED',
+            entity: 'user',
+            importance: 'INFO',
+            retentionDays: 90,
+            expiresAt,
+          },
+        })
+        .catch(() => {});
+
+      revalidatePath('/[locale]/settings', 'page');
+
+      return NextResponse.json({
+        success: true,
+        message: 'Avatar deleted successfully',
+      });
+    }
 
     if (data.name !== undefined) {
       const name = data.name.trim();
@@ -121,7 +160,6 @@ export async function PATCH(req: NextRequest) {
     if (data.username !== undefined) {
       const username = data.username.trim().toLowerCase();
 
-      // Validate username format
       if (!/^[a-z0-9_-]{3,20}$/.test(username)) {
         return NextResponse.json(
           {
@@ -132,7 +170,6 @@ export async function PATCH(req: NextRequest) {
         );
       }
 
-      // Check if username is already taken
       const existingUser = await prisma.user.findFirst({
         where: {
           username,
@@ -185,7 +222,6 @@ export async function PATCH(req: NextRequest) {
       updateData.linkedin = data.linkedin.trim().slice(0, 50) || null;
     }
 
-    // Check if there's any data to update
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { error: 'No fields to update' },
@@ -193,7 +229,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Update user profile
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: updateData,
@@ -211,7 +246,6 @@ export async function PATCH(req: NextRequest) {
       },
     });
 
-    // Log activity
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 90);
 
@@ -230,6 +264,8 @@ export async function PATCH(req: NextRequest) {
         },
       })
       .catch(() => {});
+
+    revalidatePath('/[locale]/settings', 'page');
 
     return NextResponse.json({
       success: true,

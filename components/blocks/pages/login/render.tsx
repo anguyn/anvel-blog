@@ -61,6 +61,11 @@ interface LoginFormTranslations {
   invalid2FACode: string;
   twoFactorRequired: string;
   twoFactorError: string;
+  turnstileError: string;
+  turnstileExpire: string;
+  enterBackupCode: string;
+  confirm2FALeave: string;
+  invalidBackupCode: string;
 }
 
 interface LoginRenderBlockProps {

@@ -151,6 +151,70 @@ async function main() {
       action: 'read',
       description: 'View analytics',
     },
+
+    // Admin - User Management
+    {
+      name: 'users:ban',
+      resource: 'users',
+      action: 'ban',
+      description: 'Ban or unban users',
+    },
+    {
+      name: 'users:suspend',
+      resource: 'users',
+      action: 'suspend',
+      description: 'Suspend or unsuspend users',
+    },
+    {
+      name: 'users:roles',
+      resource: 'users',
+      action: 'roles',
+      description: 'Assign roles to users',
+    },
+
+    // Admin - System Management
+    {
+      name: 'roles:manage',
+      resource: 'roles',
+      action: 'manage',
+      description: 'Manage roles and permissions',
+    },
+    {
+      name: 'sessions:manage',
+      resource: 'sessions',
+      action: 'manage',
+      description: 'Manage user sessions',
+    },
+    {
+      name: 'logs:read',
+      resource: 'logs',
+      action: 'read',
+      description: 'View system logs',
+    },
+    {
+      name: 'logs:manage',
+      resource: 'logs',
+      action: 'manage',
+      description: 'Manage and clear logs',
+    },
+    {
+      name: 'contacts:read',
+      resource: 'contacts',
+      action: 'read',
+      description: 'View contact messages',
+    },
+    {
+      name: 'contacts:manage',
+      resource: 'contacts',
+      action: 'manage',
+      description: 'Manage contact messages',
+    },
+    {
+      name: 'snippets:manage',
+      resource: 'snippets',
+      action: 'manage',
+      description: 'Manage all code snippets',
+    },
   ];
 
   const permissions = await Promise.all(

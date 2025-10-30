@@ -460,6 +460,10 @@ export interface DictionaryStructure {
     invalid2FACode: string;
     twoFactorRequired: string;
     twoFactorError: string;
+    turnstileError: string;
+    turnstileExpire: string;
+    confirm2FALeave: string;
+    invalidBackupCode: string;
   };
   register: {
     title: string;
@@ -693,6 +697,7 @@ export interface DictionaryStructure {
     password: string;
     enterPassword: string;
     enterCodeFromApp: string;
+    enterBackupCode: string;
     warning: string;
     disableTwoFactorWarning: string;
     disabling: string;

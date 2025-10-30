@@ -231,12 +231,12 @@
   },
   "dashboard": {
     "title": "Bảng điều khiển",
-    "busManagement": "Hệ thống quản lý xe buýt",
+    "blogManagement": "Hệ thống quản lý Anvel",
     "welcomeBack": "Chào mừng {name} trở lại",
-    "welcomeMessage": "Chào mừng đến với Bảng điều khiển Quản trị Đặt vé Xe buýt",
+    "welcomeMessage": "Chào mừng đến với Bảng điều khiển Quản trị Anvel",
     "systemConfigError": "Không thể tải cấu hình hệ thống",
     "loadingConfig": "Đang tải cấu hình hệ thống...",
-    "appName": "Hệ thống Đặt vé Xe buýt",
+    "appName": "Hệ thống bài đăng và đoạn mã",
     "version": "Phiên bản 1.0.0",
     "lastUpdated": "Cập nhật lần cuối: {date}",
     "userProfile": {

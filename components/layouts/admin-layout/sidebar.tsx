@@ -37,8 +37,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { SystemConfig } from './client';
+import { useLocale } from '@/libs/hooks/use-locale';
 import { useTranslations } from 'next-intl';
-import { useLocale } from 'next-intl';
 
 interface MenuItemChild {
   title: string;
@@ -72,10 +72,13 @@ function MenuItem({
   level = 0,
   onItemClick,
 }: MenuItemProps) {
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const { locale } = useLocale();
+
+  console.log('Locale nè chèn: ', locale);
   const hasChildren =
     'children' in item && item.children && item.children.length > 0;
   const pathname = usePathname();
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const isChildActive =
     hasChildren &&
@@ -226,7 +229,10 @@ function MenuItem({
   if (!isSidebarOpen && item.href) {
     // Tooltip for collapsed sidebar with single items
     return (
-      <Link href={item.href} onClick={onItemClick}>
+      <Link
+        href={locale ? `/${locale}${item.href}` : item.href}
+        onClick={onItemClick}
+      >
         <Tooltip>
           <TooltipTrigger asChild>{menuContent}</TooltipTrigger>
           <TooltipContent
@@ -242,7 +248,13 @@ function MenuItem({
 
   return (
     <div>
-      {item.href ? <Link href={item.href}>{menuContent}</Link> : menuContent}
+      {item.href ? (
+        <Link href={locale ? `/${locale}${item.href}` : item.href}>
+          {menuContent}
+        </Link>
+      ) : (
+        menuContent
+      )}
 
       {/* Children items */}
       <AnimatePresence>
@@ -315,7 +327,7 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
           },
           {
             title: 'Người dùng',
-            href: '/admin/user/users-list',
+            href: '/admin/users',
             icon: MapPin,
             badge: '287',
           },

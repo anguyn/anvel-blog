@@ -79,7 +79,7 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
                   className="hidden sm:block"
                 >
                   <h1 className="from-foreground to-muted-foreground bg-gradient-to-r bg-clip-text text-lg font-semibold sm:text-xl">
-                    {titleCase(t('busManagement'))}
+                    {titleCase(t('blogManagement'))}
                   </h1>
                   <p className="text-muted-foreground text-xs sm:text-sm">
                     {t('welcomeBack', {

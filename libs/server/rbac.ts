@@ -214,6 +214,10 @@ export const RoleLevel = {
 // PERMISSION CONSTANTS
 // ============================================
 export const Permissions = {
+  // Dashboard
+  DASHBOARD_VIEW: 'dashboard:view',
+  DASHBOARD_ANALYTICS: 'dashboard:analytics',
+
   // Posts
   POSTS_CREATE: 'posts:create',
   POSTS_READ: 'posts:read',
@@ -233,10 +237,12 @@ export const Permissions = {
   MEDIA_DELETE: 'media:delete',
   MEDIA_MANAGE: 'media:manage',
 
-  // Users
-  USERS_READ: 'users:read',
-  USERS_UPDATE: 'users:update',
+  // User Management
   USERS_MANAGE: 'users:manage',
+  USERS_CREATE: 'users:create',
+  USERS_DELETE: 'users:delete',
+  USERS_SUSPEND: 'users:suspend',
+  USERS_ROLES: 'users:roles',
 
   // Categories & Tags
   CATEGORIES_MANAGE: 'categories:manage',
@@ -245,7 +251,32 @@ export const Permissions = {
   // Settings
   SETTINGS_READ: 'settings:read',
   SETTINGS_MANAGE: 'settings:manage',
+  SETTINGS_SECURITY: 'settings:security',
+  SETTINGS_EMAIL: 'settings:email',
+  SETTINGS_APPEARANCE: 'settings:appearance',
 
-  // Analytics
+  // Analytics & Reports
   ANALYTICS_READ: 'analytics:read',
+  ANALYTICS_VIEW: 'analytics:view',
+  ANALYTICS_EXPORT: 'analytics:export',
+
+  // Comments & Moderation
+  COMMENTS_MODERATE: 'comments:moderate',
+  COMMENTS_DELETE_ANY: 'comments:delete_any',
+
+  // Translations
+  TRANSLATIONS_MANAGE: 'translations:manage',
+
+  // Notifications
+  NOTIFICATIONS_SEND: 'notifications:send',
+  NOTIFICATIONS_MANAGE: 'notifications:manage',
+
+  // AI Features
+  AI_MANAGE: 'ai:manage',
+  AI_TRAIN: 'ai:train',
+
+  // Logs & Audit
+  LOGS_VIEW: 'logs:view',
+  LOGS_EXPORT: 'logs:export',
+  LOGS_DELETE: 'logs:delete',
 } as const;

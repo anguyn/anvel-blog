@@ -230,7 +230,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "busManagement": "Bus management system",
+    "blogManagement": "Bus management system",
     "welcomeBack": "Welcome back, {name}",
     "welcomeMessage": "Welcome to the Bus Booking Admin Dashboard",
     "systemConfigError": "Failed to load system configuration",

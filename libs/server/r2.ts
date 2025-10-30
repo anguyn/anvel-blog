@@ -27,8 +27,8 @@ export interface UploadOptions {
 }
 
 export interface UploadResult {
-  url: string;
-  key: string;
+  url: string; // Public R2 URL
+  key: string; // R2 key for deletion
   thumbnailUrl?: string;
   thumbnailKey?: string;
   size: number;
@@ -39,6 +39,7 @@ export interface UploadResult {
 
 /**
  * Upload file to R2 with image optimization
+ * Returns direct R2 public URL
  */
 export async function uploadToR2(
   file: Buffer,
@@ -130,8 +131,10 @@ export async function uploadToR2(
     }),
   );
 
+  const publicUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
+
   const result: UploadResult = {
-    url: `${process.env.R2_PUBLIC_URL}/${key}`,
+    url: publicUrl,
     key,
     size: processedBuffer.length,
     format: fileExtension,
@@ -173,6 +176,7 @@ export async function uploadToR2(
 
 /**
  * Upload avatar with specific optimizations
+ * Returns direct R2 public URL for immediate use
  */
 export async function uploadAvatar(
   file: Buffer,
@@ -197,13 +201,20 @@ export async function uploadAvatar(
 
 /**
  * Delete file from R2
+ * @param keyOrUrl - R2 key or full URL
  */
 export async function deleteFromR2(keyOrUrl: string): Promise<void> {
   let key = keyOrUrl;
 
   // If full URL provided, extract key
   if (keyOrUrl.startsWith('http')) {
-    key = keyOrUrl.replace(`${process.env.R2_PUBLIC_URL}/`, '');
+    try {
+      const url = new URL(keyOrUrl);
+      key = url.pathname.substring(1); // Remove leading slash
+    } catch (error) {
+      console.error('Invalid URL:', keyOrUrl);
+      throw new Error('Invalid R2 URL');
+    }
   }
 
   try {
@@ -213,6 +224,7 @@ export async function deleteFromR2(keyOrUrl: string): Promise<void> {
         Key: key,
       }),
     );
+    console.log('Deleted from R2:', key);
   } catch (error) {
     console.error('Delete from R2 error:', error);
     throw error;
@@ -231,7 +243,7 @@ export async function deleteFileWithThumbnail(
     promises.push(deleteFromR2(result.thumbnailKey));
   }
 
-  await Promise.all(promises);
+  await Promise.allSettled(promises); // Use allSettled to not fail if one fails
 }
 
 /**
@@ -241,7 +253,12 @@ export async function fileExists(keyOrUrl: string): Promise<boolean> {
   let key = keyOrUrl;
 
   if (keyOrUrl.startsWith('http')) {
-    key = keyOrUrl.replace(`${process.env.R2_PUBLIC_URL}/`, '');
+    try {
+      const url = new URL(keyOrUrl);
+      key = url.pathname.substring(1);
+    } catch {
+      return false;
+    }
   }
 
   try {
@@ -264,7 +281,12 @@ export async function getFileMetadata(keyOrUrl: string) {
   let key = keyOrUrl;
 
   if (keyOrUrl.startsWith('http')) {
-    key = keyOrUrl.replace(`${process.env.R2_PUBLIC_URL}/`, '');
+    try {
+      const url = new URL(keyOrUrl);
+      key = url.pathname.substring(1);
+    } catch {
+      return null;
+    }
   }
 
   try {

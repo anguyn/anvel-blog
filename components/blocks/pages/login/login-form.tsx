@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +16,11 @@ import { authenticate } from '@/app/actions/login.action';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/libs/utils';
 import { signIn } from 'next-auth/react';
+import {
+  TurnstileWidget,
+  TurnstileWidgetRef,
+} from '@/components/blocks/turnstile/turnstile-widget';
+import { OTPInput, OTPInputRef } from '@/components/custom/otp-input';
 
 interface LoginFormTranslations {
   email: string;
@@ -57,6 +62,11 @@ interface LoginFormTranslations {
   invalid2FACode: string;
   twoFactorRequired: string;
   twoFactorError: string;
+  turnstileError: string;
+  turnstileExpire: string;
+  enterBackupCode: string;
+  confirm2FALeave: string;
+  invalidBackupCode: string;
 }
 
 interface LoginFormProps {
@@ -75,6 +85,11 @@ export function LoginForm({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { update } = useSession();
+
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
+  const otpRef = useRef<OTPInputRef>(null);
+  const backupCodeRef = useRef<OTPInputRef>(null);
+
   const [step, setStep] = useState<LoginStep>('credentials');
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -82,10 +97,20 @@ export function LoginForm({
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const [useBackup, setUseBackup] = useState(false);
 
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const [turnstileReady, setTurnstileReady] = useState(false);
+  const [turnstileKey, setTurnstileKey] = useState(0); // Force re-render Turnstile
+
+  // OTP states
+  const [otpValue, setOtpValue] = useState('');
+  const [backupCodeValue, setBackupCodeValue] = useState('');
+  const [otpError, setOtpError] = useState(false);
+
   // Store credentials for 2FA step
   const [storedCredentials, setStoredCredentials] = useState<{
     email: string;
     password: string;
+    turnstileToken: string;
   } | null>(null);
 
   const error = searchParams.get('error');
@@ -97,29 +122,10 @@ export function LoginForm({
     password: z.string().min(6, translations.passwordMinLength),
   });
 
-  // Schema for 2FA step
-  const twoFactorSchema = z
-    .object({
-      token2FA: z.string().optional(),
-      backupCode: z.string().optional(),
-    })
-    .refine(data => data.token2FA || data.backupCode, {
-      message: '2FA code or backup code is required',
-    });
-
   type CredentialsFormData = z.infer<typeof credentialsSchema>;
-  type TwoFactorFormData = z.infer<typeof twoFactorSchema>;
 
   const credentialsForm = useForm<CredentialsFormData>({
     resolver: zodResolver(credentialsSchema),
-  });
-
-  const twoFactorForm = useForm<TwoFactorFormData>({
-    resolver: zodResolver(twoFactorSchema),
-    defaultValues: {
-      token2FA: '',
-      backupCode: '',
-    },
   });
 
   useEffect(() => {
@@ -127,7 +133,6 @@ export function LoginForm({
       credentialsForm.setValue('email', emailParam);
     }
 
-    // Handle 2FA required error
     if (error === '2fa_required') {
       setStep('2fa');
       toast.info(
@@ -136,6 +141,7 @@ export function LoginForm({
     }
 
     if (error === 'invalid_2fa') {
+      setOtpError(true);
       toast.error(
         translations.invalid2FACode || 'Invalid 2FA code. Please try again.',
       );
@@ -148,6 +154,38 @@ export function LoginForm({
       );
     }
   }, [error, emailParam, credentialsForm, translations]);
+
+  const handleTurnstileSuccess = (token: string) => {
+    console.log('Ra nè: ', token);
+    setTurnstileToken(token);
+    setTurnstileReady(true);
+  };
+
+  const handleTurnstileError = () => {
+    setTurnstileToken('');
+    setTurnstileReady(false);
+    toast.error(
+      translations.turnstileError ||
+        'Security verification failed. Please try again.',
+    );
+  };
+
+  const handleTurnstileExpire = () => {
+    setTurnstileToken('');
+    setTurnstileReady(false);
+    toast.warning(
+      translations.turnstileExpire ||
+        'Security verification expired. Please verify again.',
+    );
+  };
+
+  // Reset Turnstile helper
+  const resetTurnstile = () => {
+    setTurnstileToken('');
+    setTurnstileReady(false);
+    setTurnstileKey(prev => prev + 1); // Force remount
+    turnstileRef.current?.reset();
+  };
 
   const handleResendVerification = async () => {
     const email = emailParam || '';
@@ -186,26 +224,20 @@ export function LoginForm({
     setIsLoading(true);
 
     try {
-      // Store credentials for potential 2FA step
       setStoredCredentials({
         email: data.email,
         password: data.password,
+        turnstileToken,
       });
 
       const result = await authenticate({
         email: data.email,
         password: data.password,
         rememberMe,
+        turnstileToken,
       });
 
       if (!result.success) {
-        if (result.code === '2FA_REQUIRED') {
-          // Move to 2FA step - don't show error toast
-          setStep('2fa');
-          return; // Exit early, don't show error
-        }
-
-        // Show error for other cases
         if (result.code === 'BANNED') {
           toast.error(result.error || translations.accountBanned);
         } else if (result.code === 'SUSPENDED') {
@@ -215,6 +247,15 @@ export function LoginForm({
         } else {
           toast.error(result.error || translations.invalidCredentials);
         }
+
+        if (result.code === '2FA_REQUIRED') {
+          setStep('2fa');
+          setTurnstileReady(false);
+          resetTurnstile();
+        } else {
+          resetTurnstile();
+        }
+        return;
       } else {
         toast.success(result.message || translations.loginSuccess);
         await update();
@@ -224,38 +265,84 @@ export function LoginForm({
     } catch (error) {
       console.error('Login error:', error);
       toast.error(translations.somethingWentWrong);
+      resetTurnstile();
     } finally {
       setIsLoading(false);
     }
   };
 
-  const on2FASubmit = async (data: TwoFactorFormData) => {
+  const handle2FASubmit = async () => {
     if (!storedCredentials) {
       toast.error('Session expired. Please login again.');
       setStep('credentials');
+      resetTurnstile();
+      return;
+    }
+
+    const codeToVerify = useBackup ? backupCodeValue : otpValue;
+
+    if (!codeToVerify || codeToVerify.length < (useBackup ? 8 : 6)) {
+      setOtpError(true);
+      toast.error('Please enter a valid code');
+      // Focus vào input tương ứng
+      if (useBackup) {
+        backupCodeRef.current?.focusIndex(6);
+      } else {
+        otpRef.current?.focusIndex(5);
+      }
+      return;
+    }
+
+    // Check if turnstile token is still valid, if not get new one
+    if (!turnstileToken || !turnstileReady) {
+      toast.warning('Security verification required. Please wait...');
+      resetTurnstile();
       return;
     }
 
     setIsLoading(true);
+    setOtpError(false);
 
     try {
       const result = await authenticate({
         email: storedCredentials.email,
         password: storedCredentials.password,
-        token2FA: useBackup ? undefined : data.token2FA,
-        backupCode: useBackup ? data.backupCode : undefined,
+        token2FA: useBackup ? undefined : otpValue,
+        backupCode: useBackup ? backupCodeValue : undefined,
         rememberMe,
+        turnstileToken: turnstileToken, // Use current token
       });
 
       if (!result.success) {
+        if (result.code?.includes('2F')) {
+          setOtpError(true);
+          // Focus vào input tương ứng khi có lỗi 2FA
+          setTimeout(() => {
+            if (useBackup) {
+              backupCodeRef.current?.focusIndex(6);
+            } else {
+              otpRef.current?.focusIndex(5);
+            }
+          }, 100);
+        }
         if (result.code === 'INVALID_2FA') {
           toast.error(
             translations.invalid2FACode ||
               'Invalid 2FA code. Please try again.',
           );
+        } else if (
+          result.code === 'TURNSTILE_EXPIRED' ||
+          result.code === 'INVALID_TURNSTILE'
+        ) {
+          // Nếu Turnstile hết hạn, reset để user verify lại
+          toast.error('Security verification expired. Please verify again.');
+          resetTurnstile();
+          setIsLoading(false);
+          return;
         } else {
           toast.error(result.error || translations.somethingWentWrong);
         }
+        setIsLoading(false);
       } else {
         toast.success(translations.loginSuccess);
         await update();
@@ -265,7 +352,15 @@ export function LoginForm({
     } catch (error) {
       console.error('2FA verification error:', error);
       toast.error(translations.somethingWentWrong);
-    } finally {
+      setOtpError(true);
+      // Focus vào input khi có exception
+      setTimeout(() => {
+        if (useBackup) {
+          backupCodeRef.current?.focusIndex(6);
+        } else {
+          otpRef.current?.focusIndex(5);
+        }
+      }, 100);
       setIsLoading(false);
     }
   };
@@ -274,7 +369,10 @@ export function LoginForm({
     setStep('credentials');
     setStoredCredentials(null);
     setUseBackup(false);
-    twoFactorForm.reset();
+    setOtpValue('');
+    setBackupCodeValue('');
+    setOtpError(false);
+    resetTurnstile();
   };
 
   const handleOAuthLogin = async (
@@ -292,6 +390,51 @@ export function LoginForm({
       setOauthLoading(null);
     }
   };
+
+  useEffect(() => {
+    if (step !== '2fa') return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    const handlePopState = () => {
+      const message =
+        translations.confirm2FALeave ||
+        'You are in the middle of 2FA verification. Are you sure you want to leave?';
+
+      const confirmLeave = window.confirm(message);
+
+      if (!confirmLeave) {
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [step, translations]);
+
+  // Render Turnstile (always mounted, hidden on 2FA step)
+  const renderTurnstile = () => (
+    <div className={cn('space-y-2', step === '2fa' && 'hidden')}>
+      <TurnstileWidget
+        key={`${step}-${turnstileKey}`}
+        ref={turnstileRef}
+        onSuccess={handleTurnstileSuccess}
+        onError={handleTurnstileError}
+        onExpire={handleTurnstileExpire}
+        action="login"
+        className="flex"
+      />
+    </div>
+  );
 
   // Render credentials step
   if (step === 'credentials') {
@@ -426,10 +569,11 @@ export function LoginForm({
               {translations.rememberMe}
             </Label>
           </div>
+          {renderTurnstile()}
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading || !!oauthLoading}
+            disabled={isLoading || !!oauthLoading || !turnstileReady}
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {translations.signIn}
@@ -532,6 +676,9 @@ export function LoginForm({
   // Render 2FA step
   return (
     <div className="space-y-6">
+      {/* Hidden Turnstile - still mounted to allow refresh */}
+      {renderTurnstile()}
+
       {/* 2FA Header */}
       <div className="space-y-2 text-center">
         <div className="bg-primary/10 mx-auto flex h-12 w-12 items-center justify-center rounded-full">
@@ -541,66 +688,57 @@ export function LoginForm({
           {translations.twoFactorTitle || 'Two-Factor Authentication'}
         </h3>
         <p className="text-muted-foreground text-sm">
-          {translations.twoFactorDescription ||
-            'Enter the 6-digit code from your authenticator app'}
+          {useBackup
+            ? translations.enterBackupCode || 'Enter your 8-digit backup code'
+            : translations.twoFactorDescription ||
+              'Enter the 6-digit code from your authenticator app'}
         </p>
       </div>
 
-      <form
-        onSubmit={twoFactorForm.handleSubmit(on2FASubmit)}
-        className="space-y-4"
-      >
+      <div className="space-y-4">
         {!useBackup ? (
-          // TOTP Code Input
-          <div className="space-y-2">
-            <Label htmlFor="token2FA" className="text-sm font-medium">
-              {translations.twoFactorCode || 'Authentication Code'}{' '}
-              <span className="text-red-400">*</span>
-            </Label>
-            <Input
-              id="token2FA"
-              type="text"
-              placeholder={translations.twoFactorCodePlaceholder || '000000'}
-              maxLength={6}
-              disabled={isLoading}
-              autoComplete="off"
-              className="text-center font-mono text-2xl tracking-widest"
-              {...twoFactorForm.register('token2FA')}
-              onChange={e => {
-                const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                twoFactorForm.setValue('token2FA', value);
+          <div className="space-y-3">
+            <OTPInput
+              ref={otpRef}
+              length={6}
+              value={otpValue}
+              onChange={value => {
+                setOtpValue(value);
+                setOtpError(false);
               }}
+              onEnter={handle2FASubmit}
+              disabled={isLoading}
+              error={otpError}
+              type="numeric"
+              autoFocus
+              className="justify-center"
             />
-            {twoFactorForm.formState.errors.token2FA && (
-              <p className="text-destructive text-sm">
-                {twoFactorForm.formState.errors.token2FA.message}
+            {otpError && (
+              <p className="text-destructive text-center text-sm">
+                {translations.invalid2FACode || 'Invalid 2FA code'}
               </p>
             )}
           </div>
         ) : (
-          // Backup Code Input
-          <div className="space-y-2">
-            <Label htmlFor="backupCode" className="text-sm font-medium">
-              {translations.backupCode || 'Backup Code'}{' '}
-              <span className="text-red-400">*</span>
-            </Label>
-            <Input
-              id="backupCode"
-              type="text"
-              placeholder={translations.backupCodePlaceholder || '00000000'}
-              maxLength={8}
-              disabled={isLoading}
-              autoComplete="off"
-              className="text-center font-mono text-xl tracking-wider"
-              {...twoFactorForm.register('backupCode')}
-              onChange={e => {
-                const value = e.target.value.replace(/\D/g, '').slice(0, 8);
-                twoFactorForm.setValue('backupCode', value);
+          <div className="space-y-3">
+            <OTPInput
+              ref={backupCodeRef}
+              length={8}
+              value={backupCodeValue}
+              onChange={value => {
+                setBackupCodeValue(value);
+                setOtpError(false);
               }}
+              onEnter={handle2FASubmit}
+              disabled={isLoading}
+              error={otpError}
+              type="numeric"
+              autoFocus
+              className="justify-center"
             />
-            {twoFactorForm.formState.errors.backupCode && (
-              <p className="text-destructive text-sm">
-                {twoFactorForm.formState.errors.backupCode.message}
+            {otpError && (
+              <p className="text-destructive text-center text-sm">
+                {translations.invalidBackupCode}
               </p>
             )}
           </div>
@@ -614,7 +752,17 @@ export function LoginForm({
             size="sm"
             onClick={() => {
               setUseBackup(!useBackup);
-              twoFactorForm.reset();
+              setOtpValue('');
+              setBackupCodeValue('');
+              setOtpError(false);
+              // Focus vào input mới sau khi chuyển đổi
+              setTimeout(() => {
+                if (!useBackup) {
+                  backupCodeRef.current?.focusIndex(6);
+                } else {
+                  otpRef.current?.focusIndex(5);
+                }
+              }, 100);
             }}
             disabled={isLoading}
             className="text-primary text-sm"
@@ -625,12 +773,21 @@ export function LoginForm({
           </Button>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button
+          type="button"
+          onClick={handle2FASubmit}
+          className="w-full"
+          disabled={
+            isLoading ||
+            (!useBackup && otpValue.length < 6) ||
+            (useBackup && backupCodeValue.length < 8) ||
+            !turnstileReady
+          }
+        >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {translations.verify || 'Verify & Sign In'}
         </Button>
 
-        {/* Back to credentials */}
         <Button
           type="button"
           variant="ghost"
@@ -641,7 +798,7 @@ export function LoginForm({
           <ArrowLeft className="mr-2 h-4 w-4" />
           {translations.backToLogin || 'Back to login'}
         </Button>
-      </form>
+      </div>
     </div>
   );
 }

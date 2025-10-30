@@ -69,7 +69,7 @@ export function UserMenu({ locale }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" asChild className="p-0 hover:cursor-pointer">
+        <Button variant="ghost" asChild className="!p-0 hover:cursor-pointer">
           <Avatar
             className="bg-muted h-9 w-9 overflow-hidden rounded-full"
             aria-label={user?.name ?? t('avatarAlt')}

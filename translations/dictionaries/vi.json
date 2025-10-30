@@ -453,7 +453,11 @@
     "verify": "Xác minh & Đăng nhập",
     "invalid2FACode": "Mã 2FA không hợp lệ. Vui lòng thử lại.",
     "twoFactorRequired": "Tài khoản của bạn yêu cầu xác thực hai yếu tố",
-    "twoFactorError": "Lỗi xác minh 2FA. Vui lòng thử lại sau."
+    "twoFactorError": "Lỗi xác minh 2FA. Vui lòng thử lại sau.",
+    "turnstileError": "Xác minh bảo mật không thành công. Vui lòng thử lại",
+    "turnstileExpire": "Xác minh bảo mật đã hết hạn. Vui lòng xác minh lại",
+    "confirm2FALeave": "Dữ liệu đã nhập sẽ không được lưu. Bạn có chắc chắn muốn rời đi không?",
+    "invalidBackupCode": "Mã dự phòng không chính xác"
   },
   "register": {
     "title": "Đăng ký",
@@ -683,6 +687,7 @@
     "next": "Tiếp Theo",
     "back": "Quay Lại",
     "enter2FACode": "Nhập mã 6 chữ số từ ứng dụng xác thực để xác minh thiết lập.",
+    "enterBackupCode": "Nhập mã dự phòng 8 chữ số",
     "verificationCode": "Mã Xác Minh",
     "verify": "Xác Minh",
     "verifying": "Đang xác minh...",

@@ -453,7 +453,11 @@
     "verify": "Verify & Sign In",
     "invalid2FACode": "Invalid 2FA code. Please try again.",
     "twoFactorRequired": "Two-factor authentication is required for your account",
-    "twoFactorError": "2FA verification error. Please try again later."
+    "twoFactorError": "2FA verification error. Please try again later.",
+    "turnstileError": "Security verification failed. Please try again",
+    "turnstileExpire": "Security verification expired. Please verify again",
+    "confirm2FALeave": "Entered data will not be saved. Are you sure you want to leave?",
+    "invalidBackupCode": "Invalid backup code"
   },
   "register": {
     "title": "Register",
@@ -701,6 +705,7 @@
     "password": "Password",
     "enterPassword": "Enter your password",
     "enterCodeFromApp": "Enter the 6-digit code from your authenticator app",
+    "enterBackupCode": "Enter the 8-digit backup code",
     "warning": "Warning",
     "disableTwoFactorWarning": "Disabling 2FA will make your account less secure. Your backup codes will also be deleted.",
     "disabling": "Disabling...",

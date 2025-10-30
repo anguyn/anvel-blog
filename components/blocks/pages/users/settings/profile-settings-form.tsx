@@ -9,8 +9,6 @@ import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { Upload, Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { toast } from 'sonner';
 
 interface ProfileSettingsFormProps {
   user: any;
@@ -29,7 +27,6 @@ export function ProfileSettingsForm({
   const [formData, setFormData] = useState({
     name: user.name || '',
     username: user.username || '',
-    email: user.email || '',
     bio: user.bio || '',
     location: user.location || '',
     website: user.website || '',
@@ -84,16 +81,18 @@ export function ProfileSettingsForm({
       }
 
       const data = await response.json();
+
+      // Update preview with new R2 URL
       setImagePreview(data.image);
       setSelectedFile(null);
 
-      toast.success(
-        translations.avatarUpdated || 'Avatar updated successfully',
-      );
+      alert(translations.avatarUpdated || 'Avatar updated successfully');
+
+      // Refresh to update avatar everywhere
       router.refresh();
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      toast.error(error.message || 'Failed to upload avatar');
+      alert(error.message || 'Failed to upload avatar');
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -116,11 +115,14 @@ export function ProfileSettingsForm({
         const error = await response.json();
         throw new Error(error.error || 'Failed to update profile');
       }
-      toast.success(translations.saveSuccess);
+
+      const data = await response.json();
+
+      alert(translations.saveSuccess || 'Profile updated successfully');
       router.refresh();
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error(error.message || translations.saveError);
+      alert(error.message || translations.saveError);
     } finally {
       setIsLoading(false);
     }
@@ -161,15 +163,13 @@ export function ProfileSettingsForm({
               transition={{ duration: 0.3, delay: 0.1 }}
             >
               <Label>Profile Picture</Label>
-              <div className="mt-4 flex items-center gap-4">
+              <div className="mt-2 flex items-center gap-4">
                 <div className="relative">
                   {imagePreview ? (
                     <div className="relative">
-                      <Image
+                      <img
                         src={imagePreview}
                         alt="Profile"
-                        width={80}
-                        height={80}
                         className="h-20 w-20 rounded-full border-2 border-[var(--color-border)] object-cover"
                       />
                       {selectedFile && (
@@ -203,8 +203,8 @@ export function ProfileSettingsForm({
                         type="button"
                         variant="outline"
                         size="sm"
-                        asChild
                         disabled={isUploadingAvatar}
+                        asChild
                       >
                         <span>Choose Image</span>
                       </Button>
@@ -249,6 +249,7 @@ export function ProfileSettingsForm({
                 placeholder="John Doe"
                 minLength={2}
                 maxLength={50}
+                required
                 className="mt-1"
               />
             </motion.div>
@@ -267,32 +268,12 @@ export function ProfileSettingsForm({
                 onChange={handleChange}
                 placeholder="johndoe"
                 pattern="[a-z0-9_-]{3,20}"
+                required
                 className="mt-1"
               />
               <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                3-20 characters, lowercase letters, numbers, hyphens and
-                underscores only
-              </p>
-            </motion.div>
-
-            {/* Email */}
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.25 }}
-            >
-              <Label htmlFor="email">{translations.email}</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled
-                className="mt-1 bg-[var(--color-secondary)]"
-              />
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Email cannot be changed
+                3-20 characters, lowercase, numbers, hyphens and underscores
+                only
               </p>
             </motion.div>
 
@@ -300,7 +281,7 @@ export function ProfileSettingsForm({
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
+              transition={{ duration: 0.3, delay: 0.25 }}
             >
               <Label htmlFor="bio">{translations.bio}</Label>
               <Textarea
@@ -322,7 +303,7 @@ export function ProfileSettingsForm({
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.35 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
             >
               <Label htmlFor="location">{translations.location}</Label>
               <Input
@@ -340,7 +321,7 @@ export function ProfileSettingsForm({
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
+              transition={{ duration: 0.3, delay: 0.35 }}
             >
               <Label htmlFor="website">{translations.website}</Label>
               <Input
@@ -361,11 +342,11 @@ export function ProfileSettingsForm({
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.45 }}
+                transition={{ duration: 0.3, delay: 0.4 }}
               >
                 <Label htmlFor="github">{translations.github}</Label>
                 <div className="mt-1 flex items-center">
-                  <span className="mr-2 text-sm text-[var(--color-muted-foreground)]">
+                  <span className="mr-2 text-sm whitespace-nowrap text-[var(--color-muted-foreground)]">
                     github.com/
                   </span>
                   <Input
@@ -383,11 +364,11 @@ export function ProfileSettingsForm({
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.5 }}
+                transition={{ duration: 0.3, delay: 0.45 }}
               >
                 <Label htmlFor="twitter">{translations.twitter}</Label>
                 <div className="mt-1 flex items-center">
-                  <span className="mr-2 text-sm text-[var(--color-muted-foreground)]">
+                  <span className="mr-2 text-sm whitespace-nowrap text-[var(--color-muted-foreground)]">
                     twitter.com/
                   </span>
                   <Input
@@ -405,11 +386,11 @@ export function ProfileSettingsForm({
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.55 }}
+                transition={{ duration: 0.3, delay: 0.5 }}
               >
                 <Label htmlFor="linkedin">{translations.linkedin}</Label>
                 <div className="mt-1 flex items-center">
-                  <span className="mr-2 text-sm text-[var(--color-muted-foreground)]">
+                  <span className="mr-2 text-sm whitespace-nowrap text-[var(--color-muted-foreground)]">
                     linkedin.com/in/
                   </span>
                   <Input
@@ -429,8 +410,8 @@ export function ProfileSettingsForm({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.6 }}
-              className="flex items-center gap-3 pt-4"
+              transition={{ duration: 0.3, delay: 0.55 }}
+              className="flex items-center gap-3 border-t border-[var(--color-border)] pt-4"
             >
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? (
@@ -446,6 +427,7 @@ export function ProfileSettingsForm({
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
+                disabled={isLoading}
               >
                 {translations.cancel}
               </Button>

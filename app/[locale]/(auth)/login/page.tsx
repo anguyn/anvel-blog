@@ -107,6 +107,11 @@ const LoginPage = async (props: PageProps) => {
     invalid2FACode: t.login.invalid2FACode,
     twoFactorRequired: t.login.twoFactorRequired,
     twoFactorError: t.login.twoFactorError,
+    turnstileError: t.login.turnstileError,
+    turnstileExpire: t.login.turnstileExpire,
+    enterBackupCode: t.settings.enterBackupCode,
+    confirm2FALeave: t.login.confirm2FALeave,
+    invalidBackupCode: t.login.invalidBackupCode,
   };
 
   return <LoginRenderBlock translations={loginFormTranslations} />;

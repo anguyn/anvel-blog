@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/libs/server/auth';
 import { prisma } from '@/libs/prisma';
 import { uploadAvatar, deleteFromR2 } from '@/libs/server/r2';
-import { getProxiedImageUrl, extractR2Key } from '@/libs/utils';
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -52,11 +51,13 @@ export async function PATCH(req: NextRequest) {
         select: { image: true },
       });
 
-      // Delete old avatar if exists
-      if (currentUser?.image) {
+      // Delete old avatar if exists (and not default)
+      if (currentUser?.image && currentUser.image.includes('r2.dev')) {
         try {
-          const oldKey = extractR2Key(currentUser.image);
-          await deleteFromR2(oldKey);
+          // Extract key from R2 URL
+          const url = new URL(currentUser.image);
+          const key = url.pathname.substring(1); // Remove leading slash
+          await deleteFromR2(key);
         } catch (error) {
           console.error('Failed to delete old avatar:', error);
           // Don't fail the request if deletion fails
@@ -70,14 +71,10 @@ export async function PATCH(req: NextRequest) {
         file.name,
       );
 
-      // Get proxied URL
-      const proxiedUrl = getProxiedImageUrl(uploadResult.url);
-
-      // Update user
-      console.log('Ra gì mẹ: ', proxiedUrl);
-      const updatedUser = await prisma.user.update({
+      // Update user with direct R2 URL
+      await prisma.user.update({
         where: { id: session.user.id },
-        data: { image: uploadResult.url }, // Store R2 URL in DB
+        data: { image: uploadResult.url }, // Store R2 public URL directly
       });
 
       // Log activity
@@ -99,8 +96,8 @@ export async function PATCH(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        image: proxiedUrl, // Return proxied URL to client
-        imageR2: uploadResult.url, // Original R2 URL (for reference)
+        image: uploadResult.url, // Return R2 URL directly
+        thumbnailUrl: uploadResult.thumbnailUrl,
       });
     }
 
@@ -158,7 +155,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (data.location !== undefined) {
-      updateData.location = data.location.trim().slice(0, 100);
+      updateData.location = data.location.trim().slice(0, 100) || null;
     }
 
     if (data.website !== undefined) {
@@ -188,10 +185,30 @@ export async function PATCH(req: NextRequest) {
       updateData.linkedin = data.linkedin.trim().slice(0, 50) || null;
     }
 
+    // Check if there's any data to update
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: 'No fields to update' },
+        { status: 400 },
+      );
+    }
+
     // Update user profile
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: updateData,
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        bio: true,
+        location: true,
+        website: true,
+        twitter: true,
+        github: true,
+        linkedin: true,
+        image: true,
+      },
     });
 
     // Log activity
@@ -216,18 +233,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: updatedUser.id,
-        name: updatedUser.name,
-        username: updatedUser.username,
-        bio: updatedUser.bio,
-        location: updatedUser.location,
-        website: updatedUser.website,
-        twitter: updatedUser.twitter,
-        github: updatedUser.github,
-        linkedin: updatedUser.linkedin,
-        image: updatedUser.image ? getProxiedImageUrl(updatedUser.image) : null,
-      },
+      user: updatedUser,
     });
   } catch (error) {
     console.error('Profile update error:', error);

@@ -4,6 +4,11 @@ import { signIn, signOut } from '@/libs/server/auth';
 import { AuthError } from 'next-auth';
 import { z } from 'zod';
 import { getActionTranslations } from '@/i18n/i18n';
+import {
+  getClientIp,
+  verifyTurnstileToken,
+} from '@/components/blocks/turnstile/verify-turnstile';
+import { headers } from 'next/headers';
 
 // ============================================
 // LOGIN ACTION WITH 2FA SUPPORT
@@ -14,6 +19,7 @@ const loginSchema = z.object({
   token2FA: z.string().optional(),
   backupCode: z.string().optional(),
   rememberMe: z.boolean().optional(),
+  turnstileToken: z.string(),
 });
 
 interface AuthenticateParams {
@@ -22,6 +28,7 @@ interface AuthenticateParams {
   token2FA?: string;
   backupCode?: string;
   rememberMe?: boolean;
+  turnstileToken: string;
 }
 
 interface AuthenticateResult {
@@ -46,8 +53,31 @@ export async function authenticate(
       };
     }
 
-    const { email, password, token2FA, backupCode, rememberMe } =
-      validatedFields.data;
+    const {
+      email,
+      password,
+      token2FA,
+      backupCode,
+      rememberMe,
+      turnstileToken,
+    } = validatedFields.data;
+
+    const headersList = await headers();
+    const clientIp = getClientIp(headersList);
+
+    const turnstileResult = await verifyTurnstileToken(turnstileToken, {
+      remoteip: clientIp,
+      action: 'login',
+    });
+
+    if (!turnstileResult.success) {
+      console.error('[Auth] Turnstile verification failed');
+      return {
+        success: false,
+        error: t.login.turnstileError,
+        code: 'TURNSTILE_FAILED',
+      };
+    }
 
     await signIn('credentials', {
       email,

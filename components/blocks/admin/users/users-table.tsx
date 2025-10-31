@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { AdminUser, UserStatus } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/libs/utils';
+import { cn, getThumbnailUrlFromAvatar } from '@/libs/utils';
 
 interface UsersTableProps {
   users: AdminUser[];
@@ -192,7 +192,12 @@ export function UsersTable({
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.image || undefined} />
+                      <AvatarImage
+                        src={
+                          getThumbnailUrlFromAvatar(user.image || '') ||
+                          undefined
+                        }
+                      />
                       <AvatarFallback className="text-xs">
                         {getInitials(user.name)}
                       </AvatarFallback>

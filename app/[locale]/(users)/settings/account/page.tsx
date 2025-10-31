@@ -7,10 +7,10 @@ import {
 import { LocaleProps } from '@/i18n/config';
 import { redirect } from 'next/navigation';
 import { SettingsLayout } from '@/components/blocks/pages/users/settings/settings-layout';
+import { AccountSettingsForm } from '@/components/blocks/pages/users/settings/account-settings-form';
 import { getCurrentUser } from '@/libs/server/rbac';
 
 export const dynamic = 'force-dynamic';
-export const generateStaticParams = getStaticParams;
 
 export default async function AccountSettingsPage({
   params,
@@ -21,7 +21,7 @@ export default async function AccountSettingsPage({
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect(`/${locale}/login?callbackUrl=/${locale}/settings/security`);
+    redirect(`/${locale}/login?callbackUrl=/${locale}/settings/account`);
   }
 
   setStaticParamsLocale(locale as LocaleProps);
@@ -35,58 +35,50 @@ export default async function AccountSettingsPage({
   const t = await translate(dictionaries);
 
   const translations = {
-    settings: t.settings.settings || 'Settings',
-    profile: t.settings.profile || 'Profile',
-    account: t.settings.account || 'Account',
-    security: t.settings.security || 'Security',
-    notifications: t.settings.notifications || 'Notifications',
-    appearance: t.settings.appearance || 'Appearance',
-
-    // Security
-    securitySettings: t.settings.securitySettings || 'Security Settings',
-    securityDescription:
-      t.settings.securityDescription ||
-      'Manage your password and security preferences',
-    changePassword: t.settings.changePassword || 'Change Password',
-    currentPassword: t.settings.currentPassword || 'Current Password',
-    newPassword: t.settings.newPassword || 'New Password',
-    confirmPassword: t.settings.confirmPassword || 'Confirm Password',
-    passwordRequirements:
-      t.settings.passwordRequirements ||
-      'Password must be at least 8 characters',
-    updatePassword: t.settings.updatePassword || 'Update Password',
-    updating: t.settings.updating || 'Updating...',
-
-    // Two Factor
-    twoFactor: t.settings.twoFactor || 'Two-Factor Authentication',
-    twoFactorDescription:
-      t.settings.twoFactorDescription ||
-      'Add an extra layer of security to your account',
-    enable: t.settings.enable || 'Enable',
-    disable: t.settings.disable || 'Disable',
-    enabled: t.settings.enabled || 'Enabled',
-    disabled: t.settings.disabled || 'Disabled',
-
-    // Sessions
-    activeSessions: t.settings.activeSessions || 'Active Sessions',
-    activeSessionsDescription:
-      t.settings.activeSessionsDescription ||
-      'Manage your active sessions across devices',
-    currentSession: t.settings.currentSession || 'Current Session',
-    revokeSession: t.settings.revokeSession || 'Revoke',
-    revokeAll: t.settings.revokeAll || 'Revoke All Other Sessions',
-
-    // Messages
-    passwordUpdated:
-      t.settings.passwordUpdated || 'Password updated successfully',
-    passwordError: t.settings.passwordError || 'Failed to update password',
-    passwordMismatch: t.settings.passwordMismatch || 'Passwords do not match',
+    settings: t.settings.settings,
+    profile: t.settings.profile,
+    account: t.settings.account,
+    security: t.settings.security,
+    notifications: t.settings.notifications,
+    appearance: t.settings.appearance,
+    accountSettings: t.settings.accountSettings,
+    accountDescription: t.settings.accountDescription,
+    emailSettings: t.settings.emailSettings,
+    emailSettingsDescription: t.settings.emailSettingsDescription,
+    changeEmail: t.settings.changeEmail,
+    currentEmail: t.settings.currentEmail,
+    emailVerified: t.settings.emailVerified,
+    emailNotVerified: t.settings.emailNotVerified,
+    verifyEmail: t.settings.verifyEmail,
+    language: t.settings.language,
+    languageDescription: t.settings.languageDescription,
+    timezone: t.settings.timezone,
+    timezoneDescription: t.settings.timezoneDescription,
+    dangerZone: t.settings.dangerZone,
+    dangerZoneDescription: t.settings.dangerZoneDescription,
+    deactivateAccount: t.settings.deactivateAccount,
+    deactivateAccountDescription: t.settings.deactivateAccountDescription,
+    deactivateButton: t.settings.deactivateButton,
+    deleteAccount: t.settings.deleteAccount,
+    deleteAccountDescription: t.settings.deleteAccountDescription,
+    deleteButton: t.settings.deleteButton,
+    confirmDeactivate: t.settings.confirmDeactivate,
+    confirmDelete: t.settings.confirmDelete,
+    enterEmail: t.settings.enterEmail,
+    enterPassword: t.settings.enterPassword,
+    enterUsername: t.settings.enterUsername,
+    enterConfirmationText: t.settings.enterConfirmationText,
+    typeToConfirm: t.settings.typeToConfirm,
+    cancel: t.settings.cancel,
+    confirm: t.settings.confirm,
+    processing: t.settings.processing,
+    update: t.settings.update,
   };
 
   return (
     <MainLayout locale={locale}>
       <SettingsLayout locale={locale} translations={translations}>
-        <h1>Account setting</h1>
+        <AccountSettingsForm user={user} translations={translations} />
       </SettingsLayout>
     </MainLayout>
   );

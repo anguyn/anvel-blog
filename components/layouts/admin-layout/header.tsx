@@ -1,4 +1,4 @@
-import { Bell, Moon, Sun, User, LogOut, Menu } from 'lucide-react';
+import { Bell, Moon, Sun, User, LogOut, Menu, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,7 +12,6 @@ import { Badge } from '@/components/common/badge';
 import { useUserStore } from '@/store/auth';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ThemeLocaleControls } from '@/components/common/theme-locale-control';
-import { cn } from '@/libs/utils';
 import { useUIStore } from '@/store/ui';
 import { useMediaQuery } from '@/libs/hooks/use-media-query';
 import { useTranslations } from 'next-intl';
@@ -20,11 +19,13 @@ import { titleCase } from '@/libs/utils';
 import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/libs/hooks/use-locale';
 
 export interface DashboardHeaderProps {}
 
 const DashboardHeader = ({}: DashboardHeaderProps) => {
   const router = useRouter();
+  const { locale } = useLocale();
   const { user } = useUserStore();
   const { isSidebarOpen, toggleSidebar } = useUIStore();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -112,14 +113,12 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
           </div>
         </div>
 
-        {/* Right side */}
         <div className="flex items-center space-x-2 sm:space-x-4">
           {/* Theme controls - hidden on very small screens */}
           <div className="hidden sm:block">
             <ThemeLocaleControls />
           </div>
 
-          {/* Notifications */}
           <Button
             variant="ghost"
             size="sm"
@@ -134,7 +133,6 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
             </Badge>
           </Button>
 
-          {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -175,7 +173,6 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
 
               <DropdownMenuSeparator />
 
-              {/* Show theme controls in dropdown on mobile */}
               <div className="block p-2 sm:hidden">
                 <ThemeLocaleControls />
               </div>
@@ -185,8 +182,10 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
               </div>
 
               <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
+                <Link href={`/${locale}/settings`} className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </Link>
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />

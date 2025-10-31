@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserStore } from '@/store/auth';
 import type { User } from '@/store/auth';
+import { getThumbnailUrlFromAvatar } from '@/libs/utils';
 
 interface WelcomeRenderBlockProps {
   locale: string;
@@ -302,7 +303,7 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
                   {session?.user?.image ? (
                     <motion.img
                       whileHover={{ scale: 1.1, rotate: 5 }}
-                      src={session.user.image}
+                      src={getThumbnailUrlFromAvatar(session.user.image)}
                       alt="Avatar"
                       className="h-10 w-10 rounded-full border-2 border-indigo-200 dark:border-indigo-800"
                     />

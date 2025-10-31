@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { signOut } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useUserStore } from '@/store/auth';
+import { getThumbnailUrlFromAvatar } from '@/libs/utils';
 
 interface UserMenuProps {
   locale: string;
@@ -88,7 +89,7 @@ export function UserMenu({
             {user?.image ? (
               <AvatarImage
                 key={user.image}
-                src={user.image}
+                src={getThumbnailUrlFromAvatar(user.image)}
                 alt={user.name ?? 'User'}
                 className="h-full w-full object-cover"
               />
@@ -181,7 +182,8 @@ export function UserMenu({
           >
             {user?.image ? (
               <AvatarImage
-                src={user.image}
+                key={user.image}
+                src={getThumbnailUrlFromAvatar(user.image)}
                 alt={user.name ?? 'User'}
                 className="h-full w-full object-cover"
               />

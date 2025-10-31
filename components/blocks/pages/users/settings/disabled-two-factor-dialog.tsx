@@ -1,17 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/common/dialog';
+import { useState, useRef, useEffect } from 'react';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -21,7 +12,9 @@ import {
 import { Button } from '@/components/common/button';
 import { Input } from '@/components/common/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { OTPInput, OTPInputRef } from '@/components/custom/otp-input';
+import { Loader2, AlertTriangle, Shield } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface DisableTwoFactorDialogProps {
   onClose: () => void;
@@ -34,26 +27,39 @@ export function DisableTwoFactorDialog({
   translations,
   hasPassword,
 }: DisableTwoFactorDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState<'password' | 'otp'>('password');
   const [password, setPassword] = useState('');
-  const [token, setToken] = useState('');
-  const [showResultDialog, setShowResultDialog] = useState(false);
-  const [resultMessage, setResultMessage] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [otpError, setOtpError] = useState(false);
 
-  const handleDisable = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const otpRef = useRef<OTPInputRef>(null);
 
-    if (!hasPassword) {
-      setResultMessage(
-        translations.passwordRequired || 'Password is required to disable 2FA',
-      );
-      setIsSuccess(false);
-      setShowResultDialog(true);
+  useEffect(() => {
+    if (step === 'password' && passwordRef.current) {
+      passwordRef.current.focus();
+    }
+  }, [step]);
+
+  const handleDisable2FA = async () => {
+    if (!password || otpValue.length !== 6) {
+      if (!password) {
+        setPasswordError(true);
+        setStep('password');
+        setTimeout(() => passwordRef.current?.focus(), 100);
+      } else if (otpValue.length !== 6) {
+        setOtpError(true);
+        setStep('otp');
+        setTimeout(() => otpRef.current?.focus(), 100);
+      }
       return;
     }
 
     setIsLoading(true);
+    setPasswordError(false);
+    setOtpError(false);
 
     try {
       const response = await fetch('/api/user/2fa/disable', {
@@ -63,169 +69,222 @@ export function DisableTwoFactorDialog({
         },
         body: JSON.stringify({
           password,
-          token,
+          token: otpValue,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to disable 2FA');
+        if (response.status === 401) {
+          if (data.error?.toLowerCase().includes('password')) {
+            setPasswordError(true);
+            setPassword('');
+            setStep('password');
+            setTimeout(() => passwordRef.current?.focus(), 100);
+            toast.error(
+              data.error || translations.invalidPassword || 'Invalid password',
+            );
+          } else {
+            setOtpError(true);
+            otpRef.current?.clear();
+            setOtpValue('');
+            setStep('otp');
+            setTimeout(() => otpRef.current?.focus(), 100);
+            toast.error(
+              data.error ||
+                translations.invalidCode ||
+                'Invalid verification code',
+            );
+          }
+        } else {
+          throw new Error(data.error || 'Failed to disable 2FA');
+        }
+        return;
       }
 
-      setResultMessage(
-        translations.twoFactorDisabled || '2FA disabled successfully',
+      toast.success(
+        data.message ||
+          translations.twoFactorDisabled ||
+          'Two-factor authentication has been disabled',
       );
-      setIsSuccess(true);
-      setShowResultDialog(true);
-
-      // Reload page after showing success message
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      onClose();
+      window.location.reload();
     } catch (error: any) {
-      console.error('Error disabling 2FA:', error);
-      setResultMessage(
-        error.message || translations.twoFactorError || 'Failed to disable 2FA',
+      console.error('2FA disable error:', error);
+      toast.error(
+        error.message ||
+          translations.failedToDisable ||
+          'Failed to disable 2FA',
       );
-      setIsSuccess(false);
-      setShowResultDialog(true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <>
-      <Dialog open onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <div className="mb-2 flex justify-center">
-              <div className="rounded-full bg-red-500/10 p-3">
-                <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
-              </div>
-            </div>
-            <DialogTitle className="text-center">
-              {translations.disableTwoFactor ||
-                'Disable Two-Factor Authentication'}
-            </DialogTitle>
-            <DialogDescription className="text-center">
-              {translations.disableTwoFactorDescription ||
-                'Enter your password and a verification code from your authenticator app to disable 2FA.'}
-            </DialogDescription>
-          </DialogHeader>
+  const handleOtpComplete = (otp: string) => {
+    setOtpValue(otp);
+    setOtpError(false);
+  };
 
-          <form onSubmit={handleDisable} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="disable-password">
+  const handleOtpChange = (value: string) => {
+    setOtpValue(value);
+    setOtpError(false);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    setPasswordError(false);
+  };
+
+  const handleNext = () => {
+    if (!password) {
+      setPasswordError(true);
+      passwordRef.current?.focus();
+      return;
+    }
+    setStep('otp');
+  };
+
+  const handleBack = () => {
+    setStep('password');
+    setOtpError(false);
+  };
+
+  return (
+    <AlertDialog open onOpenChange={onClose}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <div className="mb-2 flex justify-center">
+            <div className="rounded-full bg-red-500/10 p-3">
+              <Shield className="h-6 w-6 text-red-600 dark:text-red-400" />
+            </div>
+          </div>
+          <AlertDialogTitle className="text-center">
+            {translations.disableTwoFactor ||
+              'Disable Two-Factor Authentication'}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-center">
+            {step === 'password'
+              ? translations.disableTwoFactorPasswordDesc ||
+                'Enter your password to continue'
+              : translations.disableTwoFactorOtpDesc ||
+                'Enter the 6-digit code from your authenticator app'}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="space-y-4">
+          <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
+              <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                {translations.disableWarning ||
+                  'Disabling 2FA will make your account less secure.'}
+              </p>
+            </div>
+          </div>
+
+          {hasPassword && (
+            <div className={`space-y-2 ${step === 'otp' ? 'opacity-50' : ''}`}>
+              <Label htmlFor="password">
                 {translations.password || 'Password'}
               </Label>
               <Input
-                id="disable-password"
+                ref={passwordRef}
+                id="password"
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && step == 'password') {
+                    e.preventDefault();
+                    handleNext();
+                  }
+                }}
                 placeholder={
                   translations.enterPassword || 'Enter your password'
                 }
                 required
-                disabled={!hasPassword}
+                disabled={isLoading || step === 'otp'}
+                className={passwordError ? 'border-red-500' : ''}
               />
-              {!hasPassword && (
+              {passwordError && (
                 <p className="text-xs text-red-600 dark:text-red-400">
-                  {translations.oauthPasswordNotAvailable ||
-                    'Password authentication is not available for OAuth accounts'}
+                  {translations.passwordRequired || 'Password is required'}
                 </p>
               )}
             </div>
+          )}
 
+          {step === 'otp' && (
             <div className="space-y-2">
-              <Label htmlFor="disable-token">
+              <Label htmlFor="otp" className="mb-2 block text-center">
                 {translations.verificationCode || 'Verification Code'}
               </Label>
-              <Input
-                id="disable-token"
-                type="text"
-                value={token}
-                onChange={e =>
-                  setToken(e.target.value.replace(/\D/g, '').slice(0, 6))
-                }
-                placeholder="000000"
-                required
-                maxLength={6}
-                className="text-center font-mono text-2xl tracking-widest"
-                autoComplete="off"
-              />
-              <p className="text-xs text-[var(--color-muted-foreground)]">
+              <div className="flex justify-center">
+                <OTPInput
+                  ref={otpRef}
+                  length={6}
+                  value={otpValue}
+                  onChange={handleOtpChange}
+                  onComplete={handleOtpComplete}
+                  onEnter={handleDisable2FA}
+                  disabled={isLoading}
+                  autoFocus
+                  type="numeric"
+                  error={otpError}
+                />
+              </div>
+              <p className="text-center text-xs text-[var(--color-muted-foreground)]">
                 {translations.enterCodeFromApp ||
                   'Enter the 6-digit code from your authenticator app'}
               </p>
-            </div>
-
-            <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3">
-              <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                <strong>{translations.warning || 'Warning'}:</strong>{' '}
-                {translations.disableTwoFactorWarning ||
-                  'Disabling 2FA will make your account less secure. Your backup codes will also be deleted.'}
-              </p>
-            </div>
-
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isLoading}
-              >
-                {translations.cancel || 'Cancel'}
-              </Button>
-              <Button
-                type="submit"
-                variant="destructive"
-                disabled={
-                  isLoading || !password || token.length !== 6 || !hasPassword
-                }
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {translations.disabling || 'Disabling...'}
-                  </>
-                ) : (
-                  translations.disableTwoFactor || 'Disable 2FA'
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <div className="mb-2 flex justify-center">
-              {isSuccess ? (
-                <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
-              ) : (
-                <XCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
+              {otpError && (
+                <p className="text-center text-xs text-red-600 dark:text-red-400">
+                  {translations.codeRequired || 'Verification code is required'}
+                </p>
               )}
             </div>
-            <AlertDialogTitle className="text-center">
-              {isSuccess
-                ? translations.success || 'Success'
-                : translations.error || 'Error'}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center">
-              {resultMessage}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowResultDialog(false)}>
-              {translations.ok || 'OK'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+          )}
+        </div>
+
+        <AlertDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={step === 'otp' && hasPassword ? handleBack : onClose}
+            disabled={isLoading}
+          >
+            {step === 'otp' && hasPassword
+              ? translations.back || 'Back'
+              : translations.cancel || 'Cancel'}
+          </Button>
+          {step === 'password' ? (
+            <Button
+              variant="destructive"
+              onClick={handleNext}
+              disabled={isLoading || !password}
+            >
+              {translations.continue || 'Continue'}
+            </Button>
+          ) : (
+            <Button
+              variant="destructive"
+              disabled={isLoading || otpValue.length !== 6}
+              onClick={handleDisable2FA}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {translations.disabling || 'Disabling...'}
+                </>
+              ) : (
+                translations.disable2FA || 'Disable 2FA'
+              )}
+            </Button>
+          )}
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

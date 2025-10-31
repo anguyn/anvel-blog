@@ -47,13 +47,11 @@ export function ProfileSettingsForm({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.warning(translations.selectImageFile || 'Vui lòng chọn file ảnh');
       return;
     }
 
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error(
         translations.imageSizeLimit || 'Kích thước ảnh phải nhỏ hơn 5MB',
@@ -63,7 +61,6 @@ export function ProfileSettingsForm({
 
     setSelectedFile(file);
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
@@ -92,7 +89,6 @@ export function ProfileSettingsForm({
 
       const data = await response.json();
 
-      // Update preview with new R2 URL
       setImagePreview(data.image);
       setSelectedFile(null);
 
@@ -100,10 +96,9 @@ export function ProfileSettingsForm({
         translations.avatarUpdated || 'Cập nhật ảnh đại diện thành công',
       );
 
-      // Refresh to update avatar everywhere
       startTransition(async () => {
+        await update({ image: data?.image });
         router.refresh();
-        await update();
       });
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
@@ -149,8 +144,8 @@ export function ProfileSettingsForm({
       );
 
       startTransition(async () => {
+        await update({ image: null });
         router.refresh();
-        await update();
       });
     } catch (error: any) {
       console.error('Error deleting avatar:', error);
@@ -188,8 +183,8 @@ export function ProfileSettingsForm({
       toast.success(translations.saveSuccess || 'Cập nhật hồ sơ thành công');
 
       startTransition(async () => {
+        await update(data?.user);
         router.refresh();
-        await update();
       });
     } catch (error: any) {
       console.error('Error updating profile:', error);
@@ -240,7 +235,7 @@ export function ProfileSettingsForm({
               transition={{ duration: 0.3, delay: 0.1 }}
             >
               <Label>{translations.profilePicture || 'Ảnh đại diện'}</Label>
-              <div className="mt-2 flex items-center gap-4">
+              <div className="mt-4 flex items-center gap-4">
                 <div className="relative">
                   {imagePreview ? (
                     <div className="relative">
@@ -253,6 +248,12 @@ export function ProfileSettingsForm({
                         <button
                           type="button"
                           onClick={clearSelectedImage}
+                          disabled={
+                            isUploadingAvatar ||
+                            isDeletingAvatar ||
+                            isLoading ||
+                            isPending
+                          }
                           className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white transition-colors hover:bg-red-600"
                           aria-label={
                             translations.clearSelection || 'Xóa lựa chọn'

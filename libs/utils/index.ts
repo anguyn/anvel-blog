@@ -166,3 +166,30 @@ export function extractR2Key(url: string): string {
 
   return url;
 }
+
+/**
+ * Generate thumbnail URL from a full avatar URL.
+ * Example:
+ *   https://cdn.anvel.site/avatars/avatar-123.webp
+ * → https://cdn.anvel.site/avatars/thumbnails/avatar-123-thumb.webp
+ */
+export function getThumbnailUrlFromAvatar(url: string): string {
+  if (!url || !url.startsWith('http')) return '';
+
+  try {
+    const parsed = new URL(url);
+    const path = parsed.pathname.substring(1); // "avatars/avatar-123.webp"
+    const parts = path.split('/');
+    const fileName = parts.pop()!;
+    const folder = parts.join('/');
+
+    const thumbFileName = fileName
+      .replace(/\.[^.]+$/, '-thumb.webp')
+      .replace('-thumb-thumb', '-thumb');
+
+    return `${parsed.origin}/${folder}/thumbnails/${thumbFileName}`;
+  } catch (err) {
+    console.error('getThumbnailUrlFromAvatar error:', err);
+    return '';
+  }
+}

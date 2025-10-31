@@ -42,8 +42,6 @@ export default async function SecuritySettingsPage({
     security: t.settings.security || 'Security',
     notifications: t.settings.notifications || 'Notifications',
     appearance: t.settings.appearance || 'Appearance',
-
-    // Security
     securitySettings: t.settings.securitySettings || 'Security Settings',
     securityDescription:
       t.settings.securityDescription ||
@@ -57,8 +55,6 @@ export default async function SecuritySettingsPage({
       'Password must be at least 8 characters',
     updatePassword: t.settings.updatePassword || 'Update Password',
     updating: t.settings.updating || 'Updating...',
-
-    // Two Factor
     twoFactor: t.settings.twoFactor || 'Two-Factor Authentication',
     twoFactorDescription:
       t.settings.twoFactorDescription ||
@@ -67,8 +63,6 @@ export default async function SecuritySettingsPage({
     disable: t.settings.disable || 'Disable',
     enabled: t.settings.enabled || 'Enabled',
     disabled: t.settings.disabled || 'Disabled',
-
-    // Sessions
     activeSessions: t.settings.activeSessions || 'Active Sessions',
     activeSessionsDescription:
       t.settings.activeSessionsDescription ||
@@ -76,20 +70,100 @@ export default async function SecuritySettingsPage({
     currentSession: t.settings.currentSession || 'Current Session',
     revokeSession: t.settings.revokeSession || 'Revoke',
     revokeAll: t.settings.revokeAll || 'Revoke All Other Sessions',
-
-    // Messages
     passwordUpdated:
       t.settings.passwordUpdated || 'Password updated successfully',
     passwordError: t.settings.passwordError || 'Failed to update password',
     passwordMismatch: t.settings.passwordMismatch || 'Passwords do not match',
+    oauthPasswordNotAvailable:
+      t.settings.oauthPasswordNotAvailable ||
+      'You signed in with OAuth. Password management is not available.',
+    emailAddress: t.settings.emailAddress || 'Email Address',
+    confirmPasswordChange:
+      t.settings.confirmPasswordChange || 'Confirm Password Change',
+    confirmEmailPrompt:
+      t.settings.confirmEmailPrompt ||
+      'To confirm this action, please enter your email address:',
+    emailMismatch: t.settings.emailMismatch || 'Email does not match',
+    confirming: t.settings.confirming || 'Confirming...',
+    confirm: t.settings.confirm || 'Confirm',
+    strengthWeak: t.settings.strengthWeak || 'Weak',
+    strengthMedium: t.settings.strengthMedium || 'Medium',
+    strengthStrong: t.settings.strengthStrong || 'Strong',
+
+    backupCodesWarning:
+      t.settings.backupCodesWarning || 'Keep your backup codes safe',
+    backupCodesDescription:
+      t.settings.backupCodesDescription ||
+      'You can use backup codes to access your account if you lose access to your authenticator app.',
+    disableTwoFactor:
+      t.settings.disableTwoFactor || 'Disable Two-Factor Authentication',
+    disableTwoFactorPasswordDesc:
+      t.settings.disableTwoFactorPasswordDesc ||
+      'Enter your password to continue',
+    disableTwoFactorOtpDesc:
+      t.settings.disableTwoFactorOtpDesc ||
+      'Enter the 6-digit code from your authenticator app',
+    disableWarning:
+      t.settings.disableWarning ||
+      'Disabling 2FA will make your account less secure.',
+    password: t.settings.password || 'Password',
+    enterPassword: t.settings.enterPassword || 'Enter your password',
+    verifying: t.settings.verifying || 'Verifying...',
+    continue: t.settings.continue || 'Continue',
+    verificationCode: t.settings.verificationCode || 'Verification Code',
+    enterCodeFromApp:
+      t.settings.enterCodeFromApp ||
+      'Enter the 6-digit code from your authenticator app',
+    back: t.settings.back || 'Back',
+    disabling: t.settings.disabling || 'Disabling...',
+    twoFactorDisabled:
+      t.settings.twoFactorDisabled ||
+      'Two-factor authentication has been disabled',
+    invalidPassword: t.settings.invalidPassword || 'Invalid password',
+    invalidCode: t.settings.invalidCode || 'Invalid verification code',
+    currentDevice: t.settings.currentDevice || 'Current Device',
+    lastActive: t.settings.lastActive || 'Last active',
+    advancedSecurity: t.settings.advancedSecurity || 'Advanced Security',
+    loginNotifications: t.settings.loginNotifications || 'Login Notifications',
+    loginNotificationsDesc:
+      t.settings.loginNotificationsDesc ||
+      'Get notified of new logins to your account',
+    trustedDevices: t.settings.trustedDevices || 'Trusted Devices',
+    trustedDevicesDesc:
+      t.settings.trustedDevicesDesc ||
+      'Manage devices that skip 2FA verification',
+    securityKeys: t.settings.securityKeys || 'Security Keys (WebAuthn)',
+    securityKeysDesc:
+      t.settings.securityKeysDesc ||
+      'Use hardware security keys for authentication',
+    comingSoon: t.settings.comingSoon || 'Coming Soon',
+    developmentNote:
+      t.settings.developmentNote ||
+      'These features are currently under development and will be available soon.',
+    success: t.settings.success || 'Success',
+    ok: t.settings.ok || 'OK',
+    cancel: t.settings.cancel || 'Cancel',
+    samePassword:
+      t.auth.samePassword ||
+      'New password must be different from current password',
+    auth: {
+      passwordReset: {
+        validation: t.auth.passwordReset.validation,
+      },
+    },
+    securityReLoginMessage:
+      t.settings.securityReLoginMessage ||
+      'For security reasons, please log in again with your new password.',
+    redirectingLogin: t.settings.redirectingLogin,
+    disable2FA: t.settings.disable2FA,
   };
 
   return (
     <MainLayout locale={locale}>
       <SettingsLayout locale={locale} translations={translations}>
         <SecuritySettingsForm
+          locale={locale}
           user={user}
-          hasPassword={user.hasPassword}
           translations={translations}
         />
       </SettingsLayout>

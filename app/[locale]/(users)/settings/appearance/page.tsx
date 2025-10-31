@@ -8,11 +8,12 @@ import { LocaleProps } from '@/i18n/config';
 import { redirect } from 'next/navigation';
 import { SettingsLayout } from '@/components/blocks/pages/users/settings/settings-layout';
 import { getCurrentUser } from '@/libs/server/rbac';
+import { AppearanceSettingsForm } from '@/components/blocks/pages/users/settings/appearance-settings-form';
 
 export const dynamic = 'force-dynamic';
 export const generateStaticParams = getStaticParams;
 
-export default async function ApprearanceSettingsPage({
+export default async function AppearanceSettingsPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -35,58 +36,42 @@ export default async function ApprearanceSettingsPage({
   const t = await translate(dictionaries);
 
   const translations = {
-    settings: t.settings.settings || 'Settings',
-    profile: t.settings.profile || 'Profile',
-    account: t.settings.account || 'Account',
-    security: t.settings.security || 'Security',
-    notifications: t.settings.notifications || 'Notifications',
-    appearance: t.settings.appearance || 'Appearance',
-
-    // Security
-    securitySettings: t.settings.securitySettings || 'Security Settings',
-    securityDescription:
-      t.settings.securityDescription ||
-      'Manage your password and security preferences',
-    changePassword: t.settings.changePassword || 'Change Password',
-    currentPassword: t.settings.currentPassword || 'Current Password',
-    newPassword: t.settings.newPassword || 'New Password',
-    confirmPassword: t.settings.confirmPassword || 'Confirm Password',
-    passwordRequirements:
-      t.settings.passwordRequirements ||
-      'Password must be at least 8 characters',
-    updatePassword: t.settings.updatePassword || 'Update Password',
-    updating: t.settings.updating || 'Updating...',
-
-    // Two Factor
-    twoFactor: t.settings.twoFactor || 'Two-Factor Authentication',
-    twoFactorDescription:
-      t.settings.twoFactorDescription ||
-      'Add an extra layer of security to your account',
-    enable: t.settings.enable || 'Enable',
-    disable: t.settings.disable || 'Disable',
-    enabled: t.settings.enabled || 'Enabled',
-    disabled: t.settings.disabled || 'Disabled',
-
-    // Sessions
-    activeSessions: t.settings.activeSessions || 'Active Sessions',
-    activeSessionsDescription:
-      t.settings.activeSessionsDescription ||
-      'Manage your active sessions across devices',
-    currentSession: t.settings.currentSession || 'Current Session',
-    revokeSession: t.settings.revokeSession || 'Revoke',
-    revokeAll: t.settings.revokeAll || 'Revoke All Other Sessions',
-
-    // Messages
-    passwordUpdated:
-      t.settings.passwordUpdated || 'Password updated successfully',
-    passwordError: t.settings.passwordError || 'Failed to update password',
-    passwordMismatch: t.settings.passwordMismatch || 'Passwords do not match',
+    settings: t.settings.settings,
+    profile: t.settings.profile,
+    account: t.settings.account,
+    security: t.settings.security,
+    notifications: t.settings.notifications,
+    appearance: t.settings.appearance,
+    appearanceSettings: t.settings.appearanceSettings,
+    appearanceDescription: t.settings.appearanceDescription,
+    theme: t.settings.theme,
+    themeDescription: t.settings.themeDescription,
+    light: t.settings.light,
+    dark: t.settings.dark,
+    system: t.settings.system,
+    colorScheme: t.settings.colorScheme,
+    colorSchemeDescription: t.settings.colorSchemeDescription,
+    fontSize: t.settings.fontSize,
+    fontSizeDescription: t.settings.fontSizeDescription,
+    small: t.settings.small,
+    medium: t.settings.medium,
+    large: t.settings.large,
+    codeTheme: t.settings.codeTheme,
+    codeThemeDescription: t.settings.codeThemeDescription,
+    compactMode: t.settings.compactMode,
+    compactModeDescription: t.settings.compactModeDescription,
+    reduceAnimations: t.settings.reduceAnimations,
+    reduceAnimationsDescription: t.settings.reduceAnimationsDescription,
+    showLineNumbers: t.settings.showLineNumbers,
+    showLineNumbersDescription: t.settings.showLineNumbersDescription,
+    fontFamily: t.settings.fontFamily,
+    fontFamilyDescription: t.settings.fontFamilyDescription,
   };
 
   return (
     <MainLayout locale={locale}>
       <SettingsLayout locale={locale} translations={translations}>
-        <h1>Apprearance setting</h1>
+        <AppearanceSettingsForm user={user} translations={translations} />
       </SettingsLayout>
     </MainLayout>
   );

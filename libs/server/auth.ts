@@ -400,6 +400,7 @@ export const authConfig: NextAuthConfig = {
     },
 
     async jwt({ token, user, trigger, session, account }) {
+      console.log('[JWT Callback] Trigger:', trigger);
       // Initial sign in
       if (user) {
         token.id = user.id!;
@@ -515,6 +516,7 @@ export const authConfig: NextAuthConfig = {
 
       // Session update from client
       if (trigger === 'update' && session) {
+        console.log('[JWT Callback] Update triggered with session:', session);
         if (session.username !== undefined) token.username = session.username;
         if (session.bio !== undefined) token.bio = session.bio || null;
         if (session.name !== undefined) token.name = session.name;

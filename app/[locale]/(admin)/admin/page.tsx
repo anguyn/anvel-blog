@@ -4,7 +4,7 @@ import { PageProps } from '@/types/global';
 import { getCurrentUser, hasMinimumRole } from '@/libs/server/rbac';
 
 export const metadata: Metadata = {
-  title: 'Categories Management | Admin',
+  title: 'Redirecting Management | Admin',
   description: 'Manage your blog categories',
 };
 

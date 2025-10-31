@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/libs/server/auth';
 import { prisma } from '@/libs/prisma';
-import { uploadAvatar, deleteFromR2 } from '@/libs/server/r2';
+import { uploadAvatar, deleteAvatar } from '@/libs/server/r2';
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -50,8 +50,8 @@ export async function PATCH(req: NextRequest) {
       if (currentUser?.image && currentUser.image.includes('r2.dev')) {
         try {
           const url = new URL(currentUser.image);
-          const key = url.pathname.substring(1); // Remove leading slash
-          await deleteFromR2(key);
+          const key = url.pathname.substring(1);
+          await deleteAvatar(key);
         } catch (error) {
           console.error('Failed to delete old avatar:', error);
         }
@@ -107,7 +107,7 @@ export async function PATCH(req: NextRequest) {
         try {
           const url = new URL(currentUser.image);
           const key = url.pathname.substring(1);
-          await deleteFromR2(key);
+          await deleteAvatar(key);
         } catch (error) {
           console.error('Failed to delete avatar:', error);
           return NextResponse.json(
@@ -265,11 +265,14 @@ export async function PATCH(req: NextRequest) {
       })
       .catch(() => {});
 
+    revalidatePath('/', 'layout');
     revalidatePath('/[locale]/settings', 'page');
+    console.log('Updated user: ', updatedUser.name);
 
     return NextResponse.json({
       success: true,
       user: updatedUser,
+      timestamp: Date.now(),
     });
   } catch (error) {
     console.error('Profile update error:', error);

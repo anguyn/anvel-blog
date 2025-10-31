@@ -247,6 +247,38 @@ export async function deleteFileWithThumbnail(
 }
 
 /**
+ * Delete avatar and its thumbnail (based on avatar URL or key)
+ */
+export async function deleteAvatar(avatarKeyOrUrl: string): Promise<void> {
+  if (!avatarKeyOrUrl) return;
+
+  let key = avatarKeyOrUrl;
+  if (avatarKeyOrUrl.startsWith('http')) {
+    try {
+      const url = new URL(avatarKeyOrUrl);
+      key = url.pathname.substring(1);
+    } catch {
+      console.error('Invalid avatar URL:', avatarKeyOrUrl);
+      return;
+    }
+  }
+
+  const parts = key.split('/');
+  const fileName = parts.pop()!;
+  const folder = parts.join('/');
+
+  const thumbnailFileName = fileName
+    .replace(/\.[^.]+$/, '-thumb.webp')
+    .replace('-thumb-thumb', '-thumb'); // phòng lỗi double thumb
+
+  const thumbnailKey = `${folder}/thumbnails/${thumbnailFileName}`;
+
+  await Promise.allSettled([deleteFromR2(key), deleteFromR2(thumbnailKey)]);
+
+  console.log(`Deleted avatar and thumbnail:`, { key, thumbnailKey });
+}
+
+/**
  * Check if file exists in R2
  */
 export async function fileExists(keyOrUrl: string): Promise<boolean> {

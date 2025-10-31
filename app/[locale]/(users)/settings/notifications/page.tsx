@@ -1,18 +1,16 @@
 import { MainLayout } from '@/components/layouts/main-layout';
-import {
-  getTranslate,
-  setStaticParamsLocale,
-  getStaticParams,
-} from '@/i18n/server';
-import { LocaleProps } from '@/i18n/config';
+import { auth } from '@/libs/server/auth';
 import { redirect } from 'next/navigation';
 import { SettingsLayout } from '@/components/blocks/pages/users/settings/settings-layout';
+import { NotificationsSettingsForm } from '@/components/blocks/pages/users/settings/notification-settings-form';
+import { getTranslations } from 'next-intl/server';
 import { getCurrentUser } from '@/libs/server/rbac';
+import { getTranslate, setStaticParamsLocale } from '@/i18n/server';
+import { LocaleProps } from '@/i18n/config';
 
 export const dynamic = 'force-dynamic';
-export const generateStaticParams = getStaticParams;
 
-export default async function NotificationSettingsPage({
+export default async function NotificationsSettingsPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -35,58 +33,54 @@ export default async function NotificationSettingsPage({
   const t = await translate(dictionaries);
 
   const translations = {
-    settings: t.settings.settings || 'Settings',
-    profile: t.settings.profile || 'Profile',
-    account: t.settings.account || 'Account',
-    security: t.settings.security || 'Security',
-    notifications: t.settings.notifications || 'Notifications',
-    appearance: t.settings.appearance || 'Appearance',
+    settings: t.settings.settings,
+    profile: t.settings.profile,
+    account: t.settings.account,
+    security: t.settings.security,
+    notifications: t.settings.notifications,
+    appearance: t.settings.appearance,
 
-    // Security
-    securitySettings: t.settings.securitySettings || 'Security Settings',
-    securityDescription:
-      t.settings.securityDescription ||
-      'Manage your password and security preferences',
-    changePassword: t.settings.changePassword || 'Change Password',
-    currentPassword: t.settings.currentPassword || 'Current Password',
-    newPassword: t.settings.newPassword || 'New Password',
-    confirmPassword: t.settings.confirmPassword || 'Confirm Password',
-    passwordRequirements:
-      t.settings.passwordRequirements ||
-      'Password must be at least 8 characters',
-    updatePassword: t.settings.updatePassword || 'Update Password',
-    updating: t.settings.updating || 'Updating...',
+    // Notifications specific
+    notificationSettings: t.settings.notificationSettings,
+    notificationDescription: t.settings.notificationDescription,
 
-    // Two Factor
-    twoFactor: t.settings.twoFactor || 'Two-Factor Authentication',
-    twoFactorDescription:
-      t.settings.twoFactorDescription ||
-      'Add an extra layer of security to your account',
-    enable: t.settings.enable || 'Enable',
-    disable: t.settings.disable || 'Disable',
-    enabled: t.settings.enabled || 'Enabled',
-    disabled: t.settings.disabled || 'Disabled',
+    emailNotifications: t.settings.emailNotifications,
+    emailNotificationsDescription: t.settings.emailNotificationsDescription,
 
-    // Sessions
-    activeSessions: t.settings.activeSessions || 'Active Sessions',
-    activeSessionsDescription:
-      t.settings.activeSessionsDescription ||
-      'Manage your active sessions across devices',
-    currentSession: t.settings.currentSession || 'Current Session',
-    revokeSession: t.settings.revokeSession || 'Revoke',
-    revokeAll: t.settings.revokeAll || 'Revoke All Other Sessions',
+    pushNotifications: t.settings.pushNotifications,
+    pushNotificationsDescription: t.settings.pushNotificationsDescription,
 
-    // Messages
-    passwordUpdated:
-      t.settings.passwordUpdated || 'Password updated successfully',
-    passwordError: t.settings.passwordError || 'Failed to update password',
-    passwordMismatch: t.settings.passwordMismatch || 'Passwords do not match',
+    // Email preferences
+    newComment: t.settings.newComment,
+    newCommentDescription: t.settings.newCommentDescription,
+    commentReply: t.settings.commentReply,
+    commentReplyDescription: t.settings.commentReplyDescription,
+    newFollower: t.settings.newFollower,
+    newFollowerDescription: t.settings.newFollowerDescription,
+    mentionInComment: t.settings.mentionInComment,
+    mentionInCommentDescription: t.settings.mentionInCommentDescription,
+
+    // Marketing
+    marketingEmails: t.settings.marketingEmails,
+    marketingEmailsDescription: t.settings.marketingEmailsDescription,
+    weeklyDigest: t.settings.weeklyDigest,
+    weeklyDigestDescription: t.settings.weeklyDigestDescription,
+    productUpdates: t.settings.productUpdates,
+    productUpdatesDescription: t.settings.productUpdatesDescription,
+
+    // Summary
+    notificationSummary: t.settings.notificationSummary,
+    notificationSummaryDescription: t.settings.notificationSummaryDescription,
+    instantly: t.settings.instantly,
+    daily: t.settings.daily,
+    weekly: t.settings.weekly,
+    never: t.settings.never,
   };
 
   return (
     <MainLayout locale={locale}>
       <SettingsLayout locale={locale} translations={translations}>
-        <h1>Notification setting</h1>
+        <NotificationsSettingsForm user={user} translations={translations} />
       </SettingsLayout>
     </MainLayout>
   );

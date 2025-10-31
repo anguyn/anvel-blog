@@ -26,7 +26,6 @@ interface OTPInputProps {
   type?: 'numeric' | 'alphanumeric';
 }
 
-// Export type cho ref
 export interface OTPInputRef {
   focus: () => void;
   clear: () => void;
@@ -53,23 +52,19 @@ export const OTPInput = forwardRef<OTPInputRef, OTPInputProps>(
     const [otp, setOtp] = useState<string[]>(Array(length).fill(''));
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    // Expose methods cho parent component
     useImperativeHandle(ref, () => ({
       focus: () => {
-        // Focus vào ô đầu tiên rỗng hoặc ô đầu tiên
         const firstEmptyIndex = otp.findIndex(digit => digit === '');
         const focusIndex = firstEmptyIndex === -1 ? 0 : firstEmptyIndex;
         inputRefs.current[focusIndex]?.focus();
       },
       clear: () => {
-        // Clear tất cả ô và focus vào ô đầu
         const emptyOtp = Array(length).fill('');
         setOtp(emptyOtp);
         onChange?.('');
         inputRefs.current[0]?.focus();
       },
       focusIndex: (index: number) => {
-        // Focus vào ô cụ thể
         if (index >= 0 && index < length) {
           inputRefs.current[index]?.focus();
         }

@@ -48,6 +48,8 @@ export default async function SettingsPage({
   const { locale } = await params;
   const session = await auth();
 
+  console.log('User page: ', session?.user);
+
   if (!session?.user) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/settings`);
   }

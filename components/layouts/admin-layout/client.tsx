@@ -31,7 +31,6 @@ export function DashboardLayoutClient({
   const [isLoading, setIsLoading] = useState(true);
   const { locale } = useLocale();
 
-  // Fetch system config
   useEffect(() => {
     async function fetchSystemConfig() {
       try {
@@ -72,14 +71,12 @@ export function DashboardLayoutClient({
     fetchSystemConfig();
   }, []);
 
-  // Handle responsive behavior
   useEffect(() => {
     if (!isDesktop) {
       setSidebarOpen(false);
     }
   }, [isDesktop, setSidebarOpen]);
 
-  // Update document title when config loads
   useEffect(() => {
     if (systemConfig?.defaultTitle) {
       document.title = systemConfig.defaultTitle;
@@ -87,7 +84,7 @@ export function DashboardLayoutClient({
   }, [systemConfig]);
 
   const header: DashboardHeaderProps = {
-    systemConfig, // Pass config to header if needed
+    systemConfig,
   };
 
   return (

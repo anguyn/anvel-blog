@@ -20,8 +20,6 @@ import { TranslationBanner } from '@/components/blocks/pages/blog/view/translati
 
 export const dynamic = 'force-dynamic';
 
-export const generateStaticParams = getStaticParams;
-
 type PostResponse = {
   post: Post;
   relatedPosts: Post[];
@@ -38,7 +36,7 @@ type PostResponse = {
 async function getPost(
   slug: string,
   cookieHeader: string,
-  locale: string, // Add locale parameter
+  locale: string,
 ): Promise<PostResponse | null> {
   try {
     const res = await serverFetch(
@@ -47,7 +45,7 @@ async function getPost(
       {
         cache: 'no-store',
         headers: {
-          'Accept-Language': locale, // Pass locale in header
+          'Accept-Language': locale,
         },
       },
     );
@@ -105,134 +103,10 @@ function safeParseDate(
   }
 }
 
-// export async function generateMetadata({
-//   params,
-//   searchParams,
-// }: {
-//   params: Promise<{ locale: 'vi' | 'en'; slug: string }>;
-//   searchParams: Promise<{ password?: string }>;
-// }): Promise<Metadata> {
-//   const { locale, slug } = await params;
-
-//   setStaticParamsLocale(locale);
-//   const { translate } = await getTranslate();
-
-//   const dictionaries = {
-//     en: (await import('@/translations/dictionaries/en.json')).default,
-//     vi: (await import('@/translations/dictionaries/vi.json')).default,
-//   };
-
-//   const t = await translate(dictionaries);
-
-//   const cookieStore = await cookies();
-//   const cookieHeader = formatCookies(cookieStore.getAll());
-
-//   const result = await getPost(slug || '', cookieHeader, locale);
-//   const post = result?.post;
-
-//   const baseUrl = process.env.NEXT_PUBLIC_APP_URL!;
-//   const postUrl = `${baseUrl}/${locale}/blog/${slug}`;
-
-//   if (!post) {
-//     return {
-//       title: t.blog.notFound || 'Post Not Found',
-//       description: 'The requested blog post could not be found.',
-//     };
-//   }
-
-//   const authorName = post.author.name || post.author.username || 'Anonymous';
-
-//   const keywords = [
-//     ...(post.metaKeywords || []),
-//     post.category?.name || '',
-//     ...post.tags.map(t => t.tag.name),
-//     authorName,
-//   ].filter(Boolean);
-
-//   const publishedTime = safeParseDate(post.publishedAt);
-//   const modifiedTime = safeParseDate(post.updatedAt || post.createdAt);
-
-//   return {
-//     title: post.metaTitle || post.title,
-//     description: post.metaDescription || post.excerpt || '',
-//     keywords,
-//     authors: [
-//       {
-//         name: authorName,
-//         url: `${baseUrl}/${locale}/users/${post.author.username}`,
-//       },
-//     ],
-//     creator: authorName,
-//     publisher: 'Anvel',
-
-//     alternates: {
-//       canonical: postUrl,
-//       languages: {
-//         en: `${baseUrl}/en/blog/${slug}`,
-//         vi: `${baseUrl}/vi/blog/${slug}`,
-//       },
-//     },
-
-//     openGraph: {
-//       type: 'article',
-//       locale: locale === 'vi' ? 'vi_VN' : 'en_US',
-//       url: postUrl,
-//       siteName: 'Anvel',
-//       title: post.metaTitle || post.title,
-//       description: post.metaDescription || post.excerpt || '',
-
-//       authors: [authorName],
-//       publishedTime,
-//       modifiedTime,
-
-//       tags: post.tags.map(t => t.tag.name),
-
-//       images: post.featuredImage
-//         ? [
-//             {
-//               url: post.featuredImage,
-//               width: 1200,
-//               height: 630,
-//               alt: post.title,
-//             },
-//           ]
-//         : [],
-//     },
-
-//     twitter: {
-//       card: 'summary_large_image',
-//       title: post.metaTitle || post.title,
-//       description: post.metaDescription || post.excerpt || '',
-//       creator: '@anvel',
-//       images: post.featuredImage ? [post.featuredImage] : [],
-//     },
-
-//     category: post.category?.name,
-
-//     robots: {
-//       index: post.visibility === 'PUBLIC',
-//       follow: post.visibility === 'PUBLIC',
-//       'max-image-preview': 'large',
-//       'max-video-preview': -1,
-//       'max-snippet': -1,
-//     },
-
-//     other: {
-//       'article:author': authorName,
-//       'article:published_time': publishedTime || '',
-//       'article:modified_time': modifiedTime || '',
-//       'article:section': post.category?.name || '',
-//       'article:tag': post.tags.map(t => t.tag.name).join(','),
-//     },
-//   };
-// }
-
 export async function generateMetadata({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: 'vi' | 'en'; slug: string }>;
-  searchParams: Promise<{ password?: string }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
 
@@ -258,18 +132,18 @@ export async function generateMetadata({
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL!;
 
-  const originalLang = post.language; // 'en' or 'vi'
+  const originalLang = post.language;
   const canonicalUrl = `${baseUrl}/${originalLang}/blog/${post.slug}`;
 
   const alternateLanguages: Record<string, string> = {
-    'x-default': canonicalUrl, // Default for unlisted languages
+    'x-default': canonicalUrl,
   };
 
   alternateLanguages[originalLang] =
     `${baseUrl}/${originalLang}/blog/${post.slug}`;
 
   if (post.translations) {
-    post.translations.forEach(trans => {
+    post.translations.forEach((trans: any) => {
       alternateLanguages[trans.language] =
         `${baseUrl}/${trans.language}/blog/${trans.slug}`;
     });
@@ -308,10 +182,8 @@ export async function generateMetadata({
 
 export default async function BlogDetailPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ password?: string }>;
 }) {
   const { locale, slug } = await params;
 
@@ -327,8 +199,6 @@ export default async function BlogDetailPage({
 
   const { post, relatedPosts, translations, contentInfo } = result;
 
-  console.log('contentInfo', contentInfo);
-
   const { translate } = await getTranslate();
 
   const dictionaries = {
@@ -342,11 +212,9 @@ export default async function BlogDetailPage({
     const isAuthor = session?.user?.id === post.authorId;
 
     if (!isAuthor) {
-      // Check if user has valid access token
       const { hasAccess } = await verifyPostAccess(slug);
 
       if (!hasAccess) {
-        // Redirect to password page
         redirect(`/${locale}/blog/${slug}/password`);
       }
     }
@@ -355,12 +223,6 @@ export default async function BlogDetailPage({
   if (post.visibility === 'RESTRICTED' && !session) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/blog/${slug}`);
   }
-
-  // const relatedPosts = await getRelatedPosts(
-  //   post.id,
-  //   post.categoryId,
-  //   cookieHeader,
-  // );
 
   const blogTranslations = {
     share: t.common.share,
@@ -390,7 +252,6 @@ export default async function BlogDetailPage({
 
   return (
     <MainLayout locale={locale}>
-      {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

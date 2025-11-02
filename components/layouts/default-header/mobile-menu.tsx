@@ -53,7 +53,6 @@ export function MobileMenu({
             className="absolute right-0 h-full w-full overflow-y-auto border-l border-[var(--color-border)] bg-[var(--color-background)] shadow-xl"
           >
             <div className="container mx-auto space-y-6 p-6">
-              {/* User Menu - Mobile variant */}
               <UserMenu
                 locale={locale}
                 variant="mobile"

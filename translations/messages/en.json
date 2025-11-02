@@ -491,7 +491,7 @@
       "categorization": "Category",
       "category": "Category",
       "noCategory": "No category",
-      "noCategoriesAvailable": "There is no category for {{language}}. Please create one first.",
+      "noCategoriesAvailable": "There is no category for {language}. Please create one first.",
       "tags": "Tags",
       "newTag": "New Tag",
       "tagsSelected": "{count} selected tags",

@@ -12,8 +12,6 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
 import { common, createLowlight } from 'lowlight';
-
-const lowlight = createLowlight(common);
 import { uploadMediaAction } from '@/app/actions/media.action';
 import { toast } from 'sonner';
 import {
@@ -39,6 +37,8 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
 
+const lowlight = createLowlight(common);
+
 interface TiptapEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -57,28 +57,62 @@ export function TiptapEditor({
     extensions: [
       StarterKit.configure({
         codeBlock: false,
+        // ✅ Fix paragraph to include proper attributes
+        paragraph: {
+          HTMLAttributes: {
+            style: 'margin: 1.5em 0; line-height: 1.75;',
+          },
+        },
+        // ✅ Fix headings
+        heading: {
+          levels: [1, 2, 3, 4],
+          HTMLAttributes: {
+            style: 'font-weight: bold; margin-top: 2em; margin-bottom: 0.5em;',
+          },
+        },
       }),
       Underline,
       Image.configure({
         inline: true,
         allowBase64: true,
+        HTMLAttributes: {
+          style:
+            'max-width: 100%; height: auto; border-radius: 6px; margin: 1.5em 0;',
+        },
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
           target: '_blank',
           rel: 'noopener noreferrer',
+          style: 'color: hsl(var(--primary)); text-decoration: underline;',
         },
       }),
       Table.configure({
         resizable: true,
+        HTMLAttributes: {
+          style: 'border-collapse: collapse; width: 100%; margin: 1.5em 0;',
+        },
       }),
       TableRow,
-      TableCell,
-      TableHeader,
+      TableCell.configure({
+        HTMLAttributes: {
+          style: 'border: 1px solid hsl(var(--border)); padding: 0.75em;',
+        },
+      }),
+      TableHeader.configure({
+        HTMLAttributes: {
+          style:
+            'background: hsl(var(--muted)); font-weight: bold; border: 1px solid hsl(var(--border)); padding: 0.75em;',
+        },
+      }),
       CodeBlockLowlight.configure({
         lowlight,
         defaultLanguage: 'plaintext',
+        HTMLAttributes: {
+          style:
+            'background: hsl(var(--muted)); padding: 1.5em; border-radius: 6px; overflow-x: auto; margin: 1.5em 0; line-height: 1.6;',
+        },
       }),
       Placeholder.configure({
         placeholder,
@@ -172,12 +206,13 @@ export function TiptapEditor({
           onClick={() =>
             editor.chain().focus().toggleHeading({ level: 1 }).run()
           }
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('heading', { level: 1 })
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Heading 1"
+          type="button"
         >
           <Heading1 size={18} />
         </button>
@@ -185,12 +220,13 @@ export function TiptapEditor({
           onClick={() =>
             editor.chain().focus().toggleHeading({ level: 2 }).run()
           }
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('heading', { level: 2 })
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Heading 2"
+          type="button"
         >
           <Heading2 size={18} />
         </button>
@@ -198,12 +234,13 @@ export function TiptapEditor({
           onClick={() =>
             editor.chain().focus().toggleHeading({ level: 3 }).run()
           }
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('heading', { level: 3 })
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Heading 3"
+          type="button"
         >
           <Heading3 size={18} />
         </button>
@@ -211,12 +248,13 @@ export function TiptapEditor({
           onClick={() =>
             editor.chain().focus().toggleHeading({ level: 4 }).run()
           }
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('heading', { level: 4 })
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Heading 4"
+          type="button"
         >
           <Heading4 size={18} />
         </button>
@@ -225,52 +263,57 @@ export function TiptapEditor({
 
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('bold') ? 'bg-primary text-primary-foreground' : ''
           }`}
           title="Bold"
+          type="button"
         >
           <Bold size={18} />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('italic')
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Italic"
+          type="button"
         >
           <Italic size={18} />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('underline')
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Underline"
+          type="button"
         >
           <UnderlineIcon size={18} />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('strike')
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Strikethrough"
+          type="button"
         >
           <Strikethrough size={18} />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleCode().run()}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('code') ? 'bg-primary text-primary-foreground' : ''
           }`}
           title="Inline Code"
+          type="button"
         >
           <Code size={18} />
         </button>
@@ -279,23 +322,25 @@ export function TiptapEditor({
 
         <button
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('bulletList')
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Bullet List"
+          type="button"
         >
           <List size={18} />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('orderedList')
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Numbered List"
+          type="button"
         >
           <ListOrdered size={18} />
         </button>
@@ -304,53 +349,59 @@ export function TiptapEditor({
 
         <button
           onClick={setLink}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('link') ? 'bg-primary text-primary-foreground' : ''
           }`}
           title="Link"
+          type="button"
         >
           <LinkIcon size={18} />
         </button>
         <button
           onClick={addImage}
-          className="hover:bg-accent rounded p-2"
+          className="hover:bg-accent rounded p-2 transition-colors"
           title="Upload Image"
+          type="button"
         >
           <ImageIcon size={18} />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('blockquote')
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Blockquote"
+          type="button"
         >
           <Quote size={18} />
         </button>
         <button
           onClick={addTable}
-          className="hover:bg-accent rounded p-2"
+          className="hover:bg-accent rounded p-2 transition-colors"
           title="Insert Table"
+          type="button"
         >
           <TableIcon size={18} />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          className={`hover:bg-accent rounded p-2 ${
+          className={`hover:bg-accent rounded p-2 transition-colors ${
             editor.isActive('codeBlock')
               ? 'bg-primary text-primary-foreground'
               : ''
           }`}
           title="Code Block"
+          type="button"
         >
           <Code2 size={18} />
         </button>
         <button
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          className="hover:bg-accent rounded p-2"
+          className="hover:bg-accent rounded p-2 transition-colors"
           title="Horizontal Line"
+          type="button"
         >
           <Minus size={18} />
         </button>
@@ -360,16 +411,18 @@ export function TiptapEditor({
         <button
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          className="hover:bg-accent rounded p-2 disabled:opacity-50"
+          className="hover:bg-accent rounded p-2 transition-colors disabled:opacity-50"
           title="Undo"
+          type="button"
         >
           <Undo size={18} />
         </button>
         <button
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          className="hover:bg-accent rounded p-2 disabled:opacity-50"
+          className="hover:bg-accent rounded p-2 transition-colors disabled:opacity-50"
           title="Redo"
+          type="button"
         >
           <Redo size={18} />
         </button>
@@ -379,13 +432,14 @@ export function TiptapEditor({
       <EditorContent editor={editor} />
 
       <style jsx global>{`
+        /* Editor Container */
         .tiptap-wrapper .ProseMirror {
           min-height: ${minHeight};
           padding: 1.5rem;
           outline: none;
-          line-height: 1.8;
         }
 
+        /* Placeholder */
         .tiptap-wrapper .ProseMirror p.is-editor-empty:first-child::before {
           color: hsl(var(--muted-foreground));
           content: attr(data-placeholder);
@@ -394,55 +448,73 @@ export function TiptapEditor({
           pointer-events: none;
         }
 
+        /* Paragraphs - IMPORTANT: This spacing exports to HTML */
         .tiptap-wrapper .ProseMirror p {
-          margin: 1em 0;
-          line-height: 1.8;
+          margin: 1.5em 0;
+          line-height: 1.75;
         }
 
+        .tiptap-wrapper .ProseMirror p:first-child {
+          margin-top: 0;
+        }
+
+        .tiptap-wrapper .ProseMirror p:last-child {
+          margin-bottom: 0;
+        }
+
+        /* Headings */
         .tiptap-wrapper .ProseMirror h1 {
           font-size: 2.5em;
           font-weight: bold;
-          margin: 1em 0 0.5em 0;
-          line-height: 1.3;
+          margin: 2em 0 0.5em 0;
+          line-height: 1.2;
+        }
+
+        .tiptap-wrapper .ProseMirror h1:first-child {
+          margin-top: 0;
         }
 
         .tiptap-wrapper .ProseMirror h2 {
           font-size: 2em;
           font-weight: bold;
-          margin: 0.9em 0 0.5em 0;
+          margin: 1.8em 0 0.5em 0;
           line-height: 1.3;
         }
 
         .tiptap-wrapper .ProseMirror h3 {
           font-size: 1.5em;
           font-weight: bold;
-          margin: 0.8em 0 0.5em 0;
+          margin: 1.6em 0 0.5em 0;
           line-height: 1.4;
         }
 
         .tiptap-wrapper .ProseMirror h4 {
           font-size: 1.25em;
           font-weight: bold;
-          margin: 0.7em 0 0.5em 0;
+          margin: 1.4em 0 0.5em 0;
           line-height: 1.4;
         }
 
+        /* Blockquote */
         .tiptap-wrapper .ProseMirror blockquote {
           border-left: 4px solid hsl(var(--primary));
           padding-left: 1.5em;
           margin: 1.5em 0;
           font-style: italic;
           color: hsl(var(--muted-foreground));
+          line-height: 1.6;
         }
 
+        /* Inline Code */
         .tiptap-wrapper .ProseMirror code {
           background: hsl(var(--muted));
-          padding: 0.2em 0.5em;
+          padding: 0.2em 0.4em;
           border-radius: 4px;
           font-family: 'Courier New', Courier, monospace;
           font-size: 0.9em;
         }
 
+        /* Code Blocks */
         .tiptap-wrapper .ProseMirror pre {
           background: hsl(var(--muted));
           padding: 1.5em;
@@ -458,6 +530,7 @@ export function TiptapEditor({
           padding: 0;
         }
 
+        /* Tables */
         .tiptap-wrapper .ProseMirror table {
           border-collapse: collapse;
           width: 100%;
@@ -476,37 +549,43 @@ export function TiptapEditor({
           font-weight: bold;
         }
 
+        /* Images */
         .tiptap-wrapper .ProseMirror img {
           max-width: 100%;
           height: auto;
           border-radius: 6px;
           margin: 1.5em 0;
+          display: block;
         }
 
+        /* Links */
         .tiptap-wrapper .ProseMirror a {
           color: hsl(var(--primary));
           text-decoration: underline;
           cursor: pointer;
         }
 
+        /* Lists */
         .tiptap-wrapper .ProseMirror ul,
         .tiptap-wrapper .ProseMirror ol {
           padding-left: 2em;
-          margin: 1em 0;
+          margin: 1.5em 0;
         }
 
         .tiptap-wrapper .ProseMirror ul li,
         .tiptap-wrapper .ProseMirror ol li {
           margin: 0.5em 0;
-          line-height: 1.6;
+          line-height: 1.75;
         }
 
+        /* Horizontal Rule */
         .tiptap-wrapper .ProseMirror hr {
           border: none;
           border-top: 2px solid hsl(var(--border));
           margin: 2em 0;
         }
 
+        /* Table Selection */
         .tiptap-wrapper .ProseMirror .selectedCell {
           background: hsl(var(--accent));
         }

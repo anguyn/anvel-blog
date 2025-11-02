@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
                 hostname: 'code-bin.46004302832b6f1022cd321a40462869.r2.cloudflarestorage.com',
                 pathname: '/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'pub-f19a87932f4942b1ab1abe8d833bc242.r2.dev',
+                pathname: '/**',
+            },
         ],
     },
     webpack: (config, { isServer }) => {

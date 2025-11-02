@@ -14,6 +14,7 @@ import { SearchModal } from './search-modal';
 import { MobileSearch } from './mobile-search';
 import { MobileMenu } from './mobile-menu';
 import { NavigationLinks } from './navigation-links';
+import { useUIStore } from '@/store/ui';
 
 interface HeaderProps {
   locale: string;
@@ -22,10 +23,10 @@ interface HeaderProps {
 export function Header({ locale }: HeaderProps) {
   const t = useTranslations('common');
   const pathname = usePathname();
+  const { isHeaderVisible, setIsHeaderVisible } = useUIStore();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
   const { scrollY } = useScroll();
@@ -35,10 +36,10 @@ export function Header({ locale }: HeaderProps) {
     const isAtTop = currentScrollY < 80;
     const scrollingDown = currentScrollY > lastScrollY;
 
-    if (isAtTop || isUserMenuOpen) {
-      setIsVisible(true);
+    if (isAtTop || isUserMenuOpen || isMobileMenuOpen) {
+      setIsHeaderVisible(true);
     } else {
-      setIsVisible(scrollingDown ? false : true);
+      setIsHeaderVisible(scrollingDown ? false : true);
     }
 
     setLastScrollY(currentScrollY);
@@ -46,8 +47,8 @@ export function Header({ locale }: HeaderProps) {
     if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
 
     scrollTimeout.current = setTimeout(() => {
-      if (!isAtTop && !isUserMenuOpen) {
-        setIsVisible(false);
+      if ((!isAtTop && !isUserMenuOpen) || isMobileMenuOpen) {
+        setIsHeaderVisible(false);
       }
     }, 2500);
   });
@@ -95,7 +96,7 @@ export function Header({ locale }: HeaderProps) {
     <>
       <motion.header
         initial={{ y: 0 }}
-        animate={{ y: isVisible ? 0 : -100 }}
+        animate={{ y: isHeaderVisible ? 0 : -100 }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         className="fixed top-0 z-50 w-full border-b border-[var(--color-border)] bg-[var(--color-background)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-background)]/60"
       >

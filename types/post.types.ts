@@ -147,6 +147,7 @@ export interface PostFormData {
   excerpt?: string;
   content: string;
   contentFormat?: ContentFormat;
+  language: string;
 
   metaTitle?: string;
   metaDescription?: string;
@@ -167,9 +168,10 @@ export interface PostFormData {
 
   categoryId?: string;
   tags?: string[];
+  tagIds?: string[];
 
-  publishedAt?: Date;
-  scheduledFor?: Date;
+  publishedAt?: Date | string;
+  scheduledFor?: Date | string;
 
   mediaIds?: string[];
   readingTime?: number;
@@ -240,12 +242,24 @@ export interface PostListResponse {
 
 export interface PostDetailResponse {
   post: PostWithRelations;
-  relatedPosts?: PostWithRelations[];
-  translations?: {
+  relatedPosts: PostWithRelations[];
+  translations: Array<{
     language: string;
     title: string;
     slug: string;
-  }[];
+    excerpt: string | null;
+    content: string;
+    metaTitle: string | null;
+    metaDescription: string | null;
+    isAITranslated: boolean;
+  }>;
+  contentInfo: {
+    isTranslated: boolean;
+    originalLanguage: string;
+    currentLanguage: string;
+    availableLanguages: string[];
+    translationQuality: 'ai' | 'human' | null;
+  };
 }
 
 export interface CreatePostResponse {

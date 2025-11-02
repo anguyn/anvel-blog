@@ -7,13 +7,17 @@ interface UIStore {
   setSidebarOpen: (open: boolean) => void;
   isCreateModalOpen: boolean;
   toggleCreateModal: () => void;
+  isHeaderVisible: boolean;
+  setIsHeaderVisible: (visible: boolean) => void;
 }
 
 export const useUIStore = create<UIStore>(set => ({
   isSidebarOpen: false,
   toggleSidebar: () => set(state => ({ isSidebarOpen: !state.isSidebarOpen })),
+  setSidebarOpen: open => set({ isSidebarOpen: open }),
   isCreateModalOpen: false,
   toggleCreateModal: () =>
     set(state => ({ isCreateModalOpen: !state.isCreateModalOpen })),
-  setSidebarOpen: open => set({ isSidebarOpen: open }),
+  isHeaderVisible: true,
+  setIsHeaderVisible: visible => set({ isHeaderVisible: visible }),
 }));

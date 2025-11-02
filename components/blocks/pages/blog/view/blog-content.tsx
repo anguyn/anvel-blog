@@ -14,7 +14,6 @@ import { BlogComments } from './comments';
 import { MediaGallery } from './media-gallery';
 import { VideoPlayer } from './video-player';
 import { DocumentViewer } from './document-viewer';
-import { TableOfContentsWrapper } from './table-of-contents-wrapper';
 
 interface BlogContentProps {
   post: Post;
@@ -27,7 +26,6 @@ interface BlogContentProps {
     leaveComment: string;
     noComments: string;
     loginToComment: string;
-    tableOfContents: string;
   };
   session: any;
 }
@@ -59,29 +57,15 @@ export function BlogContent({
 
   return (
     <>
-      {/* Table of Contents - Desktop Sidebar */}
-      <aside className="hidden lg:col-span-3 lg:block">
-        <div className="sticky top-24">
-          <TableOfContentsWrapper
-            content={post.content}
-            title={translations.tableOfContents}
-          />
-        </div>
-      </aside>
-
-      {/* Main Content Column */}
-      <article className="lg:col-span-9 xl:col-span-6">
-        {/* Media Content for special post types */}
+      <article className="lg:col-span-9">
         {renderMediaContent()}
 
-        {/* Blog Content */}
-        <Card className="mb-8">
-          <CardContent className="prose prose-lg dark:prose-invert blog-content max-w-screen p-8">
+        <Card className="mb-8 !border-0 !shadow-none md:!rounded-lg md:!border md:!border-[var(--color-border)] md:!shadow-sm">
+          <CardContent className="prose prose-lg dark:prose-invert blog-content max-w-screen px-0 py-4 md:px-4">
             <div dangerouslySetInnerHTML={{ __html: post.content }} />
           </CardContent>
         </Card>
 
-        {/* Tags */}
         {post.tags.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
@@ -107,7 +91,6 @@ export function BlogContent({
           </Card>
         )}
 
-        {/* Author Card */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>{translations.aboutAuthor}</CardTitle>
@@ -146,7 +129,6 @@ export function BlogContent({
           </CardContent>
         </Card>
 
-        {/* Comments Section */}
         <BlogComments
           postId={post.id}
           locale={locale}

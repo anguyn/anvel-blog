@@ -14,6 +14,35 @@ import {
   DeletePostResponse,
 } from '@/types/post.types';
 import { PostStatus } from '@prisma/client';
+import { getActionTranslations } from '@/i18n/i18n';
+
+// ============================================
+// HELPER: Map form data to service data
+// ============================================
+function mapFormDataToServiceData(formData: Partial<PostFormData>) {
+  const serviceData: any = { ...formData };
+
+  // Map tagIds -> tags (just rename the field)
+  if (formData.tagIds !== undefined) {
+    serviceData.tagIds = formData.tagIds;
+    delete serviceData.tags; // Remove if exists
+  }
+
+  // Convert date strings to Date objects
+  if (formData.publishedAt) {
+    serviceData.publishedAt = new Date(formData.publishedAt);
+  }
+  if (formData.scheduledFor) {
+    serviceData.scheduledFor = new Date(formData.scheduledFor);
+  }
+
+  // Clean up empty strings for optional fields
+  if (serviceData.categoryId === '' || serviceData.categoryId === '0') {
+    serviceData.categoryId = undefined;
+  }
+
+  return serviceData;
+}
 
 // ============================================
 // POST ACTIONS
@@ -26,10 +55,16 @@ export async function createPostAction(
   data: PostFormData,
 ): Promise<CreatePostResponse> {
   try {
+    const { t, locale } = await getActionTranslations();
+
     const session = await requireAuth();
     await requirePermission(Permissions.POSTS_CREATE);
 
-    const post = await PostService.createPost(data, session.user.id!);
+    const serviceData = mapFormDataToServiceData(data);
+
+    const post = await PostService.createPost(serviceData, session.user.id!);
+
+    await queuePostTranslations(post.id, data.language || 'vi', locale);
 
     revalidatePath('/admin/posts');
     revalidatePath('/blog');
@@ -51,6 +86,56 @@ export async function createPostAction(
 }
 
 /**
+ * Queue translation jobs for a post
+ * @param postId - The post ID to translate
+ * @param sourceLanguage - The original language of the post
+ */
+async function queuePostTranslations(
+  postId: string,
+  sourceLanguage: 'en' | 'vi' | string,
+  locale: 'en' | 'vi',
+): Promise<void> {
+  const targetLanguages: Array<'en' | 'vi'> =
+    sourceLanguage === 'en' ? ['vi'] : ['en'];
+
+  const translationPromises = targetLanguages.map(async targetLanguage => {
+    try {
+      const queueDomain =
+        process.env.NOTIFICATION_SERVICE_URL || 'https://noti.anvel.site';
+
+      const response = await fetch(
+        `${queueDomain}/api/media/translate/post?lang=${locale}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            postId,
+            targetLanguage,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error(
+          `Failed to queue translation to ${targetLanguage}:`,
+          error,
+        );
+      } else {
+        const result = await response.json();
+        console.log(`Translation to ${targetLanguage} queued:`, result.jobId);
+      }
+    } catch (error) {
+      console.error(`Error queuing translation to ${targetLanguage}:`, error);
+    }
+  });
+
+  await Promise.allSettled(translationPromises);
+}
+
+/**
  * Update post
  */
 export async function updatePostAction(
@@ -61,7 +146,14 @@ export async function updatePostAction(
     const session = await requireAuth();
     await requirePermission(Permissions.POSTS_UPDATE);
 
-    const post = await PostService.updatePost(postId, data, session.user.id!);
+    // Map form data to service format
+    const serviceData = mapFormDataToServiceData(data);
+
+    const post = await PostService.updatePost(
+      postId,
+      serviceData,
+      session.user.id!,
+    );
 
     revalidatePath('/admin/posts');
     revalidatePath(`/blog/${post.slug}`);
@@ -142,7 +234,7 @@ export async function schedulePostAction(
 ): Promise<UpdatePostResponse> {
   return updatePostAction(postId, {
     status: PostStatus.SCHEDULED,
-    scheduledFor,
+    scheduledFor: scheduledFor,
   });
 }
 

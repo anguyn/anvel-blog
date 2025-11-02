@@ -231,13 +231,15 @@ export class PostService {
   }
 
   /**
-   * Get post by slug
+   * Get post by slug with optional language preference
    */
   static async getPostBySlug(
     slug: string,
     userId?: string,
+    preferredLanguage?: string, // 'en' or 'vi' from locale
   ): Promise<PostDetailResponse | null> {
-    const post = await prisma.post.findUnique({
+    // First, try to find post by slug (could be original or translation slug)
+    let post = await prisma.post.findUnique({
       where: { slug },
       include: {
         author: {
@@ -304,6 +306,84 @@ export class PostService {
       },
     });
 
+    // If not found by post slug, try to find by translation slug
+    if (!post) {
+      const translation = await prisma.postTranslation.findUnique({
+        where: { slug },
+        include: {
+          post: {
+            include: {
+              author: {
+                select: {
+                  id: true,
+                  name: true,
+                  username: true,
+                  image: true,
+                  bio: true,
+                },
+              },
+              category: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  icon: true,
+                  color: true,
+                },
+              },
+              tags: {
+                include: {
+                  tag: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                      type: true,
+                      color: true,
+                    },
+                  },
+                },
+              },
+              media: {
+                include: {
+                  media: {
+                    select: {
+                      id: true,
+                      filename: true,
+                      originalName: true,
+                      url: true,
+                      thumbnailUrl: true,
+                      alt: true,
+                      caption: true,
+                      type: true,
+                      width: true,
+                      height: true,
+                      size: true,
+                      mimeType: true,
+                    },
+                  },
+                },
+                orderBy: {
+                  order: 'asc',
+                },
+              },
+              _count: {
+                select: {
+                  comments: true,
+                  views: true,
+                  favorites: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (translation) {
+        post = translation.post;
+      }
+    }
+
     if (!post) return null;
 
     // Check access
@@ -315,20 +395,88 @@ export class PostService {
     // Get related posts
     const relatedPosts = await this.getRelatedPosts(post.id, post.categoryId);
 
-    // Get translations
+    // Get all translations
     const translations = await prisma.postTranslation.findMany({
       where: { postId: post.id },
       select: {
         language: true,
         title: true,
+        excerpt: true,
+        content: true,
         slug: true,
+        metaTitle: true,
+        metaDescription: true,
+        isAITranslated: true,
       },
     });
 
+    // Determine content to display based on preferred language
+    const originalLang = post.language;
+    const requestedLang = preferredLanguage || originalLang;
+
+    let displayContent = {
+      title: post.title,
+      excerpt: post.excerpt,
+      content: post.content,
+      metaTitle: post.metaTitle,
+      metaDescription: post.metaDescription,
+      slug: post.slug,
+    };
+
+    let isTranslated = false;
+    let currentLanguage = originalLang;
+
+    // If requested language differs from original, use translation
+    if (requestedLang !== originalLang) {
+      const translation = translations.find(t => t.language === requestedLang);
+
+      if (translation) {
+        displayContent = {
+          title: translation.title,
+          excerpt: translation.excerpt || post.excerpt,
+          content: translation.content,
+          metaTitle: translation.metaTitle || translation.title,
+          metaDescription:
+            translation.metaDescription ||
+            translation.excerpt ||
+            post.metaDescription,
+          slug: translation.slug,
+        };
+        isTranslated = true;
+        currentLanguage = requestedLang;
+      }
+    }
+
+    // Build content info
+    const contentInfo = {
+      isTranslated,
+      originalLanguage: originalLang,
+      currentLanguage,
+      availableLanguages: [originalLang, ...translations.map(t => t.language)],
+      translationQuality: isTranslated
+        ? translations.find(t => t.language === currentLanguage)?.isAITranslated
+          ? ('ai' as const)
+          : ('human' as const)
+        : null,
+    };
+
     return {
-      post: post as PostWithRelations,
+      post: {
+        ...post,
+        ...displayContent, // Override with translated content if applicable
+      } as PostWithRelations,
       relatedPosts,
-      translations,
+      translations: translations.map(t => ({
+        language: t.language,
+        title: t.title,
+        slug: t.slug,
+        excerpt: t.excerpt,
+        content: t.content,
+        metaTitle: t.metaTitle,
+        metaDescription: t.metaDescription,
+        isAITranslated: t.isAITranslated,
+      })),
+      contentInfo,
     };
   }
 
@@ -351,6 +499,13 @@ export class PostService {
     }
 
     if (userId && post.authorId === userId) {
+      return true;
+    }
+
+    if (
+      post.visibility === PostVisibility.PASSWORD &&
+      post.status === PostStatus.PUBLISHED
+    ) {
       return true;
     }
 
@@ -593,13 +748,14 @@ export class PostService {
   }
 
   /**
-   * Update post
+   * Update post - OPTIMIZED VERSION
    */
   static async updatePost(
     postId: string,
     data: Partial<PostFormData>,
     userId: string,
   ): Promise<PostWithRelations> {
+    // Verify ownership
     const existingPost = await prisma.post.findUnique({
       where: { id: postId },
       select: { authorId: true, slug: true },
@@ -613,34 +769,90 @@ export class PostService {
       throw new Error('UNAUTHORIZED');
     }
 
-    let slug = existingPost.slug;
-    if (data.title) {
-      slug = data.slug
+    // Build update data
+    const updateData: Prisma.PostUpdateInput = {};
+
+    // ========== BASIC FIELDS ==========
+    if (data.title !== undefined) {
+      updateData.title = data.title;
+
+      // Auto-update slug if title changed
+      const slug = data.slug
         ? await this.generateSlug(data.slug, existingPost.slug)
         : await this.generateSlug(data.title, existingPost.slug);
+      updateData.slug = slug;
     }
 
-    let readingTime: number | undefined;
-    if (data.content) {
-      readingTime = this.calculateReadingTime(data.content);
+    if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
+
+    if (data.content !== undefined) {
+      updateData.content = data.content;
+      updateData.readingTime = this.calculateReadingTime(data.content);
     }
 
-    let passwordHash: string | undefined;
-    if (data.isPasswordProtected && data.password) {
-      passwordHash = await bcrypt.hash(data.password, 10);
+    if (data.type !== undefined) updateData.type = data.type;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.visibility !== undefined) updateData.visibility = data.visibility;
+    if (data.language !== undefined) updateData.language = data.language;
+
+    // ========== BOOLEAN FIELDS ==========
+    if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
+    if (data.isPinned !== undefined) updateData.isPinned = data.isPinned;
+    if (data.isPasswordProtected !== undefined) {
+      updateData.isPasswordProtected = data.isPasswordProtected;
     }
 
-    // Exclude relation fields and non-Post fields from the update
-    const { tags, mediaIds, password, ...postData } = data;
+    // ========== DATE FIELDS ==========
+    if (data.publishedAt !== undefined) {
+      updateData.publishedAt = data.publishedAt;
+    }
+    if (data.scheduledFor !== undefined) {
+      updateData.scheduledFor = data.scheduledFor;
+    }
 
+    // ========== IMAGE FIELDS ==========
+    console.log('Ra feature image nè: ', data.featuredImage);
+    if (data.featuredImage !== undefined) {
+      updateData.featuredImage = data.featuredImage;
+    }
+
+    // ========== SEO FIELDS ==========
+    if (data.metaTitle !== undefined) updateData.metaTitle = data.metaTitle;
+    if (data.metaDescription !== undefined) {
+      updateData.metaDescription = data.metaDescription;
+    }
+    if (data.metaKeywords !== undefined) {
+      updateData.metaKeywords = data.metaKeywords;
+    }
+    if (data.ogImage !== undefined) updateData.ogImage = data.ogImage;
+
+    // ========== CONTENT FORMAT ==========
+    if (data.contentFormat !== undefined) {
+      updateData.contentFormat = data.contentFormat;
+    }
+
+    // ========== PASSWORD HANDLING ==========
+    if (data.password) {
+      updateData.passwordHash = await bcrypt.hash(data.password, 10);
+    }
+
+    // ========== CATEGORY RELATIONSHIP ==========
+    if (data.categoryId !== undefined) {
+      if (
+        !data.categoryId ||
+        data.categoryId === '' ||
+        data.categoryId === '0'
+      ) {
+        updateData.category = { disconnect: true };
+      } else {
+        updateData.category = { connect: { id: data.categoryId } };
+      }
+    }
+
+    // Update post
     const post = await prisma.post.update({
       where: { id: postId },
-      data: {
-        ...postData,
-        slug,
-        readingTime,
-        passwordHash,
-      },
+      data: updateData,
       include: {
         author: {
           select: {
@@ -706,41 +918,64 @@ export class PostService {
       },
     });
 
-    // Update tags
-    if (tags) {
+    // ========== UPDATE TAGS ==========
+    if (data.tagIds !== undefined) {
       await prisma.postTag.deleteMany({
         where: { postId },
       });
 
-      await Promise.all(
-        tags.map(tagId =>
-          prisma.postTag.create({
-            data: {
-              postId,
-              tagId,
-            },
-          }),
-        ),
-      );
+      if (data.tagIds.length > 0) {
+        await prisma.postTag.createMany({
+          data: data.tagIds.map(tagId => ({
+            postId,
+            tagId,
+          })),
+        });
+      }
     }
 
-    // Update media
-    if (mediaIds) {
+    // ========== UPDATE MEDIA ==========
+    if (data.mediaIds !== undefined) {
       await prisma.postMedia.deleteMany({
         where: { postId },
       });
 
-      await Promise.all(
-        mediaIds.map((mediaId, index) =>
-          prisma.postMedia.create({
-            data: {
-              postId,
-              mediaId,
-              order: index,
-            },
-          }),
-        ),
-      );
+      if (data.mediaIds.length > 0) {
+        await prisma.postMedia.createMany({
+          data: data.mediaIds.map((mediaId, index) => ({
+            postId,
+            mediaId,
+            order: index,
+          })),
+        });
+      }
+    }
+
+    // ========== UPDATE RESTRICTED ACCESS ==========
+    if (
+      data.visibility === PostVisibility.RESTRICTED &&
+      data.allowedUserEmails !== undefined
+    ) {
+      await prisma.postAccess.deleteMany({
+        where: { postId },
+      });
+
+      if (data.allowedUserEmails.length > 0) {
+        const users = await prisma.user.findMany({
+          where: {
+            email: { in: data.allowedUserEmails },
+          },
+          select: { id: true },
+        });
+
+        await prisma.postAccess.createMany({
+          data: users.map(user => ({
+            postId,
+            userId: user.id,
+            grantedBy: userId,
+          })),
+        });
+      }
     }
 
     return post as PostWithRelations;

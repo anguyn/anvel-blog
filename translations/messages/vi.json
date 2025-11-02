@@ -491,7 +491,7 @@
       "categorization": "Phân loại",
       "category": "Danh mục",
       "noCategory": "Không có danh mục",
-      "noCategoriesAvailable": "Không có danh mục cho {{language}}. Hãy tạo một danh mục trước.",
+      "noCategoriesAvailable": "Không có danh mục cho {language}. Hãy tạo một danh mục trước.",
       "tags": "Thẻ",
       "newTag": "Thẻ mới",
       "tagsSelected": "{count} thẻ đã chọn",

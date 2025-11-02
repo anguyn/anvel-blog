@@ -57,9 +57,10 @@ export function MediaUploader({
           const result = await uploadMediaAction(formData);
 
           if (result.success && result.media) {
+            console.log('Media: ', result);
             setUploadedFiles(prev => [...prev, result.media as MediaItem]);
             onUploadComplete?.(result.media as MediaItem);
-            toast.success(`${file.name} uploaded successfully`);
+            // toast.success(`${file.name} uploaded successfully`);
           } else {
             toast.error(`Failed to upload ${file.name}: ${result.error}`);
           }
@@ -218,7 +219,7 @@ export function MediaUploader({
                     onClick={() => removeFile(index)}
                     className="h-6 w-6 p-0"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4 text-white" />
                   </Button>
                 </div>
 

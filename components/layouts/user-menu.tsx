@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useCurrentUser } from '@/libs/hooks/use-current-user';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,6 +37,7 @@ export function UserMenu({
 }: UserMenuProps) {
   const { user, isAuthenticated, isLoading } = useCurrentUser();
   const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslations('common');
   const clearAuth = useUserStore(state => state.clearAuth);
 
@@ -46,11 +47,23 @@ export function UserMenu({
     );
   }
 
+  // Generate login URL with callback
+  const getLoginUrl = () => {
+    // Check if current page is home (e.g., /en or /vi)
+    const isHomePage = pathname === `/${locale}` || pathname === `/${locale}/`;
+
+    if (isHomePage) {
+      return `/${locale}/login`;
+    }
+
+    return `/${locale}/login?callbackUrl=${encodeURIComponent(pathname)}`;
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex items-center gap-2">
         <Button variant="outline" asChild>
-          <Link href={`/${locale}/login`}>{t('signIn')}</Link>
+          <Link href={getLoginUrl()}>{t('signIn')}</Link>
         </Button>
       </div>
     );

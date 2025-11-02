@@ -68,21 +68,6 @@ export default async function CreatePostPage({
   return (
     <AdminLayout>
       <div className="container mx-auto max-w-6xl px-4 py-2">
-        <div className="mb-6">
-          <Link
-            href="/admin/posts"
-            className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center text-sm"
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back to Posts
-          </Link>
-          <h1 className="text-3xl font-bold">Create New Post</h1>
-          <p className="text-muted-foreground mt-1 leading-normal">
-            Write and publish your content
-          </p>
-        </div>
-
-        {/* Form */}
         <PostForm categories={typedCategories} tags={tags} />
       </div>
     </AdminLayout>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TiptapEditor } from '@/components/common/tiptap-editor';
-import { MediaUploader } from './media-uploader';
+// import { MediaUploader } from './media-uploader';
+import { FeatureImageUploader } from './feature-image-uploader';
 import { GalleryManager } from '@/components/custom/gallery-manager';
 import { VideoSettings } from '@/components/custom/video-settings';
 import { CollapsibleSection } from '@/components/custom/collapsible-section';
@@ -56,7 +57,37 @@ import {
   Sparkles,
   ArrowLeft,
   Languages,
+  ChevronLeft,
 } from 'lucide-react';
+import Link from 'next/link';
+import { uploadMediaAction } from '@/app/actions/media.action';
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+// Custom debounce implementation
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+): T & { cancel: () => void } {
+  let timeout: NodeJS.Timeout | null = null;
+
+  const debounced = function (this: any, ...args: Parameters<T>) {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      func.apply(this, args);
+    }, wait);
+  } as T & { cancel: () => void };
+
+  debounced.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
+
+  return debounced;
+}
 
 // ============================================
 // INTERFACES & TYPES
@@ -77,31 +108,59 @@ interface PostFormProps {
 // VALIDATION SCHEMA
 // ============================================
 
-const postFormSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200),
-  slug: z.string().min(1, 'Slug is required').max(200),
-  excerpt: z.string().max(500).optional(),
-  content: z.string().min(1, 'Content is required'),
-  type: z.nativeEnum(PostType),
-  status: z.nativeEnum(PostStatus),
-  visibility: z.nativeEnum(PostVisibility),
-  language: z.enum(['vi', 'en']),
-  categoryId: z.string().optional(),
-  tagIds: z.array(z.string()),
-  featuredImage: z.string().optional(),
-  password: z.string().optional(),
-  allowedUserEmails: z.array(z.string().email()).optional(),
-  isFeatured: z.boolean(),
-  isPinned: z.boolean(),
-  publishedAt: z.string().optional(),
-  scheduledFor: z.string().optional(),
-  metaTitle: z.string().max(60).optional(),
-  metaDescription: z.string().max(160).optional(),
-  metaKeywords: z.array(z.string()).optional(),
-  ogImage: z.string().optional(),
-});
+const postFormSchema = z
+  .object({
+    title: z.string().min(1, 'Title is required').max(200),
+    slug: z.string().min(1, 'Slug is required').max(200),
+    excerpt: z.string().max(500).optional(),
+    content: z.string().min(1, 'Content is required'),
+    type: z.nativeEnum(PostType),
+    status: z.nativeEnum(PostStatus),
+    visibility: z.nativeEnum(PostVisibility),
+    language: z.enum(['vi', 'en']),
+    categoryId: z.string().optional(),
+    tagIds: z.array(z.string()),
+    featuredImage: z.string().optional(),
+    password: z.string().optional(),
+    isPasswordProtected: z.boolean(),
+    allowedUserEmails: z.array(z.string().email()).optional(),
+    isFeatured: z.boolean(),
+    isPinned: z.boolean(),
+    publishedAt: z.string().optional(),
+    scheduledFor: z.string().optional(),
+    metaTitle: z.string().max(60).optional(),
+    metaDescription: z.string().max(160).optional(),
+    metaKeywords: z.array(z.string()).optional(),
+    ogImage: z.string().optional(),
+  })
+  .refine(
+    data =>
+      data.visibility !== PostVisibility.PASSWORD ||
+      (data.password && data.password.length >= 4),
+    {
+      message:
+        'Password is required and must be at least 4 characters when visibility is set to PASSWORD',
+      path: ['password'],
+    },
+  );
 
 type PostFormData = z.infer<typeof postFormSchema>;
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+const generateSlug = (text: string) => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+};
 
 // ============================================
 // MAIN COMPONENT
@@ -123,7 +182,6 @@ export function PostForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState(initialCategories);
   const [tags, setTags] = useState(initialTags);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<
     'idle' | 'saving' | 'saved' | 'error'
@@ -146,6 +204,8 @@ export function PostForm({
     duration: 0,
   });
 
+  const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
+
   // Dialogs
   const [showPreview, setShowPreview] = useState(false);
   const [showCreateTag, setShowCreateTag] = useState(false);
@@ -167,10 +227,11 @@ export function PostForm({
       status: post?.status || PostStatus.DRAFT,
       visibility: post?.visibility || PostVisibility.PUBLIC,
       language: (post?.language as 'vi' | 'en') || 'vi',
-      categoryId: post?.categoryId || '',
+      categoryId: post?.categoryId || '0',
       tagIds: post?.tags?.map(t => t.tag.id) || [],
       featuredImage: post?.featuredImage || '',
       password: '',
+      isPasswordProtected: false,
       allowedUserEmails: [],
       isFeatured: post?.isFeatured || false,
       isPinned: post?.isPinned || false,
@@ -181,242 +242,338 @@ export function PostForm({
       metaKeywords: post?.metaKeywords || [],
       ogImage: post?.ogImage || '',
     },
+    mode: 'onBlur',
   });
 
   const {
-    watch,
     setValue,
+    getValues,
     formState: { isDirty, errors },
   } = form;
 
-  // Watch form values
-  const watchType = watch('type');
-  const watchVisibility = watch('visibility');
-  const watchTitle = watch('title');
-  const watchSlug = watch('slug');
-  const watchContent = watch('content');
-  const watchMetaTitle = watch('metaTitle');
-  const watchMetaDescription = watch('metaDescription');
-  const watchLanguage = watch('language');
+  // ============================================
+  // OPTIMIZED WATCHERS - Only watch what's necessary
+  // ============================================
 
-  // Filter categories by selected language
-  const filteredCategories = categories.filter(
-    cat => cat.language === watchLanguage,
+  // Use getValues() instead of watch() where possible to avoid re-renders
+  const currentType = form.watch('type');
+  const currentVisibility = form.watch('visibility');
+  const currentStatus = form.watch('status');
+  const currentLanguage = form.watch('language');
+
+  const filteredCategories = useMemo(
+    () => categories.filter(cat => true),
+    // () => categories.filter(cat => cat.language === currentLanguage),
+    [categories, currentLanguage],
   );
 
   // ============================================
   // UNSAVED CHANGES WARNING
   // ============================================
 
-  useEffect(() => {
-    setHasUnsavedChanges(isDirty);
-  }, [isDirty]);
-
   const { confirmNavigation } = useUnsavedChanges({
-    hasUnsavedChanges,
+    hasUnsavedChanges: isDirty,
   });
 
   // ============================================
-  // AUTO-SAVE
+  // AUTO-SAVE WITH DEBOUNCE
   // ============================================
 
-  const autoSave = useCallback(async () => {
-    if (!autoSaveEnabled || !hasUnsavedChanges || !isEditMode) return;
+  const performAutoSave = useCallback(
+    async (data: PostFormData) => {
+      if (!isEditMode) return;
 
-    setAutoSaveStatus('saving');
+      setAutoSaveStatus('saving');
 
-    try {
-      const data = form.getValues();
-      const formData = {
-        ...data,
-        publishedAt: data.publishedAt ? new Date(data.publishedAt) : undefined,
-        scheduledFor: data.scheduledFor
-          ? new Date(data.scheduledFor)
-          : undefined,
-      };
-      const result = await updatePostAction(post.id, formData);
+      try {
+        const formData = {
+          ...data,
+          publishedAt: data.publishedAt
+            ? new Date(data.publishedAt)
+            : undefined,
+          scheduledFor: data.scheduledFor
+            ? new Date(data.scheduledFor)
+            : undefined,
+        };
+        const result = await updatePostAction(post.id, formData);
 
-      if (result.success) {
-        setAutoSaveStatus('saved');
-        setLastSaved(new Date());
-        setHasUnsavedChanges(false);
+        if (result.success) {
+          setAutoSaveStatus('saved');
+          setLastSaved(new Date());
+
+          setTimeout(() => {
+            setAutoSaveStatus('idle');
+          }, 3000);
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        console.error('Auto-save error:', error);
+        setAutoSaveStatus('error');
 
         setTimeout(() => {
           setAutoSaveStatus('idle');
         }, 3000);
-      } else {
-        throw new Error(result.error);
       }
-    } catch (error) {
-      console.error('Auto-save error:', error);
-      setAutoSaveStatus('error');
+    },
+    [isEditMode, post],
+  );
 
-      setTimeout(() => {
-        setAutoSaveStatus('idle');
-      }, 3000);
-    }
-  }, [autoSaveEnabled, hasUnsavedChanges, isEditMode, post, form]);
+  // Debounced auto-save - only save after 2 seconds of no changes
+  const debouncedAutoSave = useMemo(
+    () => debounce(performAutoSave, 2000),
+    [performAutoSave],
+  );
 
-  // Auto-save every 30 seconds
+  // Auto-save trigger on form change
   useEffect(() => {
-    if (!autoSaveEnabled) return;
+    if (!autoSaveEnabled || !isDirty) return;
 
-    const interval = setInterval(() => {
-      autoSave();
-    }, 30000);
+    const subscription = form.watch(data => {
+      debouncedAutoSave(data as PostFormData);
+    });
 
-    return () => clearInterval(interval);
-  }, [autoSave, autoSaveEnabled]);
+    return () => {
+      subscription.unsubscribe();
+      debouncedAutoSave.cancel();
+    };
+  }, [autoSaveEnabled, isDirty, form, debouncedAutoSave]);
 
   // ============================================
-  // SLUG GENERATION
+  // SLUG GENERATION WITH DEBOUNCE
   // ============================================
 
-  const generateSlug = (text: string) => {
-    return text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/đ/g, 'd')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
-  };
+  const updateSlug = useMemo(
+    () =>
+      debounce((title: string) => {
+        const currentSlug = getValues('slug');
+        const postSlug = generateSlug(post?.title || '');
+
+        // Only auto-generate if slug is empty or matches the original post slug
+        if (!currentSlug || currentSlug === postSlug) {
+          setValue('slug', generateSlug(title), { shouldDirty: true });
+        }
+      }, 300),
+    [setValue, getValues, post],
+  );
+
+  const updateIsPasswordProtected = useMemo(
+    () =>
+      debounce((password: string) => {
+        if (password && password.length >= 4) {
+          setValue('isPasswordProtected', true, {
+            shouldDirty: true,
+          });
+        } else {
+          setValue('isPasswordProtected', false, {
+            shouldDirty: true,
+          });
+        }
+      }, 300),
+    [setValue, getValues, post],
+  );
 
   useEffect(() => {
-    if (!watchSlug || watchSlug === generateSlug(post?.title || '')) {
-      setValue('slug', generateSlug(watchTitle));
-    }
-  }, [watchTitle, watchSlug, post, setValue]);
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'title' && value.title) {
+        updateSlug(value.title);
+      }
+      if (name === 'password' && value.password) {
+        updateIsPasswordProtected(value.password);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      updateSlug.cancel();
+      updateIsPasswordProtected.cancel();
+    };
+  }, [form, updateSlug, updateIsPasswordProtected]);
 
   // Reset category when language changes
-  useEffect(() => {
-    const currentCategory = categories.find(c => c.id === watch('categoryId'));
-    if (currentCategory && currentCategory.language !== watchLanguage) {
-      setValue('categoryId', '');
-      toast.info(t('categoryResetDueToLanguageChange'));
-    }
-  }, [watchLanguage, categories, watch, setValue, t]);
+  // useEffect(() => {
+  //   const currentCategory = categories.find(
+  //     c => c.id === getValues('categoryId'),
+  //   );
+  //   if (currentCategory && currentCategory.language !== currentLanguage) {
+  //     setValue('categoryId', '', { shouldDirty: true });
+  //     toast.info(t('categoryResetDueToLanguageChange'));
+  //   }
+  // }, [currentLanguage, categories, getValues, setValue, t]);
 
   // ============================================
   // FEATURED IMAGE
   // ============================================
 
-  const handleFeaturedImageSelect = (images: MediaItem[]) => {
-    if (images.length > 0) {
-      setValue('featuredImage', images[0].url);
-      setHasUnsavedChanges(true);
-    }
-  };
+  const handleFeaturedImageSelect = useCallback(
+    (images: MediaItem[]) => {
+      console.log('Images: ', images);
+      if (images.length > 0) {
+        setValue('featuredImage', images[0].url, { shouldDirty: true });
+      }
+    },
+    [setValue],
+  );
+
+  const handleFeaturedImageRemove = useCallback(() => {
+    setValue('featuredImage', '', { shouldDirty: true });
+  }, [setValue]);
 
   // ============================================
-  // FORM SUBMISSION
+  // FORM SUBMISSION - PREVENT ACCIDENTAL SUBMIT
   // ============================================
 
-  const onSubmit = async (
-    data: PostFormData,
-    action: 'draft' | 'publish' | 'schedule',
-  ) => {
-    setIsSubmitting(true);
+  const handleSubmit = useCallback(
+    async (data: PostFormData, action: 'draft' | 'publish' | 'schedule') => {
+      if (isSubmitting) return;
+      setIsSubmitting(true);
 
-    try {
-      const status =
-        action === 'draft'
-          ? PostStatus.DRAFT
-          : action === 'schedule'
-            ? PostStatus.SCHEDULED
-            : PostStatus.PUBLISHED;
+      try {
+        let featuredImageUrl = data.featuredImage;
 
-      const formData = {
-        ...data,
-        status,
-        publishedAt: action === 'publish' ? new Date() : undefined,
-        scheduledFor: data.scheduledFor
-          ? new Date(data.scheduledFor)
-          : undefined,
-        ...(watchType === PostType.GALLERY && {
-          mediaIds: galleryImages.map(img => img.id),
-        }),
-        ...(watchType === PostType.VIDEO && videoSettings),
-      };
+        if (featuredImageFile) {
+          const formData = new FormData();
+          formData.append('file', featuredImageFile);
 
-      let result;
-      if (isEditMode) {
-        result = await updatePostAction(post.id, formData);
-      } else {
-        result = await createPostAction(formData as any);
+          const result = await uploadMediaAction(formData);
+
+          if (result.success && result.media) {
+            featuredImageUrl = result.media.url;
+          } else {
+            toast.error('Failed to upload featured image');
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
+        const status =
+          action === 'draft'
+            ? PostStatus.DRAFT
+            : action === 'schedule'
+              ? PostStatus.SCHEDULED
+              : PostStatus.PUBLISHED;
+
+        const formData = {
+          ...data,
+          featuredImage: featuredImageUrl,
+          status,
+          publishedAt: action === 'publish' ? new Date() : undefined,
+          scheduledFor: data.scheduledFor
+            ? new Date(data.scheduledFor)
+            : undefined,
+          ...(currentType === PostType.GALLERY && {
+            mediaIds: galleryImages.map(img => img.id),
+          }),
+          ...(currentType === PostType.VIDEO && videoSettings),
+        };
+
+        let result;
+        if (isEditMode) {
+          result = await updatePostAction(post.id, formData);
+        } else {
+          result = await createPostAction(formData as any);
+        }
+
+        if (result.success) {
+          toast.success(
+            isEditMode
+              ? t('postUpdatedSuccessfully')
+              : action === 'draft'
+                ? t('draftSavedSuccessfully')
+                : t('postPublishedSuccessfully'),
+          );
+
+          form.reset(data);
+
+          // ✅ Reset file state
+          setFeaturedImageFile(null);
+
+          router.push('/admin/posts');
+          router.refresh();
+        } else {
+          toast.error(result.error || t('failedToSavePost'));
+        }
+      } catch (error) {
+        console.error('Submit error:', error);
+        toast.error(t('errorOccurredWhileSaving'));
+      } finally {
+        console.log('Testing is final');
+        setIsSubmitting(false);
       }
+    },
+    [
+      isSubmitting,
+      featuredImageFile, // ✅ Add dependency
+      currentType,
+      galleryImages,
+      videoSettings,
+      isEditMode,
+      post,
+      form,
+      router,
+      t,
+    ],
+  );
 
-      if (result.success) {
-        toast.success(
-          isEditMode
-            ? t('postUpdatedSuccessfully')
-            : action === 'draft'
-              ? t('draftSavedSuccessfully')
-              : t('postPublishedSuccessfully'),
-        );
-        setHasUnsavedChanges(false);
-        router.push('/admin/posts');
-        router.refresh();
-      } else {
-        toast.error(result.error || t('failedToSavePost'));
-      }
-    } catch (error) {
-      console.error('Submit error:', error);
-      toast.error(t('errorOccurredWhileSaving'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Wrap form onSubmit to prevent default and handle properly
+  const onFormSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      form.handleSubmit(data => handleSubmit(data, 'publish'))();
+    },
+    [form, handleSubmit],
+  );
 
   // ============================================
   // TAG & CATEGORY CREATION
   // ============================================
 
-  const handleTagCreated = (tag: {
-    id: string;
-    name: string;
-    slug: string;
-  }) => {
-    setTags([...tags, tag]);
-    const currentTagIds = watch('tagIds');
-    setValue('tagIds', [...currentTagIds, tag.id]);
-    setHasUnsavedChanges(true);
-  };
+  const handleTagCreated = useCallback(
+    (tag: { id: string; name: string; slug: string }) => {
+      setTags(prev => [...prev, tag]);
+      const currentTagIds = getValues('tagIds');
+      setValue('tagIds', [...currentTagIds, tag.id], { shouldDirty: true });
+    },
+    [getValues, setValue],
+  );
 
-  const handleCategoryCreated = (category: {
-    id: string;
-    name: string;
-    slug: string;
-    language: 'vi' | 'en';
-  }) => {
-    setCategories([...categories, category]);
-    setValue('categoryId', category.id);
-    setHasUnsavedChanges(true);
-  };
+  const handleCategoryCreated = useCallback(
+    (category: {
+      id: string;
+      name: string;
+      slug: string;
+      language: 'vi' | 'en';
+    }) => {
+      setCategories(prev => [...prev, category]);
+      setValue('categoryId', category.id, { shouldDirty: true });
+    },
+    [setValue],
+  );
 
   // ============================================
   // EMAIL VALIDATION
   // ============================================
 
-  const validateEmail = (email: string): boolean | string => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return t('invalidEmailFormat');
-    }
-    return true;
-  };
+  const validateEmail = useCallback(
+    (email: string): boolean | string => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return t('invalidEmailFormat');
+      }
+      return true;
+    },
+    [t],
+  );
 
   // ============================================
-  // DISCARD CHANGES
+  // PREVIEW HANDLER
   // ============================================
 
-  const handleDiscard = () => {
-    confirmNavigation(() => {
-      router.push('/admin/posts');
-    });
-  };
+  const handlePreview = useCallback(() => {
+    setShowPreview(true);
+  }, []);
 
   // ============================================
   // RENDER
@@ -424,35 +581,43 @@ export function PostForm({
 
   return (
     <>
-      <form
-        onSubmit={form.handleSubmit(data => onSubmit(data, 'publish'))}
-        className="space-y-6"
-      >
-        {/* Header with Actions */}
+      <form onSubmit={onFormSubmit} className="space-y-6">
         <div className="bg-background/95 sticky top-0 z-20 border-b pb-4 backdrop-blur">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {hasUnsavedChanges && (
-                <span className="flex items-center gap-1.5 text-sm font-medium text-yellow-600 dark:text-yellow-500">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-yellow-600 dark:bg-yellow-500" />
-                  {t('unsavedChanges')}
-                </span>
-              )}
-
-              {autoSaveEnabled && (
-                <AutoSaveIndicator
-                  status={autoSaveStatus}
-                  lastSaved={lastSaved}
-                />
-              )}
+            <div className="">
+              <Link
+                href="/admin/posts"
+                className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center text-sm"
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" />
+                Back to Posts
+              </Link>
+              <h1 className="text-3xl font-bold">Create New Post</h1>
+              <p className="text-muted-foreground mt-1 leading-normal">
+                Write and publish your content
+              </p>
             </div>
-
             <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
+                {isDirty && (
+                  <span className="flex items-center gap-1.5 text-sm font-medium text-yellow-600 dark:text-yellow-500">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-yellow-600 dark:bg-yellow-500" />
+                    {t('unsavedChanges')}
+                  </span>
+                )}
+
+                {autoSaveEnabled && (
+                  <AutoSaveIndicator
+                    status={autoSaveStatus}
+                    lastSaved={lastSaved}
+                  />
+                )}
+              </div>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setShowPreview(true)}
+                onClick={handlePreview}
                 disabled={isSubmitting}
               >
                 <Eye className="mr-2 h-4 w-4" />
@@ -462,7 +627,10 @@ export function PostForm({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onSubmit(form.getValues(), 'draft')}
+                onClick={() => {
+                  const data = getValues();
+                  handleSubmit(data, 'draft');
+                }}
                 disabled={isSubmitting}
               >
                 <Save className="mr-2 h-4 w-4" />
@@ -518,11 +686,6 @@ export function PostForm({
                     {t('languageCannotBeChanged')}
                   </p>
                 )}
-                {!isEditMode && (
-                  <p className="text-muted-foreground text-xs">
-                    {t('selectPrimaryLanguage')}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -543,7 +706,10 @@ export function PostForm({
                     {errors.title.message}
                   </p>
                 )}
-                <CharacterCounter current={watchTitle.length} max={200} />
+                <CharacterCounter
+                  current={getValues('title')?.length || 0}
+                  max={200}
+                />
               </div>
             </div>
 
@@ -584,13 +750,13 @@ export function PostForm({
                   {t('excerptHelperText')}
                 </p>
                 <CharacterCounter
-                  current={watch('excerpt')?.length || 0}
+                  current={getValues('excerpt')?.length || 0}
                   max={500}
                 />
               </div>
             </div>
 
-            {/* Content Editor */}
+            {/* Content Editor - Memoized to prevent unnecessary re-renders */}
             <div className="space-y-2">
               <Label>
                 {t('content')} <span className="text-destructive">*</span>
@@ -615,65 +781,46 @@ export function PostForm({
             </div>
 
             {/* Featured Image */}
-            {watchType !== PostType.GALLERY && (
+            {currentType !== PostType.GALLERY && (
               <div className="space-y-2">
                 <Label>{t('featuredImage')}</Label>
-                {watch('featuredImage') ? (
-                  <div className="group relative overflow-hidden rounded-lg border">
-                    <img
-                      src={watch('featuredImage')}
-                      alt="Featured"
-                      className="h-64 w-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          setValue('featuredImage', '');
-                          setHasUnsavedChanges(true);
-                        }}
-                      >
-                        <X className="mr-2 h-4 w-4" />
-                        {t('remove')}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <MediaUploader
-                    onSelect={handleFeaturedImageSelect}
-                    accept={['image/*']}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Gallery Manager */}
-            {watchType === PostType.GALLERY && (
-              <div className="space-y-2">
-                <GalleryManager
-                  images={galleryImages}
-                  onChange={images => {
-                    setGalleryImages(images);
-                    setHasUnsavedChanges(true);
+                <FeatureImageUploader
+                  value={getValues('featuredImage')}
+                  onChange={(file, previewUrl) => {
+                    if (file) {
+                      setFeaturedImageFile(file);
+                      setValue('featuredImage', previewUrl || '', {
+                        shouldDirty: true,
+                      });
+                    }
+                  }}
+                  onRemove={() => {
+                    setFeaturedImageFile(null);
+                    setValue('featuredImage', '', { shouldDirty: true });
                   }}
                 />
               </div>
             )}
 
+            {/* Gallery Manager */}
+            {currentType === PostType.GALLERY && (
+              <div className="space-y-2">
+                <GalleryManager
+                  images={galleryImages}
+                  onChange={setGalleryImages}
+                />
+              </div>
+            )}
+
             {/* Video Settings */}
-            {watchType === PostType.VIDEO && (
+            {currentType === PostType.VIDEO && (
               <div className="space-y-2">
                 <VideoSettings
                   video={videoSettings.video}
                   videoUrl={videoSettings.videoUrl}
                   thumbnail={videoSettings.thumbnail}
                   duration={videoSettings.duration}
-                  onChange={data => {
-                    setVideoSettings(data);
-                    setHasUnsavedChanges(true);
-                  }}
+                  onChange={setVideoSettings}
                 />
               </div>
             )}
@@ -701,7 +848,6 @@ export function PostForm({
               </p>
             </div>
 
-            {/* General Settings */}
             <CollapsibleSection
               title={t('generalSettings')}
               icon={<Settings className="h-4 w-4" />}
@@ -711,42 +857,73 @@ export function PostForm({
                 {/* Post Type */}
                 <div className="space-y-2">
                   <Label htmlFor="type">{t('postType')}</Label>
-                  <select
-                    id="type"
-                    {...form.register('type')}
-                    className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-                  >
-                    <option value={PostType.ARTICLE}>📄 {t('article')}</option>
-                    <option value={PostType.GALLERY}>🖼️ {t('gallery')}</option>
-                    <option value={PostType.VIDEO}>🎥 {t('video')}</option>
-                    <option value={PostType.DOCUMENT}>
-                      📁 {t('document')}
-                    </option>
-                    <option value={PostType.LINK}>🔗 {t('link')}</option>
-                  </select>
+                  <Controller
+                    name="type"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full bg-white dark:bg-gray-900">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={PostType.ARTICLE}>
+                            📄 {t('article')}
+                          </SelectItem>
+                          <SelectItem value={PostType.GALLERY}>
+                            🖼️ {t('gallery')}
+                          </SelectItem>
+                          <SelectItem value={PostType.VIDEO}>
+                            🎥 {t('video')}
+                          </SelectItem>
+                          <SelectItem value={PostType.DOCUMENT}>
+                            📁 {t('document')}
+                          </SelectItem>
+                          <SelectItem value={PostType.LINK}>
+                            🔗 {t('link')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
 
-                {/* Post Status */}
                 <div className="space-y-2">
                   <Label htmlFor="status">{t('status')}</Label>
-                  <select
-                    id="status"
-                    {...form.register('status')}
-                    className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-                  >
-                    <option value={PostStatus.DRAFT}>{t('draft')}</option>
-                    <option value={PostStatus.PUBLISHED}>
-                      {t('published')}
-                    </option>
-                    <option value={PostStatus.SCHEDULED}>
-                      {t('scheduled')}
-                    </option>
-                    <option value={PostStatus.ARCHIVED}>{t('archived')}</option>
-                  </select>
+                  <Controller
+                    name="status"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full bg-white dark:bg-gray-900">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={PostStatus.DRAFT}>
+                            {t('draft')}
+                          </SelectItem>
+                          <SelectItem value={PostStatus.PUBLISHED}>
+                            {t('published')}
+                          </SelectItem>
+                          <SelectItem value={PostStatus.SCHEDULED}>
+                            {t('scheduled')}
+                          </SelectItem>
+                          <SelectItem value={PostStatus.ARCHIVED}>
+                            {t('archived')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
 
                 {/* Publish Date */}
-                {watch('status') === PostStatus.PUBLISHED && (
+                {currentStatus === PostStatus.PUBLISHED && (
                   <div className="space-y-2">
                     <Label htmlFor="publishedAt">
                       <Calendar className="mr-1 inline h-3 w-3" />
@@ -761,7 +938,7 @@ export function PostForm({
                 )}
 
                 {/* Schedule Date */}
-                {watch('status') === PostStatus.SCHEDULED && (
+                {currentStatus === PostStatus.SCHEDULED && (
                   <div className="space-y-2">
                     <Label htmlFor="scheduledFor">
                       <Calendar className="mr-1 inline h-3 w-3" />
@@ -848,7 +1025,6 @@ export function PostForm({
                     </div>
                   </Label>
 
-                  {/* Password Protected */}
                   <Label className="hover:bg-accent/50 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors">
                     <input
                       type="radio"
@@ -888,7 +1064,7 @@ export function PostForm({
                 </div>
 
                 {/* Password Field */}
-                {watchVisibility === PostVisibility.PASSWORD && (
+                {currentVisibility === PostVisibility.PASSWORD && (
                   <div className="animate-in fade-in slide-in-from-top-2 space-y-2">
                     <Label htmlFor="password">
                       <Key className="mr-1 inline h-3 w-3" />
@@ -903,11 +1079,16 @@ export function PostForm({
                     <p className="text-muted-foreground text-xs">
                       {t('passwordHelperText')}
                     </p>
+                    {errors.password && (
+                      <p className="text-destructive text-sm">
+                        {errors.password.message}
+                      </p>
+                    )}
                   </div>
                 )}
 
                 {/* Allowed Users */}
-                {watchVisibility === PostVisibility.RESTRICTED && (
+                {currentVisibility === PostVisibility.RESTRICTED && (
                   <div className="animate-in fade-in slide-in-from-top-2 space-y-2">
                     <Label>
                       <UserCheck className="mr-1 inline h-3 w-3" />
@@ -940,22 +1121,33 @@ export function PostForm({
               defaultOpen={true}
             >
               <div className="space-y-4">
-                {/* Category */}
                 <div className="space-y-2">
                   <Label htmlFor="categoryId">{t('category')}</Label>
                   <div className="flex gap-2">
-                    <select
-                      id="categoryId"
-                      {...form.register('categoryId')}
-                      className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
-                    >
-                      <option value="">{t('noCategory')}</option>
-                      {filteredCategories.map(cat => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      name="categoryId"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={value => {
+                            field.onChange(value == '0' ? '' : value);
+                          }}
+                        >
+                          <SelectTrigger className="w-full bg-white dark:bg-gray-900">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">{t('noCategory')}</SelectItem>
+                            {filteredCategories.map(cat => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                     <Button
                       type="button"
                       variant="outline"
@@ -969,7 +1161,7 @@ export function PostForm({
                     <p className="text-xs text-amber-600 dark:text-amber-500">
                       {t('noCategoriesAvailable', {
                         language:
-                          watchLanguage === 'vi'
+                          currentLanguage === 'vi'
                             ? t('vietnamese')
                             : t('english'),
                       })}
@@ -1046,10 +1238,12 @@ export function PostForm({
                   <Input
                     id="metaTitle"
                     {...form.register('metaTitle')}
-                    placeholder={watchTitle || t('metaTitlePlaceholder')}
+                    placeholder={
+                      getValues('title') || t('metaTitlePlaceholder')
+                    }
                   />
                   <CharacterCounter
-                    current={watchMetaTitle?.length || 0}
+                    current={getValues('metaTitle')?.length || 0}
                     max={60}
                   />
                 </div>
@@ -1066,7 +1260,7 @@ export function PostForm({
                     rows={3}
                   />
                   <CharacterCounter
-                    current={watchMetaDescription?.length || 0}
+                    current={getValues('metaDescription')?.length || 0}
                     max={160}
                   />
                 </div>
@@ -1074,9 +1268,11 @@ export function PostForm({
                 {/* SEO Preview */}
                 <div className="pt-2">
                   <SEOPreview
-                    title={watchMetaTitle || watchTitle}
-                    description={watchMetaDescription || watch('excerpt') || ''}
-                    url={`https://yoursite.com/blog/${watchSlug}`}
+                    title={getValues('metaTitle') || getValues('title')}
+                    description={
+                      getValues('metaDescription') || getValues('excerpt') || ''
+                    }
+                    url={`https://yoursite.com/blog/${getValues('slug')}`}
                   />
                 </div>
 
@@ -1102,10 +1298,10 @@ export function PostForm({
                   <p className="text-muted-foreground text-xs">
                     {t('ogImageHelperText')}
                   </p>
-                  {watch('ogImage') ? (
+                  {getValues('ogImage') ? (
                     <div className="group relative overflow-hidden rounded border">
                       <img
-                        src={watch('ogImage')}
+                        src={getValues('ogImage')}
                         alt="OG"
                         className="h-32 w-full object-cover"
                       />
@@ -1114,20 +1310,27 @@ export function PostForm({
                           type="button"
                           variant="destructive"
                           size="sm"
-                          onClick={() => setValue('ogImage', '')}
+                          onClick={() =>
+                            setValue('ogImage', '', { shouldDirty: true })
+                          }
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <MediaUploader
-                      onSelect={images => {
-                        if (images.length > 0) {
-                          setValue('ogImage', images[0].url);
+                    <FeatureImageUploader
+                      value={getValues('ogImage')}
+                      onChange={(file, previewUrl) => {
+                        if (file) {
+                          setValue('ogImage', previewUrl || '', {
+                            shouldDirty: true,
+                          });
                         }
                       }}
-                      accept={['image/*']}
+                      onRemove={() => {
+                        setValue('ogImage', '', { shouldDirty: true });
+                      }}
                     />
                   )}
                 </div>
@@ -1193,16 +1396,16 @@ export function PostForm({
         open={showPreview}
         onOpenChange={setShowPreview}
         post={{
-          title: watchTitle,
-          excerpt: watch('excerpt'),
-          content: watchContent,
-          featuredImage: watch('featuredImage'),
+          title: getValues('title'),
+          excerpt: getValues('excerpt'),
+          content: getValues('content'),
+          featuredImage: getValues('featuredImage'),
           author: {
             name: 'You',
             image: undefined,
           },
-          category: categories.find(c => c.id === watch('categoryId')),
-          tags: tags.filter(t => watch('tagIds').includes(t.id)),
+          category: categories.find(c => c.id === getValues('categoryId')),
+          tags: tags.filter(t => getValues('tagIds').includes(t.id)),
         }}
       />
 

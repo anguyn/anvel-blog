@@ -177,101 +177,108 @@ export default function VerifyEmailBlock({
   };
 
   return (
-    <div className="from-background to-secondary/20 relative flex min-h-screen items-center justify-center bg-gradient-to-br p-4">
-      <div className="absolute top-2 right-2 z-20 flex justify-center">
-        <ThemeLocaleControls />
-      </div>
-      <div className="w-full max-w-md space-y-6">
-        <div className="space-y-2 text-center">
-          <Link href={`/${locale}`} className="inline-flex items-center gap-2">
-            <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-xl">
-              <Image
-                src="/images/logo.png"
-                alt="Logo"
-                width={48}
-                height={48}
-                priority
-                className=""
-              />
-            </div>
-          </Link>
-          <h1 className="text-2xl font-bold">Anvel</h1>
-          <p className="text-muted-foreground">{t('subtitle')}</p>
+    <div className="from-background to-secondary/20 relative min-h-screen bg-gradient-to-br">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4 py-8 md:flex-row md:gap-0 md:py-4">
+        <div className="md:absolute md:top-4 md:right-4 md:z-50">
+          <ThemeLocaleControls />
         </div>
-
-        <Card>
-          <CardHeader className="text-center">
-            <div className="bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              {status === 'verifying' && (
-                <Loader2 className="text-primary h-8 w-8 animate-spin" />
-              )}
-              {status === 'success' && (
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
-              )}
-              {status === 'already_verified' && (
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
-              )}
-              {status === 'error' && (
-                <XCircle className="text-destructive h-8 w-8" />
-              )}
-              {status === 'expired' && (
-                <Clock className="h-8 w-8 text-orange-500" />
-              )}
-            </div>
-            <CardTitle>
-              {status === 'verifying' && translations.verifying}
-              {status === 'success' && translations.success}
-              {status === 'already_verified' && translations.alreadyVerified}
-              {status === 'error' && translations.error}
-              {status === 'expired' && translations.expired}
-            </CardTitle>
-            <CardDescription className="mt-2">
-              {status === 'verifying' && translations.verifyingDescription}
-              {status === 'success' && translations.successMessage}
-              {status === 'already_verified' && translations.successMessage}
-              {status === 'error' && errorMessage}
-              {status === 'expired' && translations.expiredMessage}
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            {(status === 'success' || status === 'already_verified') && (
-              <div className="space-y-3">
-                <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
-                  {typeof translations.redirectingLogin === 'function'
-                    ? translations.redirectingLogin({
-                        second: redirectCountdown.toString(),
-                      })
-                    : translations.redirectingLogin.replace(
-                        '{second}',
-                        redirectCountdown.toString(),
-                      )}
-                </div>
-                <Link href={`/${locale}/login`}>
-                  <Button className="w-full">{translations.goToLogin}</Button>
-                </Link>
+        <div className="w-full max-w-md space-y-6">
+          <div className="space-y-2 text-center">
+            <Link
+              href={`/${locale}`}
+              className="inline-flex items-center gap-2"
+            >
+              <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-xl">
+                <Image
+                  src="/images/logo.png"
+                  alt="Logo"
+                  width={48}
+                  height={48}
+                  priority
+                  className=""
+                />
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </Link>
+            <h1 className="text-2xl font-bold">Anvel</h1>
+            <p className="text-muted-foreground">{t('subtitle')}</p>
+          </div>
 
-        <p className="text-muted-foreground text-center text-sm">
-          {t('followTerms')}{' '}
-          <Link
-            href={`/${locale}/terms-of-service`}
-            className="hover:text-foreground underline"
-          >
-            {t('tos')}
-          </Link>{' '}
-          and{' '}
-          <Link
-            href={`/${locale}/privacy-policy`}
-            className="hover:text-foreground underline"
-          >
-            {t('pp')}
-          </Link>
-        </p>
-        <p className="text-center">{t('copyright')}</p>
+          <Card>
+            <CardHeader className="text-center">
+              <div className="bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                {status === 'verifying' && (
+                  <Loader2 className="text-primary h-8 w-8 animate-spin" />
+                )}
+                {status === 'success' && (
+                  <CheckCircle2 className="h-8 w-8 text-green-500" />
+                )}
+                {status === 'already_verified' && (
+                  <CheckCircle2 className="h-8 w-8 text-green-500" />
+                )}
+                {status === 'error' && (
+                  <XCircle className="text-destructive h-8 w-8" />
+                )}
+                {status === 'expired' && (
+                  <Clock className="h-8 w-8 text-orange-500" />
+                )}
+              </div>
+              <CardTitle>
+                {status === 'verifying' && translations.verifying}
+                {status === 'success' && translations.success}
+                {status === 'already_verified' && translations.alreadyVerified}
+                {status === 'error' && translations.error}
+                {status === 'expired' && translations.expired}
+              </CardTitle>
+              <CardDescription className="mt-2">
+                {status === 'verifying' && translations.verifyingDescription}
+                {status === 'success' && translations.successMessage}
+                {status === 'already_verified' && translations.successMessage}
+                {status === 'error' && errorMessage}
+                {status === 'expired' && translations.expiredMessage}
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {(status === 'success' || status === 'already_verified') && (
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
+                    {typeof translations.redirectingLogin === 'function'
+                      ? translations.redirectingLogin({
+                          second: redirectCountdown.toString(),
+                        })
+                      : translations.redirectingLogin.replace(
+                          '{second}',
+                          redirectCountdown.toString(),
+                        )}
+                  </div>
+                  <Link href={`/${locale}/login`}>
+                    <Button className="w-full">{translations.goToLogin}</Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <p className="text-muted-foreground text-center text-sm">
+            {t('followTerms')}{' '}
+            <Link
+              href={`/${locale}/terms-of-service`}
+              prefetch
+              className="hover:text-foreground underline"
+            >
+              {t('tos')}
+            </Link>{' '}
+            and{' '}
+            <Link
+              href={`/${locale}/privacy-policy`}
+              prefetch
+              className="hover:text-foreground underline"
+            >
+              {t('pp')}
+            </Link>
+          </p>
+          <p className="text-center">{t('copyright')}</p>
+        </div>
       </div>
     </div>
   );

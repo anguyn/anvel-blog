@@ -89,9 +89,8 @@ export function MobileSearch({ isOpen, onClose, locale }: MobileSearchProps) {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="fixed inset-0 z-[60] bg-[var(--color-background)] lg:hidden"
+          className="fixed inset-0 z-[110] bg-[var(--color-background)] lg:hidden"
         >
-          {/* Mobile Header */}
           <div className="flex items-center gap-3 border-b border-[var(--color-border)] px-4 py-4">
             <Button variant="ghost" size="icon" onClick={onClose}>
               <ArrowLeft className="h-5 w-5" />
@@ -115,7 +114,6 @@ export function MobileSearch({ isOpen, onClose, locale }: MobileSearchProps) {
             </form>
           </div>
 
-          {/* Mobile Results */}
           <div className="h-[calc(100vh-73px)] overflow-y-auto p-4">
             {searchQuery && searchResults ? (
               <div className="space-y-2">

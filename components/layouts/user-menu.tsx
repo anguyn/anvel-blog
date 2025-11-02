@@ -47,10 +47,11 @@ export function UserMenu({
     );
   }
 
-  // Generate login URL with callback
   const getLoginUrl = () => {
-    // Check if current page is home (e.g., /en or /vi)
-    const isHomePage = pathname === `/${locale}` || pathname === `/${locale}/`;
+    const isHomePage =
+      pathname === `/` ||
+      pathname === `/${locale}` ||
+      pathname === `/${locale}/`;
 
     if (isHomePage) {
       return `/${locale}/login`;
@@ -61,7 +62,7 @@ export function UserMenu({
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center gap-2 md:w-auto">
         <Button variant="outline" asChild>
           <Link href={getLoginUrl()}>{t('signIn')}</Link>
         </Button>

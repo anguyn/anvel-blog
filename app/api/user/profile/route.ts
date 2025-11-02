@@ -267,7 +267,6 @@ export async function PATCH(req: NextRequest) {
 
     revalidatePath('/', 'layout');
     revalidatePath('/[locale]/settings', 'page');
-    console.log('Updated user: ', updatedUser.name);
 
     return NextResponse.json({
       success: true,

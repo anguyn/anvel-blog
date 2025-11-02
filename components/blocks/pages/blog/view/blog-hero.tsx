@@ -22,49 +22,154 @@ interface BlogHeroSectionProps {
   session: any;
 }
 
-const extractDominantColor = (imageSrc: string): Promise<string> => {
+interface ColorPalette {
+  primary: string;
+  secondary: string;
+  accent: string;
+}
+
+// Hàm lấy top 3 màu dominant từ ảnh
+const extractColorPalette = (imageSrc: string): Promise<ColorPalette> => {
   return new Promise(resolve => {
     const img = new window.Image();
-    img.crossOrigin = 'Anonymous';
-    img.src = imageSrc;
+    img.crossOrigin = 'anonymous';
+
+    // Thử thêm timestamp để bypass cache
+    img.src = imageSrc.includes('?')
+      ? `${imageSrc}&t=${Date.now()}`
+      : `${imageSrc}?t=${Date.now()}`;
 
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        resolve('59, 130, 246');
-        return;
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        if (!ctx) {
+          resolve(getDefaultPalette());
+          return;
+        }
+
+        // Scale down để performance tốt hơn
+        const scale = 0.1;
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // Color quantization - nhóm màu gần nhau
+        const colorMap = new Map<string, number>();
+        const step = 4; // Sample mỗi 4 pixels để nhanh hơn
+
+        for (let i = 0; i < data.length; i += step * 4) {
+          const r = Math.round(data[i] / 10) * 10;
+          const g = Math.round(data[i + 1] / 10) * 10;
+          const b = Math.round(data[i + 2] / 10) * 10;
+          const a = data[i + 3];
+
+          // Skip transparent và quá tối/sáng
+          if (a < 125) continue;
+          const brightness = (r + g + b) / 3;
+          if (brightness < 30 || brightness > 240) continue;
+
+          const key = `${r},${g},${b}`;
+          colorMap.set(key, (colorMap.get(key) || 0) + 1);
+        }
+
+        // Sort theo frequency
+        const sortedColors = Array.from(colorMap.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10); // Lấy top 10
+
+        if (sortedColors.length === 0) {
+          resolve(getDefaultPalette());
+          return;
+        }
+
+        // Lấy 3 màu khác biệt nhất
+        const palette = getDistinctColors(sortedColors.map(c => c[0]));
+
+        console.log('Extracted palette:', palette);
+        resolve(palette);
+      } catch (error) {
+        console.error('Canvas error:', error);
+        resolve(getDefaultPalette());
       }
-
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      let r = 0,
-        g = 0,
-        b = 0;
-      const pixelCount = data.length / 4;
-
-      for (let i = 0; i < data.length; i += 4) {
-        r += data[i];
-        g += data[i + 1];
-        b += data[i + 2];
-      }
-
-      r = Math.floor(r / pixelCount);
-      g = Math.floor(g / pixelCount);
-      b = Math.floor(b / pixelCount);
-
-      resolve(`${r}, ${g}, ${b}`);
     };
 
-    img.onerror = () => {
-      resolve('59, 130, 246');
+    img.onerror = error => {
+      console.error('Image load error:', error, 'URL:', imageSrc);
+      resolve(getDefaultPalette());
     };
   });
+};
+
+// Lấy 3 màu khác biệt nhất
+const getDistinctColors = (colors: string[]): ColorPalette => {
+  if (colors.length === 0) return getDefaultPalette();
+
+  const primary = colors[0];
+  let secondary = colors[1] || primary;
+  let accent = colors[2] || primary;
+
+  // Đảm bảo màu khác biệt nhau đủ
+  for (let i = 1; i < colors.length; i++) {
+    if (colorDistance(primary, colors[i]) > 50) {
+      secondary = colors[i];
+      break;
+    }
+  }
+
+  for (let i = 2; i < colors.length; i++) {
+    if (
+      colorDistance(primary, colors[i]) > 50 &&
+      colorDistance(secondary, colors[i]) > 50
+    ) {
+      accent = colors[i];
+      break;
+    }
+  }
+
+  return { primary, secondary, accent };
+};
+
+// Tính khoảng cách giữa 2 màu
+const colorDistance = (color1: string, color2: string): number => {
+  const [r1, g1, b1] = color1.split(',').map(Number);
+  const [r2, g2, b2] = color2.split(',').map(Number);
+  return Math.sqrt((r2 - r1) ** 2 + (g2 - g1) ** 2 + (b2 - b1) ** 2);
+};
+
+const getDefaultPalette = (): ColorPalette => {
+  const palettes = [
+    {
+      primary: '59, 130, 246',
+      secondary: '99, 102, 241',
+      accent: '168, 85, 247',
+    }, // Blue-Indigo-Purple
+    {
+      primary: '168, 85, 247',
+      secondary: '236, 72, 153',
+      accent: '251, 113, 133',
+    }, // Purple-Pink
+    {
+      primary: '34, 197, 94',
+      secondary: '59, 130, 246',
+      accent: '14, 165, 233',
+    }, // Green-Blue
+    {
+      primary: '251, 146, 60',
+      secondary: '239, 68, 68',
+      accent: '236, 72, 153',
+    }, // Orange-Red-Pink
+    {
+      primary: '14, 165, 233',
+      secondary: '34, 197, 94',
+      accent: '234, 179, 8',
+    }, // Cyan-Green-Yellow
+  ];
+  return palettes[Math.floor(Math.random() * palettes.length)];
 };
 
 const hexToRgb = (hex: string): string => {
@@ -80,24 +185,76 @@ export function BlogHeroSection({
   locale,
   session,
 }: BlogHeroSectionProps) {
-  const [bgColor, setBgColor] = useState<string>('59, 130, 246');
+  const [palette, setPalette] = useState<ColorPalette | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // Set isClient on mount to avoid hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    if (!isClient) return;
+
     if (post.featuredImage) {
-      extractDominantColor(post.featuredImage).then(setBgColor);
+      extractColorPalette(post.featuredImage).then(setPalette);
     } else if (post.category?.color) {
-      setBgColor(hexToRgb(post.category.color));
+      const rgb = hexToRgb(post.category.color);
+      setPalette({
+        primary: rgb,
+        secondary: rgb,
+        accent: rgb,
+      });
     } else {
-      const colors = [
-        '59, 130, 246', // blue
-        '168, 85, 247', // purple
-        '236, 72, 153', // pink
-        '34, 197, 94', // green
-        '251, 146, 60', // orange
-      ];
-      setBgColor(colors[Math.floor(Math.random() * colors.length)]);
+      setPalette(getDefaultPalette());
     }
-  }, [post.featuredImage, post.category?.color]);
+  }, [isClient, post.featuredImage, post.category?.color]);
+
+  // Use a simple default style for SSR and initial render
+  const defaultStyle = {
+    background:
+      'linear-gradient(to bottom, rgba(59, 130, 246, 0.05), transparent)',
+  };
+
+  const dynamicStyle = palette
+    ? {
+        background: `
+          radial-gradient(
+            ellipse 80% 80% at 50% -20%,
+            rgba(${palette.primary}, 0.15),
+            transparent
+          ),
+          radial-gradient(
+            ellipse 60% 60% at 100% 50%,
+            rgba(${palette.secondary}, 0.1),
+            transparent
+          ),
+          radial-gradient(
+            ellipse 50% 50% at 0% 100%,
+            rgba(${palette.accent}, 0.08),
+            transparent
+          )
+        `,
+        backdropFilter: 'blur(40px)',
+      }
+    : defaultStyle;
+
+  const overlayStyle = palette
+    ? {
+        background: `
+          linear-gradient(135deg, 
+            rgba(${palette.primary}, 0.1) 0%, 
+            rgba(${palette.secondary}, 0.05) 50%, 
+            rgba(${palette.accent}, 0.05) 100%
+          )
+        `,
+        filter: 'blur(60px)',
+      }
+    : {
+        background:
+          'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%)',
+        filter: 'blur(60px)',
+      };
 
   return (
     <div className="from-primary/5 to-background relative overflow-hidden bg-gradient-to-b py-4 pb-0">
@@ -126,28 +283,11 @@ export function BlogHeroSection({
 
           <div
             className="relative -mx-4 overflow-hidden rounded-2xl p-6 lg:p-8"
-            style={{
-              background: `
-                radial-gradient(
-                  ellipse 80% 80% at 50% -20%,
-                  rgba(${bgColor}, 0.15),
-                  transparent
-                ),
-                radial-gradient(
-                  ellipse 60% 60% at 100% 50%,
-                  rgba(${bgColor}, 0.1),
-                  transparent
-                )
-              `,
-              backdropFilter: 'blur(40px)',
-            }}
+            style={dynamicStyle}
           >
             <div
               className="absolute inset-0 -z-10 opacity-50"
-              style={{
-                background: `linear-gradient(135deg, rgba(${bgColor}, 0.1) 0%, transparent 50%, rgba(${bgColor}, 0.05) 100%)`,
-                filter: 'blur(60px)',
-              }}
+              style={overlayStyle}
             />
 
             <div className="relative z-10 flex flex-col lg:flex-row lg:gap-8">

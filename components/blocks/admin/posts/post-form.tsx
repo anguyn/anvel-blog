@@ -497,7 +497,6 @@ export function PostForm({
         console.error('Submit error:', error);
         toast.error(t('errorOccurredWhileSaving'));
       } finally {
-        console.log('Testing is final');
         setIsSubmitting(false);
       }
     },

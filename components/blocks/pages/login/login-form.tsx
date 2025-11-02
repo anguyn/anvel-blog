@@ -136,9 +136,6 @@ export function LoginForm({
 
     if (error === '2fa_required') {
       setStep('2fa');
-      toast.info(
-        translations.twoFactorRequired || 'Please enter your 2FA code',
-      );
     }
 
     if (error === 'invalid_2fa') {
@@ -431,9 +428,8 @@ export function LoginForm({
     };
   }, [step, translations]);
 
-  // Render Turnstile (always mounted, hidden on 2FA step)
   const renderTurnstile = () => (
-    <div className={cn('space-y-2', step === '2fa' && 'hidden')}>
+    <div className={cn('space-y-2')}>
       <TurnstileWidget
         key={`${step}-${turnstileKey}`}
         ref={turnstileRef}
@@ -446,11 +442,9 @@ export function LoginForm({
     </div>
   );
 
-  // Render credentials step
   if (step === 'credentials') {
     return (
       <div className="space-y-4">
-        {/* Unverified Account Alert */}
         {error === 'unverified' && emailParam && (
           <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950">
             <div className="flex items-start gap-3">

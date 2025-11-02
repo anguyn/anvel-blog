@@ -811,7 +811,6 @@ export class PostService {
     }
 
     // ========== IMAGE FIELDS ==========
-    console.log('Ra feature image nè: ', data.featuredImage);
     if (data.featuredImage !== undefined) {
       updateData.featuredImage = data.featuredImage;
     }

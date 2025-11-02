@@ -93,7 +93,7 @@ export function SearchModal({ isOpen, onClose, locale }: SearchModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-[60] hidden bg-black/50 backdrop-blur-sm lg:block"
+            className="fixed inset-0 z-[110] hidden bg-black/50 backdrop-blur-sm lg:block"
           />
 
           {/* Search Modal */}

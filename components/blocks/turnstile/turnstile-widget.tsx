@@ -13,7 +13,6 @@ interface TurnstileWidgetProps {
   action?: string;
 }
 
-// Export type cho ref
 export interface TurnstileWidgetRef {
   reset: () => void;
   remove: () => void;
@@ -28,7 +27,6 @@ export const TurnstileWidget = forwardRef<
   const { theme } = useTheme();
   const turnstileRef = useRef<TurnstileInstance>(null);
 
-  // Expose methods để parent component có thể gọi
   useImperativeHandle(ref, () => ({
     reset: () => {
       turnstileRef.current?.reset();

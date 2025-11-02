@@ -14,7 +14,7 @@ import { PageProps } from '@/types/global';
 import { MainLayout } from '@/components/layouts/main-layout';
 import { Lock } from 'lucide-react';
 
-export const generateStaticParams = getStaticParams;
+export const dynamic = 'force-dynamic';
 
 export default async function PasswordPage({
   params,

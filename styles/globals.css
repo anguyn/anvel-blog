@@ -47,6 +47,14 @@
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
+
+  /* ============================================
+     EDITOR-SPECIFIC VARIABLES
+     ============================================ */
+  --selection-bg: oklch(87% 0.05 250);
+  --highlight-bg: oklch(76% 0.1 85);
+  --code-bg: oklch(18% 0 0);
+  --code-fg: oklch(96% 0 0);
 }
 
 /* Dark mode when system preference is dark */
@@ -79,6 +87,12 @@
     --color-border: oklch(17.5% 0 0);
     --color-input: oklch(17.5% 0 0);
     --color-ring: oklch(83.9% 0 0);
+
+    /* Editor dark mode */
+    --selection-bg: oklch(25% 0.05 250);
+    --highlight-bg: oklch(50% 0.15 85);
+    --code-bg: oklch(18% 0 0);
+    --code-fg: oklch(96% 0 0);
   }
 }
 
@@ -111,6 +125,12 @@
   --color-border: oklch(91.4% 0 0);
   --color-input: oklch(91.4% 0 0);
   --color-ring: oklch(9% 0 0);
+
+  /* Editor light mode */
+  --selection-bg: oklch(87% 0.05 250);
+  --highlight-bg: oklch(76% 0.1 85);
+  --code-bg: oklch(18% 0 0);
+  --code-fg: oklch(96% 0 0);
 }
 
 /* Dark mode when .dark class is applied */
@@ -142,6 +162,12 @@
   --color-border: oklch(17.5% 0 0);
   --color-input: oklch(17.5% 0 0);
   --color-ring: oklch(83.9% 0 0);
+
+  /* Editor dark mode */
+  --selection-bg: oklch(25% 0.05 250);
+  --highlight-bg: oklch(50% 0.15 85);
+  --code-bg: oklch(18% 0 0);
+  --code-fg: oklch(96% 0 0);
 }
 
 @layer base {
@@ -154,7 +180,6 @@
     color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
     margin: 0;
-
   }
 
   body[data-scroll-locked] {
@@ -164,39 +189,14 @@
     margin-right: 0 !important;
     padding-right: 0 !important;
   }
-
 }
 
 .container {
   @apply w-full px-4;
-  /* padding-inline: 1rem; tương đương px-4 */
   max-width: none;
-  /* Xóa giới hạn mặc định của Tailwind container */
-
-  /* Tùy chỉnh breakpoint mở rộng */
-  /* @media (min-width: 40rem) {
-    max-width: 40rem;
-  }
-
-  @media (min-width: 48rem) {
-    max-width: 48rem;
-  }
-
-  @media (min-width: 64rem) {
-    max-width: 64rem;
-  }
-
-  @media (min-width: 80rem) {
-    max-width: 80rem;
-  }
-
-  @media (min-width: 96rem) {
-    max-width: 96rem;
-  } */
 
   @media (min-width: 160rem) {
     max-width: 160rem;
-    /* Mở rộng đến màn hình TV hoặc 8K */
   }
 }
 
@@ -228,111 +228,6 @@
 .code-block pre {
   padding: 1rem;
   overflow-x: auto;
-}
-
-/* Blog CSS */
-/* Blog Content Styles */
-.blog-content {
-  @apply text-base leading-relaxed;
-}
-
-.blog-content h1,
-.blog-content h2,
-.blog-content h3,
-.blog-content h4,
-.blog-content h5,
-.blog-content h6 {
-  @apply font-bold mb-4 mt-8 scroll-mt-24;
-}
-
-.blog-content h1 {
-  @apply text-4xl;
-}
-
-.blog-content h2 {
-  @apply text-3xl border-b pb-2;
-}
-
-.blog-content h3 {
-  @apply text-2xl;
-}
-
-.blog-content h4 {
-  @apply text-xl;
-}
-
-.blog-content p {
-  @apply mb-4;
-}
-
-.blog-content a {
-  @apply text-primary underline-offset-4 hover:underline;
-}
-
-.blog-content ul,
-.blog-content ol {
-  @apply mb-4 ml-6;
-}
-
-.blog-content ul {
-  @apply list-disc;
-}
-
-.blog-content ol {
-  @apply list-decimal;
-}
-
-.blog-content li {
-  @apply mb-2;
-}
-
-.blog-content blockquote {
-  @apply border-l-4 border-primary pl-4 italic my-6 text-muted-foreground;
-}
-
-.blog-content pre {
-  @apply bg-muted rounded-lg p-4 overflow-x-auto my-6;
-}
-
-.blog-content code {
-  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
-}
-
-.blog-content pre code {
-  @apply bg-transparent p-0;
-}
-
-.blog-content img {
-  @apply rounded-lg my-6 w-full;
-}
-
-.blog-content table {
-  @apply w-full border-collapse my-6;
-}
-
-.blog-content th,
-.blog-content td {
-  @apply border border-border px-4 py-2 text-left;
-}
-
-.blog-content th {
-  @apply bg-muted font-semibold;
-}
-
-.blog-content hr {
-  @apply my-8 border-border;
-}
-
-.blog-content strong {
-  @apply font-semibold;
-}
-
-.blog-content em {
-  @apply italic;
-}
-
-/* Code block custom styles */
-.code-block pre {
   @apply !m-0 !bg-transparent;
 }
 
@@ -361,26 +256,729 @@ html {
 
 .skeleton {
   background: linear-gradient(90deg,
-      hsl(var(--muted)) 25%,
-      hsl(var(--muted-foreground) / 0.1) 50%,
-      hsl(var(--muted)) 75%);
+      var(--color-muted) 25%,
+      color-mix(in oklch, var(--color-muted-foreground) 10%, transparent) 50%,
+      var(--color-muted) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
 }
 
-/* Responsive images in blog content */
+/* ============================================
+   TIPTAP EDITOR STYLES
+   Import từ editor-styles.css
+   ============================================ */
+
+/* Scrollbar Hidden cho Editor */
+.scrollbar-hidden::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+/* Editor Selection */
+.ProseMirror ::selection {
+  background: var(--selection-bg);
+}
+
+.ProseMirror-selectednode {
+  outline: 3px solid var(--color-primary) !important;
+}
+
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 3px solid var(--color-primary) !important;
+}
+
+/* Maintain selection during interactions */
+.ProseMirror:focus {
+  outline: none;
+}
+
+.ProseMirror .has-focus {
+  outline: none;
+}
+
+/* Table Styles with Dark Mode Support */
+.tableWrapper {
+  overflow-x: auto;
+  margin: 2em 0;
+}
+
+.tableWrapper table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.tableWrapper table td,
+.tableWrapper table th {
+  border: 2px solid var(--color-border);
+  padding: 0.75rem;
+  position: relative;
+  vertical-align: top;
+  box-sizing: border-box;
+  min-width: 100px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+.tableWrapper table th {
+  background: var(--color-muted);
+  font-weight: 700;
+}
+
+.tableWrapper table .selectedCell {
+  background: var(--color-accent);
+}
+
+/* Table Resize Handle */
+.tableWrapper table td:hover::after,
+.tableWrapper table th:hover::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--color-primary);
+  cursor: col-resize;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tableWrapper table td:hover::after,
+.tableWrapper table th:hover::after {
+  opacity: 1;
+}
+
+/* Code Block Styles với Dark Mode */
+.ProseMirror pre {
+  background: var(--code-bg) !important;
+  color: var(--code-fg) !important;
+  padding: 1.5rem !important;
+  margin: 2em 0 !important;
+  overflow-x: auto;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Monaco,
+    'Courier New', monospace !important;
+  font-size: 0.875rem !important;
+  line-height: 1.7 !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--color-border);
+}
+
+.ProseMirror pre code {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  font-size: inherit !important;
+}
+
+/* Syntax Highlighting - VS Code Dark+ */
+.ProseMirror pre .hljs-comment,
+.ProseMirror pre .hljs-quote {
+  color: #6a9955;
+  font-style: italic;
+}
+
+.ProseMirror pre .hljs-keyword {
+  color: #569cd6;
+}
+
+.ProseMirror pre .hljs-string {
+  color: #ce9178;
+}
+
+.ProseMirror pre .hljs-number {
+  color: #b5cea8;
+}
+
+.ProseMirror pre .hljs-function {
+  color: #dcdcaa;
+}
+
+.ProseMirror pre .hljs-title {
+  color: #4ec9b0;
+}
+
+.ProseMirror pre .hljs-class {
+  color: #4ec9b0;
+}
+
+.ProseMirror pre .hljs-variable {
+  color: #9cdcfe;
+}
+
+/* Inline Code */
+.ProseMirror code {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+  border: 1px solid var(--color-border);
+}
+
+.ProseMirror pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--color-muted-foreground);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Paragraphs */
+.ProseMirror p {
+  line-height: 1.75;
+  margin: 0.75em 0;
+  color: var(--color-foreground);
+}
+
+/* Headings */
+.ProseMirror h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+  margin: 0.5em 0 0.5em 0;
+  line-height: 1.2;
+  color: var(--color-foreground);
+}
+
+.ProseMirror h2 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 0.5em 0 0.5em 0;
+  line-height: 1.3;
+  color: var(--color-foreground);
+}
+
+.ProseMirror h3 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 0.5em 0 0.5em 0;
+  line-height: 1.4;
+  color: var(--color-foreground);
+}
+
+/* Lists */
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 2em;
+  margin: 1em 0;
+  color: var(--color-foreground);
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+/* Links */
+.ProseMirror a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  opacity: 0.8;
+}
+
+/* Images */
+.ProseMirror .image-wrapper {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.ProseMirror .image-wrapper img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  border: 1px solid var(--color-border);
+}
+
+.ProseMirror .image-wrapper[data-align='center'] {
+  display: block;
+  margin: 1rem auto;
+  text-align: center;
+}
+
+.ProseMirror .image-wrapper[data-align='left'] {
+  float: left;
+  margin: 0.5rem 1rem 0.5rem 0;
+}
+
+.ProseMirror .image-wrapper[data-align='right'] {
+  float: right;
+  margin: 0.5rem 0 0.5rem 1rem;
+}
+
+.ProseMirror .image-wrapper[data-align='inline'] {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.5rem;
+}
+
+/* Image Resize Handles */
+.image-wrapper .resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--color-primary);
+  border: 2px solid var(--color-background);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.image-wrapper:hover .resize-handle {
+  opacity: 1;
+}
+
+.resize-handle-nw {
+  top: -6px;
+  left: -6px;
+  cursor: nw-resize;
+}
+
+.resize-handle-ne {
+  top: -6px;
+  right: -6px;
+  cursor: ne-resize;
+}
+
+.resize-handle-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.resize-handle-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: se-resize;
+}
+
+/* Blockquote */
+.ProseMirror blockquote {
+  border-left: 4px solid var(--color-primary);
+  padding-left: 1.5em;
+  margin: 1.5em 0;
+  font-style: italic;
+  color: var(--color-muted-foreground);
+}
+
+/* Highlight */
+.ProseMirror mark {
+  background-color: var(--highlight-bg);
+  padding: 0.125em 0;
+  border-radius: 0.25em;
+  color: var(--color-foreground);
+}
+
+/* Mention */
+.ProseMirror .mention {
+  background: color-mix(in oklch, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  padding: 0.125em 0.5em;
+  border-radius: 0.5em;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ProseMirror .mention:hover {
+  background: color-mix(in oklch, var(--color-primary) 20%, transparent);
+}
+
+/* Mention List */
+.mention-list {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.mention-item {
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+  text-align: left;
+  color: var(--color-foreground);
+}
+
+.mention-item:hover,
+.mention-item.is-selected {
+  background: var(--color-accent);
+}
+
+/* Draggable */
+[data-drag-handle] {
+  cursor: grab;
+}
+
+[data-drag-handle]:active {
+  cursor: grabbing;
+}
+
+/* Focus styles */
+.ProseMirror:focus-visible {
+  outline: none;
+}
+
+/* Clear floats */
+.ProseMirror::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+/* ============================================
+   BLOG CONTENT DISPLAY
+   ============================================ */
+
+.blog-content {
+  @apply text-base leading-relaxed;
+}
+
+/* Headings - Proper Spacing */
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4,
+.blog-content h5,
+.blog-content h6 {
+  @apply font-bold scroll-mt-24;
+}
+
+.blog-content h1 {
+  @apply text-4xl mt-3 mb-4;
+}
+
+.blog-content h1:first-child {
+  @apply mt-0;
+}
+
+.blog-content h2 {
+  @apply text-3xl mt-3 mb-4 border-b pb-2;
+}
+
+.blog-content h3 {
+  @apply text-2xl mt-2 mb-3;
+}
+
+.blog-content h4 {
+  @apply text-xl mt-1 mb-2;
+}
+
+/* Paragraphs - Proper Line Spacing */
+.blog-content p {
+  @apply my-1 leading-relaxed;
+}
+
+.blog-content p:first-child {
+  @apply mt-0;
+}
+
+.blog-content p:last-child {
+  @apply mb-0;
+}
+
+/* Links */
+.blog-content a {
+  @apply text-primary underline-offset-4 hover:underline;
+}
+
+/* Lists - Proper Spacing and Visibility */
+.blog-content ul,
+.blog-content ol {
+  @apply my-6 ml-6;
+}
+
+.blog-content ul {
+  @apply list-disc;
+}
+
+.blog-content ol {
+  @apply list-decimal;
+}
+
+.blog-content li {
+  @apply my-3 leading-relaxed;
+}
+
+.blog-content ul li::marker,
+.blog-content ol li::marker {
+  @apply text-foreground;
+}
+
+.blog-content ul ul,
+.blog-content ol ul {
+  @apply list-[circle];
+}
+
+.blog-content ul ul ul,
+.blog-content ol ul ul,
+.blog-content ol ol ul {
+  @apply list-[square];
+}
+
+/* Blockquote */
+.blog-content blockquote {
+  @apply border-l-4 border-primary pl-6 my-6 italic text-muted-foreground leading-relaxed;
+}
+
+/* Modern Code Block with Header and Copy Button */
+.blog-content .code-block-wrapper {
+  @apply relative my-8 rounded-lg overflow-hidden;
+  background: #1e1e1e;
+}
+
+.blog-content .code-block-header {
+  @apply flex justify-between items-center px-4 py-2 border-b;
+  background: #2d2d2d;
+  border-color: #3e3e3e;
+}
+
+.blog-content .code-block-lang {
+  @apply text-xs font-mono uppercase tracking-wider;
+  color: #858585;
+}
+
+.blog-content .code-copy-btn {
+  @apply px-2 py-1 rounded border flex items-center gap-1 transition-all cursor-pointer;
+  background: transparent;
+  border-color: #3e3e3e;
+  color: #858585;
+}
+
+.blog-content .code-copy-btn:hover {
+  background: #3e3e3e;
+  color: #d4d4d4;
+  border-color: #4e4e4e;
+}
+
+/* Code Block Syntax Highlighting */
+.blog-content pre {
+  @apply p-6 m-0 overflow-x-auto font-mono text-sm;
+  background: #1e1e1e !important;
+  color: #d4d4d4 !important;
+  line-height: 1.7 !important;
+  border-radius: 0 0 8px 8px !important;
+}
+
+.blog-content pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+
+/* VS Code Dark+ Syntax Colors */
+.blog-content .hljs-comment,
+.blog-content .hljs-quote {
+  @apply italic;
+  color: #6a9955;
+}
+
+.blog-content .hljs-keyword {
+  color: #569cd6;
+}
+
+.blog-content .hljs-selector-tag {
+  color: #569cd6;
+}
+
+.blog-content .hljs-literal {
+  color: #569cd6;
+}
+
+.blog-content .hljs-string {
+  color: #ce9178;
+}
+
+.blog-content .hljs-number {
+  color: #b5cea8;
+}
+
+.blog-content .hljs-function {
+  color: #dcdcaa;
+}
+
+.blog-content .hljs-title {
+  color: #4ec9b0;
+}
+
+.blog-content .hljs-class {
+  color: #4ec9b0;
+}
+
+.blog-content .hljs-variable {
+  color: #9cdcfe;
+}
+
+.blog-content .hljs-params {
+  color: #9cdcfe;
+}
+
+.blog-content .hljs-built_in {
+  color: #4ec9b0;
+}
+
+.blog-content .hljs-attr {
+  color: #9cdcfe;
+}
+
+.blog-content .hljs-meta {
+  color: #808080;
+}
+
+.blog-content .hljs-tag {
+  color: #569cd6;
+}
+
+.blog-content .hljs-name {
+  color: #569cd6;
+}
+
+.blog-content .hljs-operator {
+  color: #d4d4d4;
+}
+
+.blog-content .hljs-regexp {
+  color: #d16969;
+}
+
+.blog-content .hljs-selector-class {
+  color: #d7ba7d;
+}
+
+.blog-content .hljs-selector-id {
+  color: #d7ba7d;
+}
+
+/* Inline Code */
+.blog-content code {
+  @apply bg-muted text-foreground px-1.5 py-0.5 rounded font-mono text-sm;
+}
+
+.blog-content pre code {
+  @apply bg-transparent p-0;
+}
+
+/* Images */
+.blog-content img {
+  @apply rounded-lg my-8 w-full;
+}
+
+/* Tables - Proper Display */
+.blog-content table {
+  @apply w-full border-collapse my-8 overflow-hidden;
+}
+
+.blog-content th,
+.blog-content td {
+  @apply border border-border px-4 py-3 text-left;
+}
+
+.blog-content th {
+  @apply bg-muted font-semibold;
+}
+
+/* Horizontal Rule */
+.blog-content hr {
+  @apply my-8 border-t-2 border-border;
+}
+
+/* Strong and Emphasis */
+.blog-content strong {
+  @apply font-semibold;
+}
+
+.blog-content em {
+  @apply italic;
+}
+
+/* Light Mode Code Block */
+.light .blog-content .code-block-wrapper {
+  background: #f5f5f5;
+}
+
+.light .blog-content .code-block-header {
+  background: #e8e8e8;
+  border-color: #d0d0d0;
+}
+
+.light .blog-content .code-block-lang {
+  color: #666;
+}
+
+.light .blog-content .code-copy-btn {
+  border-color: #d0d0d0;
+  color: #666;
+}
+
+.light .blog-content .code-copy-btn:hover {
+  background: #d0d0d0;
+  color: #333;
+}
+
+.light .blog-content pre {
+  background: #f5f5f5 !important;
+  color: #24292e !important;
+}
+
+.light .blog-content .hljs-comment,
+.light .blog-content .hljs-quote {
+  color: #6a737d;
+}
+
+.light .blog-content .hljs-keyword {
+  color: #d73a49;
+}
+
+.light .blog-content .hljs-string {
+  color: #032f62;
+}
+
+.light .blog-content .hljs-number {
+  color: #005cc5;
+}
+
+.light .blog-content .hljs-function {
+  color: #6f42c1;
+}
+
+.light .blog-content .hljs-title,
+.light .blog-content .hljs-class {
+  color: #22863a;
+}
+
+/* Responsive images */
 .blog-content figure {
-  @apply my-6;
+  @apply my-8;
 }
 
 .blog-content figcaption {
   @apply text-sm text-center text-muted-foreground mt-2;
 }
 
-/* Video responsive wrapper */
+/* Video wrapper */
 .video-wrapper {
-  @apply relative w-full pt-[56.25%];
-  /* 16:9 Aspect Ratio */
+  @apply relative w-full;
+  padding-top: 56.25%;
 }
 
 .video-wrapper iframe,
@@ -401,6 +999,11 @@ html {
   .blog-content a::after {
     content: " (" attr(href) ")";
     @apply text-xs text-gray-600;
+  }
+
+  .blog-content .code-block-header,
+  .blog-content .code-copy-btn {
+    @apply hidden;
   }
 }
 

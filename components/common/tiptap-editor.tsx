@@ -2,7 +2,6 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
@@ -11,108 +10,138 @@ import { TableHeader } from '@tiptap/extension-table-header';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import { TextStyle } from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import FontFamily from '@tiptap/extension-font-family';
+import Highlight from '@tiptap/extension-highlight';
 import { common, createLowlight } from 'lowlight';
-import { uploadMediaAction } from '@/app/actions/media.action';
-import { toast } from 'sonner';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
+
+// Import components
+import EditorToolbar from './tiptap-editor/editor-toolbar';
+import TableToolbar from './tiptap-editor/table-toolbar';
+import FindReplace from './tiptap-editor/find-replace';
+import BubbleMenu from './tiptap-editor/bubble-menu';
+
+// Import extensions
 import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  Strikethrough,
-  Code,
-  Heading1,
-  Heading2,
-  Heading3,
-  Heading4,
-  List,
-  ListOrdered,
-  Quote,
-  Undo,
-  Redo,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  Table as TableIcon,
-  Code2,
-  Minus,
-} from 'lucide-react';
-import { useCallback, useEffect } from 'react';
+  FontSize,
+  LineHeight,
+  ResizableImage,
+} from './tiptap-editor/editor-extensions';
+
+// Import styles
+// import './editor-styles.css';
 
 const lowlight = createLowlight(common);
 
 interface TiptapEditorProps {
   value: string;
   onChange: (value: string) => void;
+  onSave?: (content: string) => void;
+  autoSave?: boolean;
+  autoSaveInterval?: number;
   placeholder?: string;
   minHeight?: string;
+  maxHeight?: string;
 }
 
-export function TiptapEditor({
+export default function TiptapEditor({
   value,
   onChange,
+  onSave,
+  autoSave = false,
+  autoSaveInterval = 5000,
   placeholder = 'Start writing...',
   minHeight = '500px',
+  maxHeight = '70vh',
 }: TiptapEditorProps) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFindReplace, setShowFindReplace] = useState(false);
+  const [showScrollbar, setShowScrollbar] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const lastSavedContent = useRef(value);
+  const saveTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+  // Debounced onChange to prevent excessive updates
+  const debouncedOnChange = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    return (html: string) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        onChange(html);
+      }, 300);
+    };
+  }, [onChange]);
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (!autoSave || !onSave) return;
+
+    const interval = setInterval(() => {
+      const currentContent = editor?.getHTML() || '';
+      if (currentContent !== lastSavedContent.current && !isSaving) {
+        setIsSaving(true);
+        onSave(currentContent);
+        lastSavedContent.current = currentContent;
+
+        // Reset saving state after 1 second
+        setTimeout(() => setIsSaving(false), 1000);
+      }
+    }, autoSaveInterval);
+
+    return () => clearInterval(interval);
+  }, [autoSave, autoSaveInterval, onSave, isSaving]);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         codeBlock: false,
-        // ✅ Fix paragraph to include proper attributes
-        paragraph: {
-          HTMLAttributes: {
-            style: 'margin: 1.5em 0; line-height: 1.75;',
-          },
-        },
-        // ✅ Fix headings
         heading: {
-          levels: [1, 2, 3, 4],
-          HTMLAttributes: {
-            style: 'font-weight: bold; margin-top: 2em; margin-bottom: 0.5em;',
-          },
+          levels: [1, 2, 3, 4, 5, 6],
         },
       }),
       Underline,
-      Image.configure({
-        inline: true,
+      Highlight.configure({
+        multicolor: true,
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      TextStyle,
+      Color,
+      FontFamily.configure({
+        types: ['textStyle'],
+      }),
+      FontSize,
+      LineHeight,
+      ResizableImage.configure({
+        inline: false,
         allowBase64: true,
-        HTMLAttributes: {
-          style:
-            'max-width: 100%; height: auto; border-radius: 6px; margin: 1.5em 0;',
-        },
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
           target: '_blank',
           rel: 'noopener noreferrer',
-          style: 'color: hsl(var(--primary)); text-decoration: underline;',
         },
       }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
-          style: 'border-collapse: collapse; width: 100%; margin: 1.5em 0;',
+          class: 'editor-table',
         },
       }),
       TableRow,
-      TableCell.configure({
-        HTMLAttributes: {
-          style: 'border: 1px solid hsl(var(--border)); padding: 0.75em;',
-        },
-      }),
-      TableHeader.configure({
-        HTMLAttributes: {
-          style:
-            'background: hsl(var(--muted)); font-weight: bold; border: 1px solid hsl(var(--border)); padding: 0.75em;',
-        },
-      }),
+      TableCell,
+      TableHeader,
       CodeBlockLowlight.configure({
         lowlight,
+        languageClassPrefix: 'language-',
         defaultLanguage: 'plaintext',
-        HTMLAttributes: {
-          style:
-            'background: hsl(var(--muted)); padding: 1.5em; border-radius: 6px; overflow-x: auto; margin: 1.5em 0; line-height: 1.6;',
-        },
       }),
       Placeholder.configure({
         placeholder,
@@ -120,12 +149,13 @@ export function TiptapEditor({
     ],
     content: value,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      debouncedOnChange(html);
     },
     editorProps: {
       attributes: {
-        class:
-          'prose prose-sm sm:prose lg:prose-lg focus:outline-none max-w-none',
+        class: 'editor-content focus:outline-none',
+        spellcheck: 'false',
       },
     },
   });
@@ -136,460 +166,99 @@ export function TiptapEditor({
     }
   }, [value, editor]);
 
-  const addImage = useCallback(async () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async e => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-
-          const result = await uploadMediaAction(formData);
-
-          if (result.success && result.media) {
-            editor?.chain().focus().setImage({ src: result.media.url }).run();
-            toast.success('Image uploaded successfully');
-          } else {
-            toast.error(result.error || 'Upload failed');
-          }
-        } catch (error) {
-          toast.error('Failed to upload image');
-        }
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowFindReplace(true);
       }
     };
-    input.click();
-  }, [editor]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
 
-  const setLink = useCallback(() => {
-    const previousUrl = editor?.getAttributes('link').href;
-    const url = window.prompt('URL', previousUrl);
+  const handleManualSave = () => {
+    if (onSave && !isSaving) {
+      const content = editor?.getHTML() || '';
+      setIsSaving(true);
+      onSave(content);
+      lastSavedContent.current = content;
 
-    if (url === null) return;
-
-    if (url === '') {
-      editor?.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
+      setTimeout(() => setIsSaving(false), 1000);
     }
-
-    editor
-      ?.chain()
-      .focus()
-      .extendMarkRange('link')
-      .setLink({ href: url })
-      .run();
-  }, [editor]);
-
-  const addTable = useCallback(() => {
-    editor
-      ?.chain()
-      .focus()
-      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-      .run();
-  }, [editor]);
+  };
 
   if (!editor) {
     return (
-      <div className="border-border bg-muted/50 w-full rounded-lg border p-4">
-        <p className="text-muted-foreground text-center">Loading editor...</p>
+      <div className="flex h-32 w-full items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)]">
+        <p className="text-sm text-[var(--color-muted-foreground)]">
+          Loading editor...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="tiptap-wrapper border-border bg-background w-full rounded-lg border">
-      {/* Toolbar */}
-      <div className="border-border bg-muted flex flex-wrap gap-1 border-b p-2">
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 1 }).run()
-          }
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('heading', { level: 1 })
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Heading 1"
-          type="button"
-        >
-          <Heading1 size={18} />
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('heading', { level: 2 })
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Heading 2"
-          type="button"
-        >
-          <Heading2 size={18} />
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('heading', { level: 3 })
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Heading 3"
-          type="button"
-        >
-          <Heading3 size={18} />
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 4 }).run()
-          }
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('heading', { level: 4 })
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Heading 4"
-          type="button"
-        >
-          <Heading4 size={18} />
-        </button>
+    <div
+      className={`rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] ${
+        isFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''
+      }`}
+    >
+      {/* Main Toolbar */}
+      <EditorToolbar
+        editor={editor}
+        onSave={onSave ? handleManualSave : undefined}
+        isSaving={isSaving}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+        showScrollbar={showScrollbar}
+        onToggleScrollbar={() => setShowScrollbar(!showScrollbar)}
+        onToggleFindReplace={() => setShowFindReplace(!showFindReplace)}
+      />
 
-        <div className="bg-border mx-1 w-px" />
+      {/* Find & Replace */}
+      {showFindReplace && (
+        <FindReplace
+          editor={editor}
+          onClose={() => setShowFindReplace(false)}
+        />
+      )}
 
-        <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('bold') ? 'bg-primary text-primary-foreground' : ''
-          }`}
-          title="Bold"
-          type="button"
-        >
-          <Bold size={18} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('italic')
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Italic"
-          type="button"
-        >
-          <Italic size={18} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('underline')
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Underline"
-          type="button"
-        >
-          <UnderlineIcon size={18} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('strike')
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Strikethrough"
-          type="button"
-        >
-          <Strikethrough size={18} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('code') ? 'bg-primary text-primary-foreground' : ''
-          }`}
-          title="Inline Code"
-          type="button"
-        >
-          <Code size={18} />
-        </button>
+      {/* Table Toolbar */}
+      {editor.isActive('table') && <TableToolbar editor={editor} />}
 
-        <div className="bg-border mx-1 w-px" />
+      {/* Bubble Menu */}
+      <BubbleMenu editor={editor} />
 
-        <button
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('bulletList')
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Bullet List"
-          type="button"
-        >
-          <List size={18} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('orderedList')
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Numbered List"
-          type="button"
-        >
-          <ListOrdered size={18} />
-        </button>
-
-        <div className="bg-border mx-1 w-px" />
-
-        <button
-          onClick={setLink}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('link') ? 'bg-primary text-primary-foreground' : ''
-          }`}
-          title="Link"
-          type="button"
-        >
-          <LinkIcon size={18} />
-        </button>
-        <button
-          onClick={addImage}
-          className="hover:bg-accent rounded p-2 transition-colors"
-          title="Upload Image"
-          type="button"
-        >
-          <ImageIcon size={18} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('blockquote')
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Blockquote"
-          type="button"
-        >
-          <Quote size={18} />
-        </button>
-        <button
-          onClick={addTable}
-          className="hover:bg-accent rounded p-2 transition-colors"
-          title="Insert Table"
-          type="button"
-        >
-          <TableIcon size={18} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          className={`hover:bg-accent rounded p-2 transition-colors ${
-            editor.isActive('codeBlock')
-              ? 'bg-primary text-primary-foreground'
-              : ''
-          }`}
-          title="Code Block"
-          type="button"
-        >
-          <Code2 size={18} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          className="hover:bg-accent rounded p-2 transition-colors"
-          title="Horizontal Line"
-          type="button"
-        >
-          <Minus size={18} />
-        </button>
-
-        <div className="bg-border mx-1 w-px" />
-
-        <button
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          className="hover:bg-accent rounded p-2 transition-colors disabled:opacity-50"
-          title="Undo"
-          type="button"
-        >
-          <Undo size={18} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          className="hover:bg-accent rounded p-2 transition-colors disabled:opacity-50"
-          title="Redo"
-          type="button"
-        >
-          <Redo size={18} />
-        </button>
+      {/* Editor Content */}
+      <div
+        className={`${
+          showScrollbar ? 'overflow-y-auto' : 'scrollbar-hidden overflow-y-auto'
+        } ${isFullscreen ? 'h-[calc(100vh-120px)]' : ''}`}
+        style={{
+          minHeight: isFullscreen ? 'auto' : minHeight,
+          maxHeight: isFullscreen ? 'calc(100vh - 120px)' : maxHeight,
+        }}
+      >
+        <div className="px-6">
+          <EditorContent editor={editor} />
+        </div>
       </div>
 
-      {/* Editor */}
-      <EditorContent editor={editor} />
-
-      <style jsx global>{`
-        /* Editor Container */
-        .tiptap-wrapper .ProseMirror {
-          min-height: ${minHeight};
-          padding: 1.5rem;
-          outline: none;
-        }
-
-        /* Placeholder */
-        .tiptap-wrapper .ProseMirror p.is-editor-empty:first-child::before {
-          color: hsl(var(--muted-foreground));
-          content: attr(data-placeholder);
-          float: left;
-          height: 0;
-          pointer-events: none;
-        }
-
-        /* Paragraphs - IMPORTANT: This spacing exports to HTML */
-        .tiptap-wrapper .ProseMirror p {
-          margin: 1.5em 0;
-          line-height: 1.75;
-        }
-
-        .tiptap-wrapper .ProseMirror p:first-child {
-          margin-top: 0;
-        }
-
-        .tiptap-wrapper .ProseMirror p:last-child {
-          margin-bottom: 0;
-        }
-
-        /* Headings */
-        .tiptap-wrapper .ProseMirror h1 {
-          font-size: 2.5em;
-          font-weight: bold;
-          margin: 2em 0 0.5em 0;
-          line-height: 1.2;
-        }
-
-        .tiptap-wrapper .ProseMirror h1:first-child {
-          margin-top: 0;
-        }
-
-        .tiptap-wrapper .ProseMirror h2 {
-          font-size: 2em;
-          font-weight: bold;
-          margin: 1.8em 0 0.5em 0;
-          line-height: 1.3;
-        }
-
-        .tiptap-wrapper .ProseMirror h3 {
-          font-size: 1.5em;
-          font-weight: bold;
-          margin: 1.6em 0 0.5em 0;
-          line-height: 1.4;
-        }
-
-        .tiptap-wrapper .ProseMirror h4 {
-          font-size: 1.25em;
-          font-weight: bold;
-          margin: 1.4em 0 0.5em 0;
-          line-height: 1.4;
-        }
-
-        /* Blockquote */
-        .tiptap-wrapper .ProseMirror blockquote {
-          border-left: 4px solid hsl(var(--primary));
-          padding-left: 1.5em;
-          margin: 1.5em 0;
-          font-style: italic;
-          color: hsl(var(--muted-foreground));
-          line-height: 1.6;
-        }
-
-        /* Inline Code */
-        .tiptap-wrapper .ProseMirror code {
-          background: hsl(var(--muted));
-          padding: 0.2em 0.4em;
-          border-radius: 4px;
-          font-family: 'Courier New', Courier, monospace;
-          font-size: 0.9em;
-        }
-
-        /* Code Blocks */
-        .tiptap-wrapper .ProseMirror pre {
-          background: hsl(var(--muted));
-          padding: 1.5em;
-          border-radius: 6px;
-          overflow-x: auto;
-          font-family: 'Courier New', Courier, monospace;
-          margin: 1.5em 0;
-          line-height: 1.6;
-        }
-
-        .tiptap-wrapper .ProseMirror pre code {
-          background: none;
-          padding: 0;
-        }
-
-        /* Tables */
-        .tiptap-wrapper .ProseMirror table {
-          border-collapse: collapse;
-          width: 100%;
-          margin: 1.5em 0;
-        }
-
-        .tiptap-wrapper .ProseMirror table td,
-        .tiptap-wrapper .ProseMirror table th {
-          border: 1px solid hsl(var(--border));
-          padding: 0.75em;
-          position: relative;
-        }
-
-        .tiptap-wrapper .ProseMirror table th {
-          background: hsl(var(--muted));
-          font-weight: bold;
-        }
-
-        /* Images */
-        .tiptap-wrapper .ProseMirror img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 6px;
-          margin: 1.5em 0;
-          display: block;
-        }
-
-        /* Links */
-        .tiptap-wrapper .ProseMirror a {
-          color: hsl(var(--primary));
-          text-decoration: underline;
-          cursor: pointer;
-        }
-
-        /* Lists */
-        .tiptap-wrapper .ProseMirror ul,
-        .tiptap-wrapper .ProseMirror ol {
-          padding-left: 2em;
-          margin: 1.5em 0;
-        }
-
-        .tiptap-wrapper .ProseMirror ul li,
-        .tiptap-wrapper .ProseMirror ol li {
-          margin: 0.5em 0;
-          line-height: 1.75;
-        }
-
-        /* Horizontal Rule */
-        .tiptap-wrapper .ProseMirror hr {
-          border: none;
-          border-top: 2px solid hsl(var(--border));
-          margin: 2em 0;
-        }
-
-        /* Table Selection */
-        .tiptap-wrapper .ProseMirror .selectedCell {
-          background: hsl(var(--accent));
-        }
-      `}</style>
+      {/* Status Bar */}
+      {(autoSave || onSave) && (
+        <div className="flex items-center justify-between border-t border-[var(--color-border)] bg-[var(--color-muted)] px-4 py-2 text-xs text-[var(--color-muted-foreground)]">
+          <div>
+            {editor.storage.characterCount?.characters() || 0} characters
+          </div>
+          {isSaving && (
+            <div className="text-[var(--color-primary)]">Saving...</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

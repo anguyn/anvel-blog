@@ -137,21 +137,7 @@ export default async function EditPostPage({
 
   return (
     <AdminLayout>
-      <div className="container mx-auto max-w-6xl px-4 py-6">
-        <div className="mb-6">
-          <Link
-            href="/admin/posts"
-            className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center text-sm"
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back to Posts
-          </Link>
-          <h1 className="text-3xl font-bold">Edit Post</h1>
-          <p className="text-muted-foreground mt-1 leading-normal">
-            Update your post content
-          </p>
-        </div>
-
+      <div className="container mx-auto max-w-6xl px-4 py-2">
         <PostForm post={post as any} categories={typedCategories} tags={tags} />
       </div>
     </AdminLayout>

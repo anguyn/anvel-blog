@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TiptapEditor } from '@/components/common/tiptap-editor';
+import TiptapEditor from '@/components/common/tiptap-editor';
 // import { MediaUploader } from './media-uploader';
 import { FeatureImageUploader } from './feature-image-uploader';
 import { GalleryManager } from '@/components/custom/gallery-manager';
@@ -581,7 +581,7 @@ export function PostForm({
   return (
     <>
       <form onSubmit={onFormSubmit} className="space-y-6">
-        <div className="bg-background/95 sticky top-0 z-20 border-b pb-4 backdrop-blur">
+        <div className="bg-background/95 sticky top-16 z-20 border-b pb-4 backdrop-blur">
           <div className="flex items-center justify-between">
             <div className="">
               <Link
@@ -591,7 +591,9 @@ export function PostForm({
                 <ChevronLeft className="mr-1 h-4 w-4" />
                 Back to Posts
               </Link>
-              <h1 className="text-3xl font-bold">Create New Post</h1>
+              <h1 className="text-3xl font-bold">
+                {!isEditMode ? 'Create New Post' : 'Edit Post'}
+              </h1>
               <p className="text-muted-foreground mt-1 leading-normal">
                 Write and publish your content
               </p>
@@ -650,9 +652,9 @@ export function PostForm({
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-24">
           {/* Left Column - Main Content */}
-          <div className="space-y-6 lg:col-span-2">
+          <div className="space-y-6 lg:col-span-19">
             {/* Language Selector */}
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
               <div className="space-y-2">
@@ -755,6 +757,28 @@ export function PostForm({
               </div>
             </div>
 
+            {/* Featured Image */}
+            {currentType !== PostType.GALLERY && (
+              <div className="space-y-2">
+                <Label>{t('featuredImage')}</Label>
+                <FeatureImageUploader
+                  value={getValues('featuredImage')}
+                  onChange={(file, previewUrl) => {
+                    if (file) {
+                      setFeaturedImageFile(file);
+                      setValue('featuredImage', previewUrl || '', {
+                        shouldDirty: true,
+                      });
+                    }
+                  }}
+                  onRemove={() => {
+                    setFeaturedImageFile(null);
+                    setValue('featuredImage', '', { shouldDirty: true });
+                  }}
+                />
+              </div>
+            )}
+
             {/* Content Editor - Memoized to prevent unnecessary re-renders */}
             <div className="space-y-2">
               <Label>
@@ -778,28 +802,6 @@ export function PostForm({
                 </p>
               )}
             </div>
-
-            {/* Featured Image */}
-            {currentType !== PostType.GALLERY && (
-              <div className="space-y-2">
-                <Label>{t('featuredImage')}</Label>
-                <FeatureImageUploader
-                  value={getValues('featuredImage')}
-                  onChange={(file, previewUrl) => {
-                    if (file) {
-                      setFeaturedImageFile(file);
-                      setValue('featuredImage', previewUrl || '', {
-                        shouldDirty: true,
-                      });
-                    }
-                  }}
-                  onRemove={() => {
-                    setFeaturedImageFile(null);
-                    setValue('featuredImage', '', { shouldDirty: true });
-                  }}
-                />
-              </div>
-            )}
 
             {/* Gallery Manager */}
             {currentType === PostType.GALLERY && (
@@ -826,7 +828,7 @@ export function PostForm({
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="space-y-4 lg:col-span-1">
+          <div className="space-y-4 lg:col-span-5">
             {/* Auto-Save Toggle */}
             <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center justify-between">

@@ -14,6 +14,7 @@ import { BlogComments } from './comments';
 import { MediaGallery } from './media-gallery';
 import { VideoPlayer } from './video-player';
 import { DocumentViewer } from './document-viewer';
+import { BlogContentWrapper } from '@/components/common/blog-content-wrapper';
 
 interface BlogContentProps {
   post: Post;
@@ -62,7 +63,7 @@ export function BlogContent({
 
         <Card className="mb-8 !border-0 !shadow-none md:!rounded-lg md:!border md:!border-[var(--color-border)] md:!shadow-sm">
           <CardContent className="prose prose-lg dark:prose-invert blog-content max-w-screen px-0 py-4 md:px-4">
-            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            <BlogContentWrapper content={post.content} />
           </CardContent>
         </Card>
 

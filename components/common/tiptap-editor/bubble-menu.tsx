@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import ColorPicker from './color-picker';
+import { NodeSelection } from '@tiptap/pm/state';
 
 interface BubbleMenuProps {
   editor: Editor;
@@ -26,6 +27,19 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
   );
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+
+  const shouldShow = ({ state }: any) => {
+    // Don't show if image is selected
+    if (state.selection instanceof NodeSelection) {
+      if (state.selection.node?.type.name === 'image') {
+        return false;
+      }
+    }
+
+    // Show for text selection
+    const { $from, $to } = state.selection;
+    return $from.pos !== $to.pos;
+  };
 
   const handleTextColor = () => {
     setColorPickerType('text');
@@ -95,9 +109,17 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
     <>
       <TiptapBubbleMenu
         editor={editor}
+        shouldShow={shouldShow}
         options={{
           placement: 'top',
           offset: 8,
+          strategy: 'absolute',
+          flip: {
+            fallbackPlacements: ['bottom', 'top'],
+          },
+          shift: {
+            padding: 8,
+          },
         }}
         className="flex items-center gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] p-1 shadow-lg"
       >

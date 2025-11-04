@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Palette, X } from 'lucide-react';
 import { DEFAULT_COLORS } from './editor-constants';
+import { useColorStore } from '@/store/colors';
 
 interface ColorPickerProps {
   currentColor: string;
@@ -10,9 +11,6 @@ interface ColorPickerProps {
   type: 'text' | 'highlight';
   onClose: () => void;
 }
-
-const STORAGE_KEY_TEXT = 'editor-saved-text-colors';
-const STORAGE_KEY_HIGHLIGHT = 'editor-saved-highlight-colors';
 
 export default function ColorPicker({
   currentColor,
@@ -22,17 +20,39 @@ export default function ColorPicker({
 }: ColorPickerProps) {
   const [customColor, setCustomColor] = useState(currentColor);
   const [colorInput, setColorInput] = useState(currentColor);
-  const [savedColors, setSavedColors] = useState<string[]>([]);
 
-  const storageKey = type === 'text' ? STORAGE_KEY_TEXT : STORAGE_KEY_HIGHLIGHT;
+  const {
+    textColors,
+    highlightColors,
+    addTextColor,
+    addHighlightColor,
+    removeTextColor,
+    removeHighlightColor,
+  } = useColorStore();
+
+  const savedColors = type === 'text' ? textColors : highlightColors;
+  const addColor = type === 'text' ? addTextColor : addHighlightColor;
+  const removeColor = type === 'text' ? removeTextColor : removeHighlightColor;
+
+  const rgbToHex = (rgb: string): string => {
+    if (rgb.startsWith('#')) return rgb;
+    const rgbMatch = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!rgbMatch) return '#000000';
+    const [, r, g, b] = rgbMatch;
+    return (
+      '#' +
+      [parseInt(r), parseInt(g), parseInt(b)]
+        .map(x => x.toString(16).padStart(2, '0'))
+        .join('')
+        .toUpperCase()
+    );
+  };
 
   useEffect(() => {
-    // Load saved colors from localStorage
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      setSavedColors(JSON.parse(saved));
-    }
-  }, [storageKey]);
+    const hexColor = rgbToHex(currentColor);
+    setCustomColor(hexColor);
+    setColorInput(hexColor);
+  }, [currentColor]);
 
   const handleColorSelect = (color: string) => {
     onColorChange(color);
@@ -46,7 +66,6 @@ export default function ColorPicker({
   };
 
   const handleApplyCustomColor = () => {
-    // Validate hex color
     const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
     if (hexRegex.test(colorInput)) {
       onColorChange(colorInput);
@@ -54,18 +73,13 @@ export default function ColorPicker({
     }
   };
 
-  const handleSaveColor = () => {
-    if (!savedColors.includes(customColor)) {
-      const newSavedColors = [...savedColors, customColor].slice(-12); // Keep last 12
-      setSavedColors(newSavedColors);
-      localStorage.setItem(storageKey, JSON.stringify(newSavedColors));
-    }
+  const handleSaveColor = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    addColor(customColor);
   };
 
   const handleRemoveSavedColor = (color: string) => {
-    const newSavedColors = savedColors.filter(c => c !== color);
-    setSavedColors(newSavedColors);
-    localStorage.setItem(storageKey, JSON.stringify(newSavedColors));
+    removeColor(color);
   };
 
   return (
@@ -75,7 +89,10 @@ export default function ColorPicker({
           {type === 'text' ? 'Text Color' : 'Highlight Color'}
         </h3>
         <button
-          onClick={onClose}
+          onClick={e => {
+            e.preventDefault();
+            onClose();
+          }}
           className="rounded p-1 hover:bg-[var(--color-accent)]"
         >
           <X className="h-4 w-4" />
@@ -91,7 +108,10 @@ export default function ColorPicker({
           {DEFAULT_COLORS.map(({ name, value }) => (
             <button
               key={value}
-              onClick={() => handleColorSelect(value)}
+              onClick={e => {
+                e.preventDefault();
+                handleColorSelect(value);
+              }}
               className={`h-8 w-8 rounded border-2 transition-all hover:scale-110 ${
                 customColor === value
                   ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)] ring-offset-2'
@@ -143,7 +163,10 @@ export default function ColorPicker({
             {savedColors.map(color => (
               <div key={color} className="group relative">
                 <button
-                  onClick={() => handleColorSelect(color)}
+                  onClick={e => {
+                    e.preventDefault();
+                    handleColorSelect(color);
+                  }}
                   className={`h-8 w-8 rounded border-2 transition-all hover:scale-110 ${
                     customColor === color
                       ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)] ring-offset-2'
@@ -152,7 +175,10 @@ export default function ColorPicker({
                   style={{ backgroundColor: color }}
                 />
                 <button
-                  onClick={() => handleRemoveSavedColor(color)}
+                  onClick={e => {
+                    e.preventDefault();
+                    handleRemoveSavedColor(color);
+                  }}
                   className="absolute -top-1 -right-1 hidden rounded-full bg-red-500 p-0.5 text-white group-hover:block"
                 >
                   <X className="h-3 w-3" />
@@ -173,7 +199,10 @@ export default function ColorPicker({
           Save Color
         </button>
         <button
-          onClick={() => handleColorSelect('transparent')}
+          onClick={e => {
+            e.preventDefault();
+            handleColorSelect('transparent');
+          }}
           className="rounded border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-[var(--color-accent)]"
         >
           Clear

@@ -1,16 +1,36 @@
 'use client';
 
+import { memo, useEffect } from 'react';
 import type { Editor } from '@tiptap/react';
 import { Plus, Trash2, Palette } from 'lucide-react';
 import { useState } from 'react';
 
 interface TableToolbarProps {
   editor: Editor;
+  onClose: () => void;
 }
 
-export default function TableToolbar({ editor }: TableToolbarProps) {
+function TableToolbar({ editor, onClose }: TableToolbarProps) {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [cellColor, setCellColor] = useState('#ffffff');
+
+  useEffect(() => {
+    const checkTableActive = () => {
+      // Check if cursor is inside table
+      if (!editor.isActive('table')) {
+        onClose();
+      }
+    };
+
+    // Subscribe to editor updates
+    editor.on('update', checkTableActive);
+    editor.on('selectionUpdate', checkTableActive);
+
+    return () => {
+      editor.off('update', checkTableActive);
+      editor.off('selectionUpdate', checkTableActive);
+    };
+  }, [editor, onClose]);
 
   const setCellBackgroundColor = (color: string) => {
     editor.chain().focus().setCellAttribute('backgroundColor', color).run();
@@ -119,7 +139,10 @@ export default function TableToolbar({ editor }: TableToolbarProps) {
       <div className="h-6 w-px bg-[var(--color-border)]" />
 
       <button
-        onClick={() => editor.chain().focus().deleteTable().run()}
+        onClick={() => {
+          editor.chain().focus().deleteTable().run();
+          onClose();
+        }}
         className="flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
       >
         <Trash2 className="h-3 w-3" />
@@ -128,3 +151,5 @@ export default function TableToolbar({ editor }: TableToolbarProps) {
     </div>
   );
 }
+
+export default memo(TableToolbar);

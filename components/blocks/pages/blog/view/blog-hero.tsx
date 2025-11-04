@@ -380,12 +380,12 @@ export function BlogHeroSection({
               </div>
               {post.featuredImage && (
                 <div className="mt-8 lg:mt-0 lg:flex-1">
-                  <div className="relative aspect-video overflow-hidden rounded-xl shadow-2xl ring-1 ring-white/10 lg:sticky lg:top-4">
+                  <div className="relative aspect-video min-h-72 overflow-hidden rounded-xl shadow-2xl ring-1 ring-white/10 lg:sticky lg:top-4">
                     <Image
                       src={post.featuredImage}
                       alt={post.title}
                       fill
-                      className="object-cover"
+                      className="min-h-64 object-cover"
                       priority
                     />
                   </div>

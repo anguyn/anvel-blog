@@ -79,7 +79,7 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
                   transition={{ duration: 0.3 }}
                   className="hidden sm:block"
                 >
-                  <h1 className="from-foreground to-muted-foreground bg-gradient-to-r bg-clip-text text-lg font-semibold sm:text-xl">
+                  <h1 className="from-foreground to-muted-foreground bg-gradient-to-r bg-clip-text text-lg sm:text-xl">
                     {titleCase(t('blogManagement'))}
                   </h1>
                   <p className="text-muted-foreground text-xs sm:text-sm">
@@ -95,7 +95,7 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
-                  className="from-foreground to-muted-foreground hidden bg-gradient-to-r bg-clip-text text-lg font-semibold sm:block sm:text-xl"
+                  className="from-foreground to-muted-foreground hidden bg-gradient-to-r bg-clip-text text-lg sm:block sm:text-xl"
                 >
                   {t('welcomeBack', {
                     name: user?.name || user?.username || user?.email || '',

@@ -520,7 +520,7 @@ export function PostForm({
       e.preventDefault();
       e.stopPropagation();
 
-      form.handleSubmit(data => handleSubmit(data, 'publish'))();
+      // form.handleSubmit(data => handleSubmit(data, 'publish'))();
     },
     [form, handleSubmit],
   );
@@ -640,6 +640,9 @@ export function PostForm({
 
               <Button
                 type="submit"
+                onClick={() =>
+                  form.handleSubmit(data => handleSubmit(data, 'publish'))()
+                }
                 disabled={isSubmitting || Object.keys(errors).length > 0}
               >
                 {isSubmitting && (

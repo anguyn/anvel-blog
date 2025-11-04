@@ -25,6 +25,7 @@ import {
   Shield,
   Bell,
   LucideIcon,
+  Newspaper,
 } from 'lucide-react';
 import { cn } from '@/libs/utils';
 import { Badge } from '@/components/common/badge';
@@ -333,12 +334,12 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
         ],
       },
       {
-        title: 'Bus Management',
-        icon: Bus,
+        title: 'Blog Management',
+        icon: Newspaper,
         gradient: 'from-orange-500 to-red-600',
         children: [
           {
-            title: 'Bus Types',
+            title: 'Blog Types',
             href: '/admin/bus-types',
             icon: Car,
           },
@@ -349,7 +350,7 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
             badge: '42',
           },
           {
-            title: 'Bus Stops',
+            title: 'Blog Stops',
             href: '/admin/bus-stops',
             icon: MapPin,
             badge: '287',

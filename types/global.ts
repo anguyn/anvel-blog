@@ -96,3 +96,21 @@ export enum MediaType {
   Gif = 'gif',
   Video = 'video',
 }
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    indent: {
+      /**
+       * Increase indent level
+       */
+      indent: () => ReturnType;
+      /**
+       * Decrease indent level
+       */
+      outdent: () => ReturnType;
+    };
+    drawTool: {
+      insertDrawing: (dataUrl: string) => ReturnType;
+    };
+  }
+}

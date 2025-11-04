@@ -13,6 +13,8 @@ import {
   List,
   ListOrdered,
   Quote,
+  IndentIncrease,
+  IndentDecrease,
   Undo,
   Redo,
   Link as LinkIcon,
@@ -29,20 +31,42 @@ import {
   Eye,
   EyeOff,
   Save,
+  FileDown,
+  Brush,
+  MonitorPlay,
 } from 'lucide-react';
-import { useState, useRef } from 'react';
-import { FONT_SIZES, LINE_HEIGHTS, CODE_LANGUAGES } from './editor-constants';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import {
+  FONT_FAMILIES,
+  FONT_SIZES,
+  LINE_HEIGHTS,
+  CODE_LANGUAGES,
+} from './editor-constants';
 import ColorPicker from './color-picker';
+import { TextSelection } from '@tiptap/pm/state';
 
 interface EditorToolbarProps {
   editor: Editor;
   onSave?: () => void;
   isSaving?: boolean;
   isFullscreen: boolean;
+  onToggleHtml: () => void;
   onToggleFullscreen: () => void;
   showScrollbar: boolean;
   onToggleScrollbar: () => void;
   onToggleFindReplace: () => void;
+  onOpenDrawTool: () => void;
+  onExportWord?: () => void;
+  onExportPDF?: () => void;
+  onInsertEmbed?: () => void;
+}
+
+interface CurrentStyles {
+  fontSize: string;
+  lineHeight: string;
+  textColor: string;
+  highlightColor: string;
+  fontFamily: string;
 }
 
 export default function EditorToolbar({
@@ -50,15 +74,21 @@ export default function EditorToolbar({
   onSave,
   isSaving,
   isFullscreen,
+  onToggleHtml,
   onToggleFullscreen,
   showScrollbar,
   onToggleScrollbar,
   onToggleFindReplace,
+  onOpenDrawTool,
+  onExportWord,
+  onExportPDF,
+  onInsertEmbed,
 }: EditorToolbarProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlign, setImageAlign] = useState('left');
   const [imageWrapping, setImageWrapping] = useState('wrap');
+  const [imageLayout, setImageLayout] = useState('inline');
 
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
@@ -76,6 +106,85 @@ export default function EditorToolbar({
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
   const [showHighlightColorPicker, setShowHighlightColorPicker] =
     useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showHtmlContent, setShowHtmlContent] = useState(false);
+
+  // State để track styles hiện tại
+  const [currentStyles, setCurrentStyles] = useState<CurrentStyles>({
+    fontSize: '',
+    lineHeight: '',
+    textColor: '#000000',
+    highlightColor: '#fef08a',
+    fontFamily: '',
+  });
+
+  // Ref để lưu selection khi dialog mở
+  const savedSelectionRef = useRef<any>(null);
+  const isDialogOpenRef = useRef(false);
+
+  // Function để cập nhật current styles
+  const updateCurrentStyles = useCallback(() => {
+    if (!editor) return;
+
+    const textStyleAttrs = editor.getAttributes('textStyle');
+    const fontSize = textStyleAttrs.fontSize || '';
+    const textColor = textStyleAttrs.color || '#000000';
+
+    const lineHeightAttrs = editor.getAttributes('paragraph');
+    const lineHeight = lineHeightAttrs.lineHeight || '';
+
+    const highlightAttrs = editor.getAttributes('highlight');
+    const highlightColor = highlightAttrs.color || '#fef08a';
+
+    setCurrentStyles({
+      fontSize: fontSize ? fontSize.replace('px', '') : '',
+      lineHeight,
+      textColor,
+      highlightColor,
+      fontFamily: textStyleAttrs.fontFamily || '',
+    });
+  }, [editor]);
+
+  // Update styles khi selection hoặc content thay đổi
+  useEffect(() => {
+    if (!editor) return;
+
+    updateCurrentStyles();
+
+    const handleUpdate = () => updateCurrentStyles();
+    const handleSelectionUpdate = () => updateCurrentStyles();
+
+    editor.on('update', handleUpdate);
+    editor.on('selectionUpdate', handleSelectionUpdate);
+
+    return () => {
+      editor.off('update', handleUpdate);
+      editor.off('selectionUpdate', handleSelectionUpdate);
+    };
+  }, [editor, updateCurrentStyles]);
+
+  // Preserve selection khi dialog mở
+  const saveSelection = useCallback(() => {
+    if (!editor) return;
+
+    const { state } = editor;
+    savedSelectionRef.current = {
+      from: state.selection.from,
+      to: state.selection.to,
+    };
+    isDialogOpenRef.current = true;
+  }, [editor]);
+
+  // Restore selection khi dialog đóng
+  const restoreSelection = useCallback(() => {
+    if (!editor || !savedSelectionRef.current) return;
+
+    const { from, to } = savedSelectionRef.current;
+    const { state } = editor;
+    const selection = TextSelection.create(state.doc, from, to);
+    editor.view.dispatch(state.tr.setSelection(selection));
+    isDialogOpenRef.current = false;
+  }, [editor]);
 
   const fontSizeInputRef = useRef<HTMLInputElement>(null);
   const lineHeightInputRef = useRef<HTMLInputElement>(null);
@@ -109,6 +218,7 @@ export default function EditorToolbar({
   );
 
   const addImage = () => {
+    saveSelection();
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -129,9 +239,9 @@ export default function EditorToolbar({
 
   const insertImage = () => {
     if (imageUrl && editor) {
+      restoreSelection();
       editor.chain().focus().setImage({ src: imageUrl }).run();
 
-      // Apply attributes
       const { state } = editor;
       const { selection } = state;
       const node = state.doc.nodeAt(selection.from - 1);
@@ -139,6 +249,7 @@ export default function EditorToolbar({
         editor.commands.updateAttributes('image', {
           align: imageAlign,
           wrapping: imageWrapping,
+          layout: imageLayout,
         });
       }
 
@@ -148,12 +259,14 @@ export default function EditorToolbar({
   };
 
   const setLink = () => {
+    saveSelection();
     const previousUrl = editor.getAttributes('link').href;
     setLinkUrl(previousUrl || '');
     setShowLinkDialog(true);
   };
 
   const insertLink = () => {
+    restoreSelection();
     if (!linkUrl) {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
     } else {
@@ -169,6 +282,7 @@ export default function EditorToolbar({
   };
 
   const insertTable = () => {
+    restoreSelection();
     const rows = parseInt(tableRows) || 3;
     const cols = parseInt(tableCols) || 3;
     editor
@@ -182,6 +296,7 @@ export default function EditorToolbar({
   };
 
   const insertCodeBlock = () => {
+    restoreSelection();
     editor
       .chain()
       .focus()
@@ -202,6 +317,45 @@ export default function EditorToolbar({
   const applyLineHeight = () => {
     if (customLineHeight && !isNaN(parseFloat(customLineHeight))) {
       editor.chain().focus().setLineHeight(customLineHeight).run();
+    }
+  };
+
+  const handleTextColorOpen = () => {
+    saveSelection();
+    setShowTextColorPicker(true);
+  };
+
+  const handleTextColorClose = () => {
+    restoreSelection();
+    setShowTextColorPicker(false);
+  };
+
+  const handleHighlightColorOpen = () => {
+    saveSelection();
+    setShowHighlightColorPicker(true);
+  };
+
+  const handleHighlightColorClose = () => {
+    restoreSelection();
+    setShowHighlightColorPicker(false);
+  };
+
+  const handleTextColorChange = (color: string) => {
+    editor.chain().focus().setColor(color).run();
+    setCurrentStyles(prev => ({ ...prev, textColor: color }));
+  };
+
+  const handleHighlightColorChange = (color: string) => {
+    editor.chain().focus().toggleHighlight({ color }).run();
+    setCurrentStyles(prev => ({ ...prev, highlightColor: color }));
+  };
+
+  const handleFontFamilyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const fontFamily = e.target.value;
+    if (fontFamily) {
+      editor.chain().focus().setFontFamily(fontFamily).run();
+    } else {
+      editor.chain().focus().unsetFontFamily().run();
     }
   };
 
@@ -274,6 +428,19 @@ export default function EditorToolbar({
         </div>
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
+        {/* Font Family */}
+        <select
+          value={currentStyles.fontFamily}
+          onChange={handleFontFamilyChange}
+          className="h-8 rounded border border-[var(--color-input)] bg-[var(--color-background)] px-2 text-sm"
+          title="Font Family"
+        >
+          {FONT_FAMILIES.map(font => (
+            <option key={font.value} value={font.value}>
+              {font.label}
+            </option>
+          ))}
+        </select>
 
         {/* Font Size */}
         <div className="flex items-center gap-1">
@@ -282,7 +449,7 @@ export default function EditorToolbar({
             type="text"
             list="font-sizes"
             placeholder="Size"
-            value={customFontSize}
+            value={currentStyles.fontSize}
             onChange={e => setCustomFontSize(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter') {
@@ -313,7 +480,7 @@ export default function EditorToolbar({
             type="text"
             list="line-heights"
             placeholder="1.5"
-            value={customLineHeight}
+            value={currentStyles.lineHeight}
             onChange={e => setCustomLineHeight(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter') {
@@ -329,6 +496,24 @@ export default function EditorToolbar({
               <option key={height} value={height} />
             ))}
           </datalist>
+        </div>
+
+        <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
+
+        {/* Indent */}
+        <div className="flex items-center gap-1">
+          <ToolbarButton
+            onClick={() => editor.chain().focus().indent().run()}
+            title="Indent (Tab)"
+          >
+            <IndentIncrease className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().outdent().run()}
+            title="Outdent (Shift+Tab)"
+          >
+            <IndentDecrease className="h-4 w-4" />
+          </ToolbarButton>
         </div>
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
@@ -376,6 +561,13 @@ export default function EditorToolbar({
           >
             <ListOrdered className="h-4 w-4" />
           </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            isActive={editor.isActive('blockquote')}
+            title="Quote"
+          >
+            <Quote className="h-4 w-4" />
+          </ToolbarButton>
         </div>
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
@@ -392,14 +584,27 @@ export default function EditorToolbar({
           <ToolbarButton onClick={addImage} title="Upload Image">
             <ImageIcon className="h-4 w-4" />
           </ToolbarButton>
+          <button
+            onClick={onInsertEmbed}
+            className="flex h-8 items-center gap-1 rounded px-2 hover:cursor-pointer hover:bg-[var(--color-accent)]"
+            title="Embed"
+          >
+            <MonitorPlay className="h-4 w-4" />
+          </button>
           <ToolbarButton
-            onClick={() => setShowTableDialog(true)}
+            onClick={() => {
+              saveSelection();
+              setShowTableDialog(true);
+            }}
             title="Insert Table"
           >
             <TableIcon className="h-4 w-4" />
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => setShowCodeBlockDialog(true)}
+            onClick={() => {
+              saveSelection();
+              setShowCodeBlockDialog(true);
+            }}
             title="Code Block"
           >
             <Code2 className="h-4 w-4" />
@@ -411,27 +616,35 @@ export default function EditorToolbar({
         {/* Color Buttons */}
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setShowTextColorPicker(true)}
+            onClick={() => handleTextColorOpen()}
             className="flex h-8 items-center gap-1 rounded px-2 hover:bg-[var(--color-accent)]"
             title="Text Color"
           >
             <span className="text-xs">A</span>
             <div
               className="h-1 w-4 rounded"
-              style={{
-                backgroundColor:
-                  editor.getAttributes('textStyle').color || '#000000',
-              }}
+              style={{ backgroundColor: currentStyles.textColor }}
             />
           </button>
           <button
-            onClick={() => setShowHighlightColorPicker(true)}
+            onClick={() => handleHighlightColorOpen()}
             className="flex h-8 items-center gap-1 rounded px-2 hover:bg-[var(--color-accent)]"
             title="Highlight"
           >
             <span className="text-xs">H</span>
-            <div className="h-1 w-4 rounded bg-yellow-300" />
+            <div
+              className="h-1 w-4 rounded"
+              style={{ backgroundColor: currentStyles.highlightColor }}
+            />
           </button>
+        </div>
+
+        <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
+
+        <div className="flex items-center gap-1">
+          <ToolbarButton onClick={onOpenDrawTool} title="Draw Tool">
+            <Brush className="h-4 w-4" />
+          </ToolbarButton>
         </div>
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
@@ -458,9 +671,51 @@ export default function EditorToolbar({
 
         {/* Utilities */}
         <div className="ml-auto flex items-center gap-1">
+          <button
+            onClick={onToggleHtml}
+            className="flex h-8 items-center gap-1 rounded px-2 hover:cursor-pointer hover:bg-[var(--color-accent)]"
+            title="HTML"
+          >
+            <Code className="h-4 w-4" />
+          </button>
+          {/* Export Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className="flex h-8 items-center gap-1 rounded border border-[var(--color-input)] bg-[var(--color-background)] px-2 text-xs hover:bg-[var(--color-accent)]"
+              title="Export"
+            >
+              <FileDown className="h-4 w-4" />
+            </button>
+            {showExportMenu && (
+              <div className="absolute top-full right-0 z-20 mt-1 min-w-[120px] rounded border border-[var(--color-border)] bg-[var(--color-background)] py-1 shadow-lg">
+                {onExportWord && (
+                  <button
+                    onClick={() => {
+                      onExportWord();
+                      setShowExportMenu(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-accent)]"
+                  >
+                    Export to Word
+                  </button>
+                )}
+                {onExportPDF && (
+                  <button
+                    onClick={() => {
+                      onExportPDF();
+                      setShowExportMenu(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-accent)]"
+                  >
+                    Export to PDF
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           {onSave && (
             <button
-              onClick={onSave}
               disabled={isSaving}
               className="flex items-center gap-1 rounded bg-[var(--color-primary)] px-3 py-1.5 text-xs text-white hover:opacity-90 disabled:opacity-50"
             >
@@ -495,7 +750,7 @@ export default function EditorToolbar({
         </div>
       </div>
 
-      {/* Dialogs */}
+      {/* Image Dialog */}
       {showImageDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-[var(--color-background)] p-6">
@@ -544,7 +799,10 @@ export default function EditorToolbar({
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button
-                onClick={() => setShowImageDialog(false)}
+                onClick={() => {
+                  setShowImageDialog(false);
+                  restoreSelection();
+                }}
                 className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-[var(--color-accent)]"
               >
                 Cancel
@@ -573,7 +831,10 @@ export default function EditorToolbar({
             />
             <div className="mt-6 flex justify-end gap-2">
               <button
-                onClick={() => setShowLinkDialog(false)}
+                onClick={() => {
+                  setShowLinkDialog(false);
+                  restoreSelection();
+                }}
                 className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-[var(--color-accent)]"
               >
                 Cancel
@@ -622,7 +883,10 @@ export default function EditorToolbar({
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button
-                onClick={() => setShowTableDialog(false)}
+                onClick={() => {
+                  setShowTableDialog(false);
+                  restoreSelection();
+                }}
                 className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-[var(--color-accent)]"
               >
                 Cancel
@@ -659,7 +923,10 @@ export default function EditorToolbar({
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button
-                onClick={() => setShowCodeBlockDialog(false)}
+                onClick={() => {
+                  setShowCodeBlockDialog(false);
+                  restoreSelection();
+                }}
                 className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-[var(--color-accent)]"
               >
                 Cancel
@@ -675,29 +942,26 @@ export default function EditorToolbar({
         </div>
       )}
 
-      {/* Color Pickers */}
+      {/* Text Color Picker */}
       {showTextColorPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <ColorPicker
-            currentColor={editor.getAttributes('textStyle').color || '#000000'}
-            onColorChange={color =>
-              editor.chain().focus().setColor(color).run()
-            }
+            currentColor={currentStyles.textColor}
+            onColorChange={handleTextColorChange}
             type="text"
-            onClose={() => setShowTextColorPicker(false)}
+            onClose={handleTextColorClose}
           />
         </div>
       )}
 
+      {/* Highlight Color Picker */}
       {showHighlightColorPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <ColorPicker
-            currentColor="#fef08a"
-            onColorChange={color =>
-              editor.chain().focus().toggleHighlight({ color }).run()
-            }
+            currentColor={currentStyles.highlightColor}
+            onColorChange={handleHighlightColorChange}
             type="highlight"
-            onClose={() => setShowHighlightColorPicker(false)}
+            onClose={handleHighlightColorClose}
           />
         </div>
       )}

@@ -1,4 +1,17 @@
 // Editor Constants
+export const FONT_FAMILIES = [
+  { value: '', label: 'Default' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Helvetica', label: 'Helvetica' },
+  { value: 'Times New Roman', label: 'Times New Roman' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Courier New', label: 'Courier New' },
+  { value: 'monospace', label: 'Monospace' },
+  { value: 'Verdana', label: 'Verdana' },
+  { value: 'Comic Sans MS', label: 'Comic Sans MS' },
+  { value: 'Impact', label: 'Impact' },
+];
+
 export const FONT_SIZES = [
   '12px',
   '14px',

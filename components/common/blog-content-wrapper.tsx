@@ -80,6 +80,8 @@ export function BlogContentWrapper({
   useEffect(() => {
     if (!content) return;
 
+    console.log('Content: ', content);
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(content, 'text/html');
     const codeBlocks = doc.querySelectorAll('pre code');

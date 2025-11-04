@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Search,
   ChevronUp,
@@ -10,11 +10,103 @@ import {
   ReplaceAll,
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 interface FindReplaceProps {
   editor: Editor;
   onClose: () => void;
 }
+
+const findPluginKey = new PluginKey('findPlugin');
+
+const createFindPlugin = (
+  findText: string,
+  caseSensitive: boolean,
+  wholeWord: boolean,
+  currentIndex: number,
+) => {
+  return new Plugin({
+    key: findPluginKey,
+    state: {
+      init() {
+        return DecorationSet.empty;
+      },
+      apply(tr, oldState, oldEditorState, newEditorState) {
+        if (!findText) return DecorationSet.empty;
+
+        const decorations: Decoration[] = [];
+        const doc = newEditorState.doc;
+        let matchCount = 0;
+
+        doc.descendants((node, pos) => {
+          if (!node.isText || !node.text) return;
+
+          let nodeText = node.text;
+          let searchText = findText;
+
+          if (!caseSensitive) {
+            nodeText = nodeText.toLowerCase();
+            searchText = searchText.toLowerCase();
+          }
+
+          let index = 0;
+          while (index < nodeText.length) {
+            const matchIndex = nodeText.indexOf(searchText, index);
+            if (matchIndex === -1) break;
+
+            if (wholeWord) {
+              const before = matchIndex > 0 ? nodeText[matchIndex - 1] : ' ';
+              const after =
+                matchIndex + searchText.length < nodeText.length
+                  ? nodeText[matchIndex + searchText.length]
+                  : ' ';
+
+              if (!/\w/.test(before) && !/\w/.test(after)) {
+                const from = pos + matchIndex;
+                const to = from + findText.length;
+
+                decorations.push(
+                  Decoration.inline(from, to, {
+                    class:
+                      matchCount === currentIndex
+                        ? 'find-match-current'
+                        : 'find-match',
+                    nodeName: 'span', // Force tạo span element
+                  }),
+                );
+                matchCount++;
+              }
+            } else {
+              const from = pos + matchIndex;
+              const to = from + findText.length;
+
+              decorations.push(
+                Decoration.inline(from, to, {
+                  class:
+                    matchCount === currentIndex
+                      ? 'find-match-current'
+                      : 'find-match',
+                  nodeName: 'span', // Force tạo span element
+                }),
+              );
+              matchCount++;
+            }
+
+            index = matchIndex + 1;
+          }
+        });
+
+        return DecorationSet.create(doc, decorations);
+      },
+    },
+    props: {
+      decorations(state) {
+        return this.getState(state);
+      },
+    },
+  });
+};
 
 export default function FindReplace({ editor, onClose }: FindReplaceProps) {
   const [findText, setFindText] = useState('');
@@ -25,166 +117,227 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
   const [wholeWord, setWholeWord] = useState(false);
   const [showReplace, setShowReplace] = useState(false);
 
-  useEffect(() => {
-    if (!findText) {
-      clearHighlights();
-      setTotalMatches(0);
-      setCurrentMatch(0);
-      return;
-    }
+  const debounceTimerRef = useRef<NodeJS.Timeout>(null);
+  const matchesRef = useRef<number[]>([]);
 
-    const matches = findMatches();
-    setTotalMatches(matches.length);
-    if (matches.length > 0) {
-      setCurrentMatch(1);
-      highlightMatches(matches, 0);
-    }
-  }, [findText, caseSensitive, wholeWord]);
-
-  const findMatches = () => {
-    const content = editor.getText();
-    let searchText = findText;
-    let text = content;
-
-    if (!caseSensitive) {
-      searchText = searchText.toLowerCase();
-      text = text.toLowerCase();
-    }
-
-    const matches: number[] = [];
-    let index = 0;
-
-    while (index < text.length) {
-      const matchIndex = text.indexOf(searchText, index);
-      if (matchIndex === -1) break;
-
-      if (wholeWord) {
-        const before = matchIndex > 0 ? text[matchIndex - 1] : ' ';
-        const after =
-          matchIndex + searchText.length < text.length
-            ? text[matchIndex + searchText.length]
-            : ' ';
-
-        if (!/\w/.test(before) && !/\w/.test(after)) {
-          matches.push(matchIndex);
-        }
-      } else {
-        matches.push(matchIndex);
+  const debouncedFind = useMemo(
+    () => (text: string) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
 
-      index = matchIndex + 1;
+      debounceTimerRef.current = setTimeout(() => {
+        if (!text) {
+          matchesRef.current = [];
+          setTotalMatches(0);
+          setCurrentMatch(0);
+          editor.unregisterPlugin(findPluginKey);
+          return;
+        }
+
+        const matches = findMatches(text);
+        matchesRef.current = matches;
+        setTotalMatches(matches.length);
+
+        if (matches.length > 0) {
+          setCurrentMatch(1);
+          const plugin = createFindPlugin(text, caseSensitive, wholeWord, 0);
+          editor.unregisterPlugin(findPluginKey);
+          editor.registerPlugin(plugin);
+          scrollToMatch(matches[0]);
+        } else {
+          setCurrentMatch(0);
+          editor.unregisterPlugin(findPluginKey);
+        }
+      }, 150);
+    },
+    [caseSensitive, wholeWord, editor],
+  );
+
+  useEffect(() => {
+    debouncedFind(findText);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [findText, caseSensitive, wholeWord, debouncedFind]);
+
+  useEffect(() => {
+    if (findText && matchesRef.current.length > 0) {
+      const plugin = createFindPlugin(
+        findText,
+        caseSensitive,
+        wholeWord,
+        currentMatch - 1,
+      );
+      editor.unregisterPlugin(findPluginKey);
+      editor.registerPlugin(plugin);
     }
+  }, [currentMatch, findText, caseSensitive, wholeWord, editor]);
+
+  const findMatches = (text: string) => {
+    if (!text) return [];
+
+    const { state } = editor;
+    const { doc } = state;
+    let searchText = text;
+    const matches: number[] = [];
+
+    doc.descendants((node, pos) => {
+      if (node.isText && node.text) {
+        let nodeText = node.text;
+
+        if (!caseSensitive) {
+          nodeText = nodeText.toLowerCase();
+          searchText = searchText.toLowerCase();
+        }
+
+        let index = 0;
+        while (index < nodeText.length) {
+          const matchIndex = nodeText.indexOf(searchText, index);
+          if (matchIndex === -1) break;
+
+          if (wholeWord) {
+            const before = matchIndex > 0 ? nodeText[matchIndex - 1] : ' ';
+            const after =
+              matchIndex + searchText.length < nodeText.length
+                ? nodeText[matchIndex + searchText.length]
+                : ' ';
+
+            if (!/\w/.test(before) && !/\w/.test(after)) {
+              matches.push(pos + matchIndex);
+            }
+          } else {
+            matches.push(pos + matchIndex);
+          }
+
+          index = matchIndex + 1;
+        }
+      }
+    });
 
     return matches;
   };
 
-  const highlightMatches = (matches: number[], currentIndex: number) => {
-    clearHighlights();
+  const scrollToMatch = (position: number) => {
+    if (position === undefined) return;
 
-    matches.forEach((matchPos, idx) => {
-      const from = matchPos;
-      const to = matchPos + findText.length;
+    try {
+      editor.commands.setTextSelection({
+        from: position,
+        to: position + findText.length,
+      });
 
-      editor
-        .chain()
-        .setTextSelection({ from, to })
-        .setHighlight({
-          color: idx === currentIndex ? '#fbbf24' : '#fef08a',
-        })
-        .run();
-    });
+      // Scroll vào view
+      const { node } = editor.view.domAtPos(position);
+      const element = node instanceof HTMLElement ? node : node.parentElement;
 
-    // Scroll to current match
-    if (matches.length > 0) {
-      const currentPos = matches[currentIndex];
-      editor
-        .chain()
-        .setTextSelection({
-          from: currentPos,
-          to: currentPos + findText.length,
-        })
-        .run();
-
-      // Scroll into view
-      try {
-        const { node } = editor.view.domAtPos(currentPos);
-        const element =
-          node.nodeType === Node.ELEMENT_NODE
-            ? (node as HTMLElement)
-            : (node.parentElement as HTMLElement);
-
-        if (element && element.scrollIntoView) {
-          element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-          });
-        }
-      } catch (error) {
-        console.error('Scroll error:', error);
-      }
+      element?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    } catch (error) {
+      console.warn('Scroll failed:', error);
     }
-  };
-
-  const clearHighlights = () => {
-    editor.chain().focus().unsetHighlight().run();
   };
 
   const handleNext = () => {
-    const matches = findMatches();
-    if (matches.length === 0) return;
+    if (matchesRef.current.length === 0) return;
 
-    const nextIndex = currentMatch % matches.length;
+    const nextIndex = currentMatch % matchesRef.current.length;
     setCurrentMatch(nextIndex + 1);
-    highlightMatches(matches, nextIndex);
+    scrollToMatch(matchesRef.current[nextIndex]);
   };
 
   const handlePrevious = () => {
-    const matches = findMatches();
-    if (matches.length === 0) return;
+    if (matchesRef.current.length === 0) return;
 
-    const prevIndex = (currentMatch - 2 + matches.length) % matches.length;
+    const prevIndex =
+      (currentMatch - 2 + matchesRef.current.length) %
+      matchesRef.current.length;
     setCurrentMatch(prevIndex + 1);
-    highlightMatches(matches, prevIndex);
+    scrollToMatch(matchesRef.current[prevIndex]);
   };
 
   const handleReplace = () => {
-    if (!findText) return;
+    if (!findText || matchesRef.current.length === 0 || currentMatch === 0)
+      return;
 
-    const { from, to } = editor.state.selection;
-    const selectedText = editor.state.doc.textBetween(from, to);
+    const currentPos = matchesRef.current[currentMatch - 1];
 
-    const matches = caseSensitive
-      ? selectedText === findText
-      : selectedText.toLowerCase() === findText.toLowerCase();
+    editor
+      .chain()
+      .focus()
+      .setTextSelection({ from: currentPos, to: currentPos + findText.length })
+      .insertContent(replaceText)
+      .run();
 
-    if (matches) {
-      editor.chain().focus().insertContentAt({ from, to }, replaceText).run();
-      handleNext();
-    } else {
+    // Re-find sau khi replace
+    setTimeout(() => {
+      const newMatches = findMatches(findText);
+      matchesRef.current = newMatches;
+      setTotalMatches(newMatches.length);
+
+      if (newMatches.length > 0) {
+        // Giữ nguyên index hoặc về đầu nếu hết
+        const newIndex = Math.min(currentMatch, newMatches.length);
+        setCurrentMatch(newIndex);
+        scrollToMatch(newMatches[newIndex - 1]);
+      } else {
+        setCurrentMatch(0);
+        editor.unregisterPlugin(findPluginKey);
+      }
+    }, 50);
+  };
+
+  const handleReplaceAll = () => {
+    if (!findText || matchesRef.current.length === 0) return;
+
+    // Replace từ cuối lên đầu để không ảnh hưởng vị trí
+    const matches = [...matchesRef.current].reverse();
+
+    editor.chain().focus().run();
+
+    matches.forEach(pos => {
+      editor
+        .chain()
+        .setTextSelection({ from: pos, to: pos + findText.length })
+        .insertContent(replaceText)
+        .run();
+    });
+
+    // Clear find
+    matchesRef.current = [];
+    setTotalMatches(0);
+    setCurrentMatch(0);
+    editor.unregisterPlugin(findPluginKey);
+    setFindText('');
+  };
+
+  const handleClose = () => {
+    editor.unregisterPlugin(findPluginKey);
+    matchesRef.current = [];
+    setFindText('');
+    setTotalMatches(0);
+    setCurrentMatch(0);
+    onClose();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Prevent Enter from submitting form
+    if (e.key === 'Enter') {
+      e.preventDefault();
       handleNext();
     }
   };
 
-  const handleReplaceAll = () => {
-    if (!findText) return;
-
-    const content = editor.getText();
-    let newContent = content;
-
-    if (caseSensitive) {
-      newContent = content.split(findText).join(replaceText);
-    } else {
-      const regex = new RegExp(
-        findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-        'gi',
-      );
-      newContent = content.replace(regex, replaceText);
+  const handleReplaceKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleReplace();
     }
-
-    editor.commands.setContent(newContent);
-    clearHighlights();
-    setTotalMatches(0);
-    setCurrentMatch(0);
   };
 
   return (
@@ -198,6 +351,7 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
               type="text"
               value={findText}
               onChange={e => setFindText(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Find..."
               className="w-full rounded border border-[var(--color-input)] bg-[var(--color-background)] py-2 pr-3 pl-9 text-sm text-[var(--color-foreground)] focus:border-[var(--color-primary)] focus:outline-none"
             />
@@ -259,10 +413,7 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
 
           {/* Close */}
           <button
-            onClick={() => {
-              clearHighlights();
-              onClose();
-            }}
+            onClick={handleClose}
             className="rounded p-1.5 hover:bg-[var(--color-accent)]"
             title="Close"
           >
@@ -279,6 +430,7 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
               type="text"
               value={replaceText}
               onChange={e => setReplaceText(e.target.value)}
+              onKeyDown={handleReplaceKeyDown}
               placeholder="Replace with..."
               className="w-full rounded border border-[var(--color-input)] bg-[var(--color-background)] py-2 pr-3 pl-3 text-sm text-[var(--color-foreground)] focus:border-[var(--color-primary)] focus:outline-none"
             />

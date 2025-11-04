@@ -236,12 +236,12 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "blogManagement": "Bus management system",
+    "blogManagement": "Blog management system",
     "welcomeBack": "Welcome back, {name}",
-    "welcomeMessage": "Welcome to the Bus Booking Admin Dashboard",
+    "welcomeMessage": "Welcome to the Blog Admin Dashboard",
     "systemConfigError": "Failed to load system configuration",
     "loadingConfig": "Loading system configuration...",
-    "appName": "Bus Booking System",
+    "appName": "Blog System",
     "version": "Version 1.0.0",
     "lastUpdated": "Last updated: {date}",
     "userProfile": {

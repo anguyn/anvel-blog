@@ -167,7 +167,7 @@ export function BlogCard({
         </div>
 
         <CardContent className="p-4">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
+          <div className="my-2.5 flex flex-wrap items-center gap-2">
             {post.type !== 'ARTICLE' && (
               <Badge variant="outline" className={getTypeColor()}>
                 {getTypeIcon()}

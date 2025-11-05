@@ -263,7 +263,7 @@ export function GalleryLayout({
                   {relatedPost.title}
                 </h3>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  {relatedPost._count?.views || 0} views
+                  {relatedPost?.viewCount || 0} views
                 </p>
               </Link>
             ))}

@@ -19,8 +19,10 @@ declare module 'next-auth' {
       roleName?: string | null;
       roleLevel?: number;
       permissions?: string[];
+      securityStamp: string;
       twoFactorEnabled: boolean;
       hasPassword: boolean;
+      accessToken: string;
     } & DefaultSession['user'];
   }
 

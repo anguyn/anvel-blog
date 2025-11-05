@@ -137,11 +137,15 @@ export async function POST(request: Request) {
 
     // Hash new password
     const hashedPassword = await bcrypt.hash(password, 12);
+    const newSecurityStamp = crypto.randomBytes(32).toString('hex');
 
     // Update password
     await prisma.user.update({
       where: { id: resetToken.userId },
-      data: { password: hashedPassword },
+      data: {
+        password: hashedPassword,
+        securityStamp: newSecurityStamp,
+      },
     });
 
     // Delete all reset tokens for this user

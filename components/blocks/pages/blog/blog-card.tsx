@@ -64,7 +64,7 @@ export function BlogCard({
       <Link href={`/${locale}/blog/${post.slug}`}>
         <div className="group relative overflow-hidden rounded-xl transition-all hover:shadow-lg">
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="relative aspect-video overflow-hidden rounded-lg lg:aspect-auto lg:h-full">
+            <div className="relative aspect-video min-h-72 overflow-hidden rounded-lg lg:aspect-auto lg:h-full">
               {post.featuredImage ? (
                 <Image
                   src={post.featuredImage}

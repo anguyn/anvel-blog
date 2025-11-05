@@ -209,7 +209,6 @@ export class PostService {
           _count: {
             select: {
               comments: true,
-              views: true,
               favorites: true,
             },
           },
@@ -299,7 +298,6 @@ export class PostService {
         _count: {
           select: {
             comments: true,
-            views: true,
             favorites: true,
           },
         },
@@ -370,7 +368,6 @@ export class PostService {
               _count: {
                 select: {
                   comments: true,
-                  views: true,
                   favorites: true,
                 },
               },
@@ -603,7 +600,6 @@ export class PostService {
         _count: {
           select: {
             comments: true,
-            views: true,
             favorites: true,
           },
         },
@@ -910,7 +906,6 @@ export class PostService {
         _count: {
           select: {
             comments: true,
-            views: true,
             favorites: true,
           },
         },
@@ -1013,15 +1008,6 @@ export class PostService {
     referrer?: string,
   ): Promise<void> {
     await Promise.all([
-      prisma.postView.create({
-        data: {
-          postId,
-          userId,
-          ipAddress,
-          userAgent,
-          referrer,
-        },
-      }),
       prisma.post.update({
         where: { id: postId },
         data: {

@@ -8,6 +8,7 @@ import GitHub from 'next-auth/providers/github';
 import Facebook from 'next-auth/providers/facebook';
 import type { NextAuthConfig } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
+import { generateAccessToken } from './utils';
 
 export const authConfig: NextAuthConfig = {
   trustHost: true,
@@ -593,6 +594,7 @@ export const authConfig: NextAuthConfig = {
         session.user.twitter = (token.twitter as string) || undefined;
         session.user.github = (token.github as string) || undefined;
         session.user.linkedin = (token.linkedin as string) || undefined;
+        session.user.accessToken = generateAccessToken(token.id as string);
       }
 
       // Don't override session.expires - let NextAuth handle it

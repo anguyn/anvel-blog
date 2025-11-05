@@ -220,7 +220,6 @@ export interface PostWithRelations extends PostPrisma {
   media?: PostMediaItem[];
   _count?: {
     comments: number;
-    views: number;
     favorites: number;
   };
 }

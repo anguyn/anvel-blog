@@ -307,7 +307,7 @@ export default async function BlogDetailPage({
               post={post}
               locale={locale}
               translations={blogTranslations}
-              session={session}
+              // session={session}
             />
 
             <BlogSidebar

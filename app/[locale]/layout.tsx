@@ -19,6 +19,7 @@ import '@/styles/globals.css';
 import { getServerLocale } from '@/libs/server/utils';
 import { NavigationProgress } from '@/components/common/navigation-progress';
 import { Analytics } from '@vercel/analytics/next';
+import { SocketProvider } from '@/providers/socket';
 
 interface LocaleLayoutProps extends PropsWithChildren {
   params: Promise<{ locale: string }>;
@@ -190,8 +191,10 @@ const LocaleLayout = async (props: LocaleLayoutProps) => {
         <NextIntlClientProvider messages={messages}>
           <NavigationProgress />
           <Providers locale={serverLocale}>
-            {props.children}
-            {props.modal}
+            <SocketProvider>
+              {props.children}
+              {props.modal}
+            </SocketProvider>
           </Providers>
         </NextIntlClientProvider>
         <Analytics />

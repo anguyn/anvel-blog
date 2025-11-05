@@ -80,8 +80,6 @@ export function BlogContentWrapper({
   useEffect(() => {
     if (!content) return;
 
-    console.log('Content: ', content);
-
     const parser = new DOMParser();
     const doc = parser.parseFromString(content, 'text/html');
     const codeBlocks = doc.querySelectorAll('pre code');
@@ -106,22 +104,17 @@ export function BlogContentWrapper({
       placeholder.textContent = code;
       preElement.replaceWith(placeholder);
     });
-    // console.log(codeBlocks)
 
     // Split content by placeholders
     const parts: React.ReactNode[] = [];
     let currentHtml = '';
     let partIndex = 0;
 
-    console.log('Temp div: ', tempDiv);
-
     Array.from(tempDiv.childNodes).forEach(node => {
-      console.log('Dô 0: ', node.nodeType === Node.ELEMENT_NODE);
       if (
         node.nodeType === Node.ELEMENT_NODE &&
         (node as Element).classList.contains('code-block-content')
       ) {
-        console.log('Dô 1: ', currentHtml);
         // Push accumulated HTML
         if (currentHtml.trim()) {
           parts.push(
@@ -138,7 +131,6 @@ export function BlogContentWrapper({
         const language =
           (node as Element).getAttribute('data-language') || 'plaintext';
 
-        console.log(language);
         parts.push(
           <CodeBlock
             key={`code-${partIndex++}`}
@@ -148,7 +140,6 @@ export function BlogContentWrapper({
         );
       } else {
         // Accumulate HTML
-        console.log('Dô 2: ', currentHtml);
         if (node.nodeType === Node.ELEMENT_NODE) {
           currentHtml += (node as Element).outerHTML;
         } else if (node.nodeType === Node.TEXT_NODE) {

@@ -33,7 +33,7 @@ export async function getDashboardStats(): Promise<
       totalPosts,
       publishedPosts,
       draftPosts,
-      totalViews,
+      // totalViews,
 
       // Comments stats
       totalComments,
@@ -69,7 +69,7 @@ export async function getDashboardStats(): Promise<
       prisma.post.count(),
       prisma.post.count({ where: { status: 'PUBLISHED' } }),
       prisma.post.count({ where: { status: 'DRAFT' } }),
-      prisma.postView.count(),
+      // prisma.postView.count(),
 
       // Comments
       prisma.comment.count(),
@@ -148,7 +148,7 @@ export async function getDashboardStats(): Promise<
         total: totalPosts,
         published: publishedPosts,
         draft: draftPosts,
-        views: totalViews,
+        views: 999,
       },
       comments: {
         total: totalComments,

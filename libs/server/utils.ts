@@ -3,6 +3,7 @@ import { LocaleProps } from '@/i18n/config';
 import slugify from 'slugify';
 import { prisma } from '@/libs/prisma';
 import { jwtVerify } from 'jose';
+import crypto from 'crypto';
 
 export async function getServerLocale(): Promise<LocaleProps> {
   const cookieStore = await cookies();
@@ -116,4 +117,20 @@ export async function clearPostAccess(slug: string): Promise<void> {
   } catch (error) {
     console.error('Failed to clear post access:', error);
   }
+}
+
+export function generateAccessToken(userId: string): string {
+  const payload = JSON.stringify({
+    userId,
+    type: 'socket',
+    iat: Date.now(),
+  });
+
+  const secret = process.env.NEXTAUTH_SECRET!;
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('base64url');
+
+  return `${Buffer.from(payload).toString('base64url')}.${signature}`;
 }

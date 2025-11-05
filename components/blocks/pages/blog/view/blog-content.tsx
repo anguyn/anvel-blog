@@ -28,15 +28,10 @@ interface BlogContentProps {
     noComments: string;
     loginToComment: string;
   };
-  session: any;
+  session?: any;
 }
 
-export function BlogContent({
-  post,
-  locale,
-  translations,
-  session,
-}: BlogContentProps) {
+export function BlogContent({ post, locale, translations }: BlogContentProps) {
   const renderMediaContent = () => {
     switch (post.type) {
       case 'GALLERY':
@@ -55,6 +50,8 @@ export function BlogContent({
         return null;
     }
   };
+
+  console.log('Re render nè 1');
 
   return (
     <>
@@ -133,8 +130,8 @@ export function BlogContent({
         <BlogComments
           postId={post.id}
           locale={locale}
-          translations={translations}
-          session={session}
+          // translations={translations}
+          // session={session}
         />
       </article>
     </>

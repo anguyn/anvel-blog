@@ -13,7 +13,7 @@ export async function POST(
 ) {
   try {
     const { password } = await request.json();
-    const { slug } = await params; // Add await here
+    const { slug } = await params;
 
     if (!password) {
       return NextResponse.json(

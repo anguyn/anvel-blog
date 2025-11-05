@@ -553,7 +553,7 @@ export interface DashboardStats {
     total: number;
     published: number;
     draft: number;
-    views: number;
+    views?: number;
   };
   comments: {
     total: number;

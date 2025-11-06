@@ -76,8 +76,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('GET /api/posts/[slug] error:', error);
-
     if (error instanceof Error && error.message === 'ACCESS_DENIED') {
       return NextResponse.json(
         {

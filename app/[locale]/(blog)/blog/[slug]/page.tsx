@@ -40,7 +40,7 @@ async function getPost(
 ): Promise<PostResponse | null> {
   try {
     const res = await serverFetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/posts/${slug}`,
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/posts/by-slug/${slug}`,
       cookieHeader,
       {
         cache: 'no-store',

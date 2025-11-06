@@ -38,7 +38,7 @@ export function useMentionSearch(postId: string) {
 
       try {
         const res = await fetch(
-          `/api/posts/${postId}/mention-search?q=${encodeURIComponent(query)}`,
+          `/api/posts/${postId}/commenters?q=${encodeURIComponent(query)}`,
           { signal: searchAbortController.current.signal },
         );
 

@@ -86,7 +86,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (status === 'authenticated' && session?.user && !socketRef.current) {
-      const socketUrl = 'http://localhost:3002';
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3002';
 
       const newSocket = io(socketUrl, {
         auth: {

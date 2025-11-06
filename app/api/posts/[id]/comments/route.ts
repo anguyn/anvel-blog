@@ -21,70 +21,94 @@ export async function GET(
     );
 
     const session = await auth();
-
     const currentUserId = session?.user?.id;
 
-    // Build query
+    // Build where clause
     const where: any = {
       postId,
       status: 'PUBLISHED',
     };
 
-    // If parentId is null, get top-level comments
-    // If parentId is provided, get replies to that comment
-    if (parentId === 'null' || !parentId) {
+    const isTopLevel = parentId === 'null' || !parentId;
+
+    if (isTopLevel) {
       where.parentId = null;
     } else {
       where.parentId = parentId;
     }
 
+    // Base include structure
+    const baseInclude = {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          image: true,
+        },
+      },
+      mentions: {
+        select: {
+          id: true,
+          userId: true,
+          username: true,
+          position: true,
+        },
+      },
+      stickers: {
+        include: {
+          sticker: {
+            select: {
+              id: true,
+              name: true,
+              imageUrl: true,
+            },
+          },
+        },
+      },
+      parent: {
+        select: {
+          id: true,
+          author: {
+            select: {
+              username: true,
+            },
+          },
+        },
+      },
+    };
+
+    // Reply include with likes if user is authenticated
+    const replyInclude = {
+      ...baseInclude,
+      ...(currentUserId && {
+        likes: {
+          where: { userId: currentUserId },
+          select: { id: true },
+        },
+      }),
+    };
+
     // Fetch comments
     const comments = await prisma.comment.findMany({
       where,
-      take: limit + 1, // Take one extra to determine if there are more
+      take: limit + 1,
       ...(cursor && {
         cursor: { id: cursor },
-        skip: 1, // Skip the cursor
+        skip: 1,
       }),
       orderBy: { createdAt: 'desc' },
       include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-            image: true,
+        ...baseInclude,
+        // Only include replies if fetching top-level comments
+        ...(isTopLevel && {
+          replies: {
+            where: { status: 'PUBLISHED' },
+            orderBy: { createdAt: 'asc' },
+            include: replyInclude,
           },
-        },
-        mentions: {
-          select: {
-            id: true,
-            userId: true,
-            username: true,
-            position: true,
-          },
-        },
-        stickers: {
-          include: {
-            sticker: {
-              select: {
-                id: true,
-                name: true,
-                imageUrl: true,
-              },
-            },
-          },
-        },
-        parent: {
-          select: {
-            id: true,
-            author: {
-              select: {
-                username: true,
-              },
-            },
-          },
-        },
+        }),
+        // Include likes for current user
         ...(currentUserId && {
           likes: {
             where: { userId: currentUserId },
@@ -98,8 +122,8 @@ export async function GET(
     const hasMore = comments.length > limit;
     const returnComments = hasMore ? comments.slice(0, -1) : comments;
 
-    // Format response
-    const formattedComments = returnComments.map(comment => ({
+    // Helper function to format a single comment
+    const formatComment = (comment: any) => ({
       id: comment.id,
       content: comment.content,
       createdAt: comment.createdAt.toISOString(),
@@ -107,10 +131,10 @@ export async function GET(
       isEdited: comment.isEdited,
       likeCount: comment.likeCount,
       replyCount: comment.replyCount,
-      isLiked: currentUserId ? comment.likes?.length > 0 : false,
+      isLiked: currentUserId ? (comment.likes?.length ?? 0) > 0 : false,
       author: comment.author,
       mentions: comment.mentions,
-      sticker: comment.stickers[0]?.sticker,
+      sticker: comment.stickers?.[0]?.sticker ?? null,
       parentId: comment.parentId,
       replyTo: comment.parent
         ? {
@@ -118,6 +142,12 @@ export async function GET(
             username: comment.parent.author.username,
           }
         : undefined,
+    });
+
+    // Format response with replies
+    const formattedComments = returnComments.map(comment => ({
+      ...formatComment(comment),
+      replies: comment.replies?.map((reply: any) => formatComment(reply)) ?? [],
     }));
 
     return NextResponse.json({

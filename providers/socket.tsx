@@ -74,23 +74,26 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const reconnectAttempts = useRef(0);
+  const [currentAccessToken, setCurrentAccessToken] = useState<string | null>(
+    session?.user?.accessToken || null,
+  );
+
   const socketRef = useRef<Socket | null>(null);
-  const maxReconnectAttempts = 5;
+  const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const maxReconnectAttempts = 5;
 
   useEffect(() => {
-    if (socketRef.current?.connected) {
-      console.log('♻️ Reusing existing socket connection');
-      return;
-    }
-
-    if (status === 'authenticated' && session?.user && !socketRef.current) {
-      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3002';
+    if (
+      currentAccessToken !== session?.user?.accessToken ||
+      !socketRef.current
+    ) {
+      const socketUrl =
+        process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3002';
 
       const newSocket = io(socketUrl, {
         auth: {
-          token: session?.user?.accessToken || '', // ⭐ Use access token
+          token: session?.user?.accessToken || '',
         },
         transports: ['websocket', 'polling'],
         reconnection: true,
@@ -111,13 +114,15 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         console.log('❌ Socket disconnected:', reason);
         setIsConnected(false);
         if (reason === 'io server disconnect') {
-          console.warn('Server forcefully disconnected. Check auth token.');
           reconnectTimeoutRef.current = setTimeout(() => {
             newSocket.connect();
             reconnectAttempts.current++;
           }, 1000);
         } else if (reason === 'transport close') {
-          console.warn('Transport closed. Network issue or server restart.');
+          reconnectTimeoutRef.current = setTimeout(() => {
+            newSocket.connect();
+            reconnectAttempts.current++;
+          }, 1000);
         }
       });
 
@@ -139,15 +144,18 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         console.log('System message:', data);
       });
 
-      setSocket(newSocket);
+      setSocket(newSocket); // ✅ Trigger re-render
       socketRef.current = newSocket;
     }
+
+    setCurrentAccessToken(session?.user?.accessToken || null);
 
     return () => {
       if (status === 'unauthenticated' && socketRef.current) {
         console.log('🔌 Cleaning up socket on logout');
         socketRef.current.disconnect();
         socketRef.current = null;
+        setSocket(null); // ✅ Clear state
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
         }
@@ -156,16 +164,19 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   }, [session?.user?.accessToken, status]);
 
   const disconnect = useCallback(() => {
-    if (socket) {
-      socket.disconnect();
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
       setSocket(null);
       setIsConnected(false);
     }
   }, []);
 
+  // ✅ Fix: Dùng socket state thay vì socketRef
   const contextValue = useMemo(
-    () => ({ socket: socketRef.current, isConnected, disconnect }),
-    [socketRef, isConnected, disconnect],
+    () => ({ socket, isConnected, disconnect }),
+    [socket, isConnected, disconnect],
+    // ^^^^^^ - Đúng! socket state sẽ trigger re-render
   );
 
   return (

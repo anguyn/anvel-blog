@@ -21,14 +21,12 @@ export function useMentionSearch(postId: string) {
   // Search users for mention with debounce
   const searchUsers = useCallback(
     debounce(async (query: string) => {
-      // Require minimum 2 characters
       if (!query || query.length < 2) {
         setMentionUsers([]);
         setIsSearching(false);
         return;
       }
 
-      // Abort previous request
       if (searchAbortController.current) {
         searchAbortController.current.abort();
       }
@@ -55,14 +53,13 @@ export function useMentionSearch(postId: string) {
       } finally {
         setIsSearching(false);
       }
-    }, 300), // 300ms debounce
+    }, 300),
     [postId],
   );
 
   // Handle input for mentions
   const handleMentionInput = useCallback(
     (value: string, cursorPos: number) => {
-      // Find @ symbol before cursor
       const beforeCursor = value.slice(0, cursorPos);
       const lastAtIndex = beforeCursor.lastIndexOf('@');
 
@@ -73,10 +70,8 @@ export function useMentionSearch(postId: string) {
         return;
       }
 
-      // Get text after @
       const afterAt = beforeCursor.slice(lastAtIndex + 1);
 
-      // Check if there's a space after @ (invalid mention)
       if (afterAt.includes(' ')) {
         setShowMentions(false);
         setMentionStartPos(null);
@@ -84,7 +79,6 @@ export function useMentionSearch(postId: string) {
         return;
       }
 
-      // Check if @ is at start or has space before it
       const charBeforeAt =
         lastAtIndex > 0 ? beforeCursor[lastAtIndex - 1] : ' ';
       if (charBeforeAt !== ' ' && lastAtIndex !== 0) {
@@ -93,42 +87,52 @@ export function useMentionSearch(postId: string) {
         return;
       }
 
-      // Valid mention in progress
       setShowMentions(true);
       setMentionStartPos(lastAtIndex);
       setMentionSearch(afterAt);
 
-      // Only search if we have at least 2 characters
       if (afterAt.length >= 2) {
         searchUsers(afterAt);
       } else if (afterAt.length === 0) {
-        // Show empty state or recent commenters
         setMentionUsers([]);
       }
     },
     [searchUsers],
   );
 
-  // Select mention from list
+  // Select mention from list - Fixed version
   const selectMention = useCallback(
     (user: MentionUser, textarea: HTMLTextAreaElement | null) => {
       if (!textarea || mentionStartPos === null) return;
 
       const value = textarea.value;
       const beforeMention = value.slice(0, mentionStartPos);
-      const afterMention = value.slice(textarea.selectionStart);
+      const afterCursor = value.slice(textarea.selectionStart);
 
-      const newValue = `${beforeMention}@${user.username} ${afterMention}`;
+      const newValue = `${beforeMention}@${user.username} ${afterCursor}`;
       const newCursorPos = mentionStartPos + user.username.length + 2;
 
-      // Update textarea value
-      textarea.value = newValue;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-      textarea.focus();
+      // Update via React's controlled component pattern
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        'value',
+      )?.set;
 
-      // Trigger change event for React
-      const event = new Event('input', { bubbles: true });
-      textarea.dispatchEvent(event);
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(textarea, newValue);
+      } else {
+        textarea.value = newValue;
+      }
+
+      // Trigger React onChange
+      const inputEvent = new Event('input', { bubbles: true });
+      textarea.dispatchEvent(inputEvent);
+
+      // Set cursor position
+      setTimeout(() => {
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        textarea.focus();
+      }, 0);
 
       // Close mentions
       closeMentions();

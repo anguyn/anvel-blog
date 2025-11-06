@@ -37,12 +37,15 @@ export function PasswordForm({
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/posts/by-slug/${slug}/verify-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `/api/posts/by-slug/${slug}/verify-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+          credentials: 'include',
+        },
+      );
 
       const data = await response.json();
 

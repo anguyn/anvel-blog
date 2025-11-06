@@ -51,8 +51,6 @@ export function BlogContent({ post, locale, translations }: BlogContentProps) {
     }
   };
 
-  console.log('Re render nè 1');
-
   return (
     <>
       <article className="lg:col-span-9">

@@ -102,7 +102,7 @@ export function SearchModal({ isOpen, onClose, locale }: SearchModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed top-20 left-1/2 z-[61] hidden w-full max-w-2xl -translate-x-1/2 lg:block"
+            className="fixed top-20 left-1/2 z-[120] hidden w-full max-w-2xl -translate-x-1/2 lg:block"
           >
             <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] shadow-2xl">
               {/* Search Input */}

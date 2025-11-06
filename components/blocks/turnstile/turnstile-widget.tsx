@@ -54,6 +54,7 @@ export const TurnstileWidget = forwardRef<
         retry: 'auto',
         refreshExpired: 'auto',
         appearance: 'always',
+        execution: 'render',
       }}
       className={className}
     />

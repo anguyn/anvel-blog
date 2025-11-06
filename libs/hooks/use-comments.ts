@@ -1,4 +1,3 @@
-// libs/hooks/use-comments.ts
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useTransition } from 'react';
@@ -56,14 +55,14 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
   >(new Map());
   const [isPending, startTransition] = useTransition();
 
-  const typingTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const socketRef = useRef(socket);
-  const isConnectedRef = useRef(isConnected);
+  // const typingTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  // const socketRef = useRef(socket);
+  // const isConnectedRef = useRef(isConnected);
 
-  useEffect(() => {
-    socketRef.current = socket;
-    isConnectedRef.current = isConnected;
-  }, [socket, isConnected]);
+  // useEffect(() => {
+  //   socketRef.current = socket;
+  //   isConnectedRef.current = isConnected;
+  // }, [socket, isConnected]);
 
   const fetchComments = useCallback(
     async (cursor?: string | null) => {
@@ -115,10 +114,10 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
       },
     ) => {
       return new Promise<Comment>((resolve, reject) => {
-        const currentSocket = socketRef.current;
-        const currentIsConnected = isConnectedRef.current;
+        // const currentSocket = socketRef.current;
+        // const currentIsConnected = isConnectedRef.current;
 
-        if (!currentSocket || !currentIsConnected) {
+        if (!socket || !isConnected) {
           return reject(new Error('Socket not connected'));
         }
 
@@ -169,7 +168,7 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           }
         });
 
-        currentSocket.emit(
+        socket.emit(
           SOCKET_EVENTS.COMMENT_NEW,
           {
             postId,
@@ -211,32 +210,34 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
         );
       });
     },
-    [postId],
+    [postId, socket, isConnected],
   );
 
   const updateComment = useCallback(
     (commentId: string, content: string) => {
       return new Promise<void>((resolve, reject) => {
-        const currentSocket = socketRef.current;
-        const currentIsConnected = isConnectedRef.current;
-
-        if (!currentSocket || !currentIsConnected) {
+        if (!socket || !isConnected) {
           return reject(new Error('Socket not connected'));
         }
 
-        // Optimistic update
+        // Optimistic update - chỉ update content và isEdited
         const previousComments = comments;
         startTransition(() => {
           setComments(prev =>
             prev.map(c =>
               c.id === commentId
-                ? { ...c, content, isEdited: true, _pending: true }
+                ? {
+                    ...c, // ✅ Giữ nguyên tất cả fields (replies, author, etc.)
+                    content,
+                    isEdited: true,
+                    _pending: true,
+                  }
                 : c,
             ),
           );
         });
 
-        currentSocket.emit(
+        socket.emit(
           SOCKET_EVENTS.COMMENT_UPDATE,
           { commentId, postId, content },
           (response: any) => {
@@ -249,7 +250,12 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
                 setComments(prev =>
                   prev.map(c =>
                     c.id === commentId
-                      ? { ...response.comment, _pending: false }
+                      ? {
+                          ...c, // ✅ Giữ nguyên replies và các field khác
+                          ...response.comment, // Merge với data mới từ server
+                          replies: c.replies, // ✅ Đảm bảo replies không bị mất
+                          _pending: false,
+                        }
                       : c,
                   ),
                 );
@@ -260,16 +266,16 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
         );
       });
     },
-    [postId, comments],
+    [postId, comments, socket, isConnected],
   );
 
   const likeComment = useCallback(
     (commentId: string) => {
       return new Promise<void>((resolve, reject) => {
-        const currentSocket = socketRef.current;
-        const currentIsConnected = isConnectedRef.current;
+        // const currentSocket = socketRef.current;
+        // const currentIsConnected = isConnectedRef.current;
 
-        if (!currentSocket || !currentIsConnected) {
+        if (!socket || !isConnected) {
           return reject(new Error('Socket not connected'));
         }
 
@@ -284,7 +290,7 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           );
         });
 
-        currentSocket.emit(
+        socket.emit(
           SOCKET_EVENTS.COMMENT_LIKE,
           { commentId, postId },
           (response: any) => {
@@ -307,16 +313,16 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
         );
       });
     },
-    [postId],
+    [postId, socket, isConnected],
   );
 
   const unlikeComment = useCallback(
     (commentId: string) => {
       return new Promise<void>((resolve, reject) => {
-        const currentSocket = socketRef.current;
-        const currentIsConnected = isConnectedRef.current;
+        // const currentSocket = socketRef.current;
+        // const currentIsConnected = isConnectedRef.current;
 
-        if (!currentSocket || !currentIsConnected) {
+        if (!socket || !isConnected) {
           return reject(new Error('Socket not connected'));
         }
 
@@ -335,7 +341,7 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           );
         });
 
-        currentSocket.emit(
+        socket.emit(
           SOCKET_EVENTS.COMMENT_UNLIKE,
           { commentId, postId },
           (response: any) => {
@@ -358,16 +364,16 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
         );
       });
     },
-    [postId],
+    [postId, socket, isConnected],
   );
 
   const deleteComment = useCallback(
     (commentId: string) => {
       return new Promise<void>((resolve, reject) => {
-        const currentSocket = socketRef.current;
-        const currentIsConnected = isConnectedRef.current;
+        // const currentSocket = socketRef.current;
+        // const currentIsConnected = isConnectedRef.current;
 
-        if (!currentSocket || !currentIsConnected) {
+        if (!socket || !isConnected) {
           return reject(new Error('Socket not connected'));
         }
 
@@ -376,7 +382,7 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           setComments(prev => prev.filter(c => c.id !== commentId));
         });
 
-        currentSocket.emit(
+        socket.emit(
           SOCKET_EVENTS.COMMENT_DELETE,
           { commentId, postId },
           (response: any) => {
@@ -390,32 +396,31 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
         );
       });
     },
-    [postId, comments],
+    [postId, comments, socket, isConnected],
   );
 
   const emitTyping = useCallback(
     (parentId?: string) => {
-      const currentSocket = socketRef.current;
-      const currentIsConnected = isConnectedRef.current;
+      if (!socket || !isConnected) {
+        console.warn('❌ Cannot emit - socket not ready');
+        return;
+      }
 
-      if (!currentSocket || !currentIsConnected) return;
-      currentSocket.emit(SOCKET_EVENTS.COMMENT_TYPING, { postId, parentId });
+      socket.emit(SOCKET_EVENTS.COMMENT_TYPING, { postId, parentId });
     },
-    [postId],
+    [postId, socket, isConnected],
   );
 
   const stopTyping = useCallback(
     (parentId?: string) => {
-      const currentSocket = socketRef.current;
-      const currentIsConnected = isConnectedRef.current;
+      if (!socket || !isConnected) {
+        console.warn('❌ Cannot stop typing - socket not ready');
+        return;
+      }
 
-      if (!currentSocket || !currentIsConnected) return;
-      currentSocket.emit(SOCKET_EVENTS.COMMENT_STOP_TYPING, {
-        postId,
-        parentId,
-      });
+      socket.emit(SOCKET_EVENTS.COMMENT_STOP_TYPING, { postId, parentId });
     },
-    [postId],
+    [postId, socket, isConnected],
   );
 
   useEffect(() => {
@@ -448,7 +453,17 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
 
     const handleCommentUpdated = (comment: Comment) => {
       startTransition(() => {
-        setComments(prev => prev.map(c => (c.id === comment.id ? comment : c)));
+        setComments(prev =>
+          prev.map(c =>
+            c.id === comment.id
+              ? {
+                  ...c, // ✅ Giữ nguyên replies
+                  ...comment, // Merge data mới
+                  replies: c.replies, // ✅ Preserve replies
+                }
+              : c,
+          ),
+        );
       });
     };
 
@@ -499,19 +514,19 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
         }),
       );
 
-      const existingTimeout = typingTimeouts.current.get(data.userId);
-      if (existingTimeout) clearTimeout(existingTimeout);
+      // const existingTimeout = typingTimeouts.current.get(data.userId);
+      // if (existingTimeout) clearTimeout(existingTimeout);
 
-      const timeout = setTimeout(() => {
-        setTypingUsers(prev => {
-          const next = new Map(prev);
-          next.delete(data.userId);
-          return next;
-        });
-        typingTimeouts.current.delete(data.userId);
-      }, 5000);
+      // const timeout = setTimeout(() => {
+      //   setTypingUsers(prev => {
+      //     const next = new Map(prev);
+      //     next.delete(data.userId);
+      //     return next;
+      //   });
+      //   typingTimeouts.current.delete(data.userId);
+      // }, 5000);
 
-      typingTimeouts.current.set(data.userId, timeout);
+      // typingTimeouts.current.set(data.userId, timeout);
     };
 
     const handleStopTyping = (data: { userId: string }) => {
@@ -521,11 +536,11 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
         return next;
       });
 
-      const timeout = typingTimeouts.current.get(data.userId);
-      if (timeout) {
-        clearTimeout(timeout);
-        typingTimeouts.current.delete(data.userId);
-      }
+      // const timeout = typingTimeouts.current.get(data.userId);
+      // if (timeout) {
+      //   clearTimeout(timeout);
+      //   typingTimeouts.current.delete(data.userId);
+      // }
     };
 
     socket.on(SOCKET_EVENTS.COMMENT_CREATED, handleCommentCreated);
@@ -546,8 +561,8 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
       socket.off(SOCKET_EVENTS.COMMENT_TYPING, handleTyping);
       socket.off(SOCKET_EVENTS.COMMENT_STOP_TYPING, handleStopTyping);
 
-      typingTimeouts.current.forEach(timeout => clearTimeout(timeout));
-      typingTimeouts.current.clear();
+      // typingTimeouts.current.forEach(timeout => clearTimeout(timeout));
+      // typingTimeouts.current.clear();
     };
   }, [socket, isConnected, postId, enabled]);
 

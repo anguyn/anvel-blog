@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
                 hostname: 'pub-f19a87932f4942b1ab1abe8d833bc242.r2.dev',
                 pathname: '/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'media.giphy.com',
+                pathname: '/**',
+            },
         ],
     },
     webpack: (config, { isServer }) => {

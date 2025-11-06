@@ -1,7 +1,7 @@
 // components/blog/blog-comments-enhanced.tsx
 'use client';
 
-import { useState, useRef, useCallback, useMemo, memo } from 'react';
+import { useState, useRef, useCallback, useMemo, memo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -32,13 +32,15 @@ import { resolveMentions } from '@/libs/helpers/mention.helpter';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePermissions } from '@/libs/hooks/use-permissions';
+import { StickerPicker } from './sticker-picker';
+import { CommentTextarea } from './comment-textarea';
+import { cn } from '@/libs/utils';
 
 interface BlogCommentsProps {
   postId: string;
   locale: string;
 }
 
-// Format time helper
 function formatTimeAgo(date: string | Date): string {
   const now = new Date().getTime();
   const then = new Date(date).getTime();
@@ -70,6 +72,24 @@ function formatTimeAgo(date: string | Date): string {
   });
 }
 
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+): ((...args: Parameters<T>) => void) & { cancel: () => void } {
+  let timeout: NodeJS.Timeout | null = null;
+
+  const debounced = function (this: any, ...args: Parameters<T>) {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+
+  debounced.cancel = () => {
+    if (timeout) clearTimeout(timeout);
+  };
+
+  return debounced;
+}
+
 function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
   const { data: session } = useSession();
   const currentUser = session?.user;
@@ -90,19 +110,28 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
     stopTyping,
   } = useComments({ postId });
 
+  console.log('log ra comment nè: ', comments);
+
   const { hasMinimumRole } = usePermissions();
 
   const [newComment, setNewComment] = useState('');
-  const [replyTo, setReplyTo] = useState<string | null>(null);
-  const [replyContent, setReplyContent] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState('');
+  // const [replyTo, setReplyTo] = useState<string | null>(null);
+  // const [replyContent, setReplyContent] = useState('');
+  // const [editingId, setEditingId] = useState<string | null>(null);
+  // const [editContent, setEditContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  // const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  // const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(false);
+
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
+  const [selectedSticker, setSelectedSticker] = useState<{
+    id: string;
+    imageUrl: string;
+  } | null>(null);
 
   const {
     showMentions,
@@ -117,34 +146,47 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
   const handleInputChange = useCallback(
     (value: string, type: 'new' | 'reply' | 'edit' = 'new') => {
       if (type === 'new') setNewComment(value);
-      else if (type === 'reply') setReplyContent(value);
-      else setEditContent(value);
+      // else if (type === 'reply') setReplyContent(value);
+      // else setEditContent(value);
+
+      const parentId = undefined;
 
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
 
-      // ✅ Emit typing mỗi khi có thay đổi
-      emitTyping(type === 'reply' ? replyTo! : undefined);
-
-      // ✅ Tăng lên 3 giây
+      if (!isTypingRef.current) {
+        emitTyping(parentId);
+        isTypingRef.current = true;
+      }
       typingTimerRef.current = setTimeout(() => {
-        stopTyping(type === 'reply' ? replyTo! : undefined);
+        stopTyping(parentId);
+        isTypingRef.current = false;
       }, 3000);
 
       handleMentionInput(value, textareaRef.current?.selectionStart || 0);
     },
-    [replyTo, emitTyping, stopTyping, handleMentionInput],
+    [emitTyping, stopTyping, handleMentionInput],
   );
 
   const handleFocus = useCallback(
     (type: 'new' | 'reply' | 'edit' = 'new') => {
-      emitTyping(type === 'reply' ? replyTo! : undefined);
+      const parentId = undefined;
 
-      // Set timeout để auto stop nếu không typing
+      // ✅ Chỉ emit nếu chưa typing
+      if (!isTypingRef.current) {
+        emitTyping(parentId);
+        isTypingRef.current = true;
+      }
+
+      // ✅ Set timeout để auto stop
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+
       typingTimerRef.current = setTimeout(() => {
-        stopTyping(type === 'reply' ? replyTo! : undefined);
+        stopTyping(parentId);
+        isTypingRef.current = false;
       }, 3000);
     },
-    [replyTo, emitTyping, stopTyping],
+    [emitTyping, stopTyping],
+    // ^^^^ QUAN TRỌNG: Phải có emitTyping, stopTyping trong deps
   );
 
   const handleSubmit = async () => {
@@ -158,42 +200,6 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
       await createComment(newComment, { mentions });
       setNewComment('');
       toast.success('Đã đăng bình luận!');
-    } catch (error) {
-      if (error instanceof Error) toast.error(error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleReplySubmit = async (parentId: string) => {
-    if (!replyContent.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-    stopTyping(parentId);
-
-    try {
-      const mentions = await resolveMentions(replyContent, postId);
-      await createComment(replyContent, { parentId, mentions });
-      setReplyContent('');
-      setReplyTo(null);
-      toast.success('Đã trả lời!');
-    } catch (error) {
-      if (error instanceof Error) toast.error(error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleEditSubmit = async (commentId: string) => {
-    if (!editContent.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-
-    try {
-      await updateComment(commentId, editContent);
-      setEditingId(null);
-      setEditContent('');
-      toast.success('Đã chỉnh sửa!');
     } catch (error) {
       if (error instanceof Error) toast.error(error.message);
     } finally {
@@ -281,16 +287,120 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
   const CommentItem = memo(
     ({ comment, isReply = false }: { comment: Comment; isReply?: boolean }) => {
       const [showReplyForm, setShowReplyForm] = useState(false);
-      const isEditing = editingId === comment.id;
+      const [localReplyContent, setLocalReplyContent] = useState('');
+      const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+
+      const [isLocalEditing, setIsLocalEditing] = useState(false);
+      const [localEditContent, setLocalEditContent] = useState('');
+      const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+
+      const localReplyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+      const localEditTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+      const localTypingTimerRef = useRef<NodeJS.Timeout | null>(null);
+      const localIsTypingRef = useRef(false);
+
       const canManage = useMemo(() => canEditOrDelete(comment), [comment]);
+
+      // Local edit handlers
+      const handleStartEdit = useCallback(() => {
+        setIsLocalEditing(true);
+        setLocalEditContent(comment.content);
+
+        setTimeout(() => {
+          if (localEditTextareaRef.current) {
+            const textarea = localEditTextareaRef.current;
+            const length = textarea.value.length;
+
+            textarea.focus();
+
+            textarea.setSelectionRange(length, length);
+
+            textarea.scrollTop = textarea.scrollHeight;
+          }
+        }, 0);
+      }, [comment.content]);
+
+      const handleCancelEdit = useCallback(() => {
+        setIsLocalEditing(false);
+        setLocalEditContent('');
+      }, []);
+
+      const handleLocalEditSubmit = async () => {
+        if (!localEditContent.trim() || isSubmittingEdit) return;
+
+        setIsSubmittingEdit(true);
+
+        try {
+          await updateComment(comment.id, localEditContent);
+          setIsLocalEditing(false);
+          setLocalEditContent('');
+          toast.success('Đã chỉnh sửa!');
+        } catch (error) {
+          if (error instanceof Error) toast.error(error.message);
+        } finally {
+          setIsSubmittingEdit(false);
+        }
+      };
+
+      // Local reply submit handler
+      const handleLocalReplySubmit = async () => {
+        if (!localReplyContent.trim() || isSubmittingReply) return;
+
+        setIsSubmittingReply(true);
+
+        // Stop typing indicator
+        if (localTypingTimerRef.current) {
+          clearTimeout(localTypingTimerRef.current);
+        }
+        stopTyping(comment.id);
+        localIsTypingRef.current = false;
+
+        try {
+          const mentions = await resolveMentions(localReplyContent, postId);
+          await createComment(localReplyContent, {
+            parentId: comment.id,
+            mentions,
+          });
+          setLocalReplyContent('');
+          setShowReplyForm(false);
+          toast.success('Đã trả lời!');
+        } catch (error) {
+          if (error instanceof Error) toast.error(error.message);
+        } finally {
+          setIsSubmittingReply(false);
+        }
+      };
+
+      // Local typing handler
+      const handleLocalTyping = (value: string) => {
+        setLocalReplyContent(value);
+
+        // Clear previous timer
+        if (localTypingTimerRef.current) {
+          clearTimeout(localTypingTimerRef.current);
+        }
+
+        // Emit typing
+        if (!localIsTypingRef.current) {
+          emitTyping(comment.id);
+          localIsTypingRef.current = true;
+        }
+
+        // Auto stop after 3s
+        localTypingTimerRef.current = setTimeout(() => {
+          stopTyping(comment.id);
+          localIsTypingRef.current = false;
+        }, 3000);
+      };
 
       return (
         <motion.div
-          initial={{ opacity: 0.8, y: 5 }}
-          animate={{ opacity: comment._pending ? 0.8 : 1, y: 0 }}
-          exit={{ opacity: 0, x: -5 }}
-          transition={{ duration: 0.25 }}
-          className={`space-y-3 ${isReply ? 'ml-8 sm:ml-12' : ''}`}
+          layout
+          initial={comment._pending ? { opacity: 0, scale: 0.95 } : false} // ← CHỈ animate khi pending
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2 }} // ← Giảm duration
+          className={`space-y-3`}
         >
           <div className="flex gap-2 sm:gap-3">
             <Link
@@ -313,7 +423,7 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
             </Link>
 
             <div className="min-w-0 flex-1 space-y-2">
-              {!isEditing ? (
+              {!isLocalEditing ? (
                 <div className="bg-muted rounded-2xl px-3 py-2 sm:px-4">
                   <div className="mb-1 flex flex-wrap items-center gap-2">
                     <Link
@@ -358,10 +468,10 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <textarea
-                    ref={editTextareaRef}
-                    value={editContent}
-                    onChange={e => handleInputChange(e.target.value, 'edit')}
+                  <CommentTextarea
+                    value={localEditContent}
+                    onChange={setLocalEditContent}
+                    textareaRef={localEditTextareaRef}
                     className="bg-background focus:ring-primary w-full resize-none rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                     rows={3}
                     autoFocus
@@ -369,10 +479,10 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      onClick={() => handleEditSubmit(comment.id)}
-                      disabled={isSubmitting}
+                      onClick={handleLocalEditSubmit}
+                      disabled={isSubmittingEdit}
                     >
-                      {isSubmitting ? (
+                      {isSubmittingEdit ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
                       ) : (
                         <Check className="h-3 w-3" />
@@ -381,10 +491,7 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => {
-                        setEditingId(null);
-                        setEditContent('');
-                      }}
+                      onClick={handleCancelEdit}
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -392,82 +499,99 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-3 px-2 text-sm">
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleLikeToggle(comment)}
-                  className={`flex items-center gap-1 transition-colors ${
-                    comment.isLiked
-                      ? 'text-red-500'
-                      : 'text-muted-foreground hover:text-red-500'
-                  }`}
-                >
-                  <motion.div
-                    animate={comment.isLiked ? { scale: [1, 1.3, 1] } : {}}
-                    transition={{ duration: 0.3 }}
+              {!isLocalEditing && (
+                <div className="flex flex-wrap items-center gap-3 px-2 text-sm">
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleLikeToggle(comment)}
+                    className={cn(
+                      'flex items-center gap-1 transition-colors hover:cursor-pointer',
+                      comment.isLiked
+                        ? 'text-red-500'
+                        : 'text-muted-foreground hover:text-red-500',
+                    )}
                   >
-                    <Heart
-                      className={`h-4 w-4 ${comment.isLiked ? 'fill-current' : ''}`}
-                    />
-                  </motion.div>
-                  {comment.likeCount > 0 && <span>{comment.likeCount}</span>}
-                </motion.button>
+                    <motion.div
+                      animate={comment.isLiked ? { scale: [1, 1.3, 1] } : {}}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Heart
+                        className={`h-4 w-4 ${comment.isLiked ? 'fill-current' : ''}`}
+                      />
+                    </motion.div>
+                    {comment.likeCount > 0 && <span>{comment.likeCount}</span>}
+                  </motion.button>
 
-                {session && !isReply && (
-                  <button
-                    onClick={() => {
-                      setShowReplyForm(!showReplyForm);
-                      setReplyTo(comment.id);
-                    }}
-                    className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                  >
-                    <Reply className="h-4 w-4" />
-                    <span className="hidden sm:inline">Trả lời</span>
-                  </button>
-                )}
-
-                {canManage && !isEditing && (
-                  <>
+                  {session && !isReply && (
                     <button
                       onClick={() => {
-                        setEditingId(comment.id);
-                        setEditContent(comment.content);
+                        setShowReplyForm(!showReplyForm);
+                        // ← KHÔNG cần setReplyTo nữa vì dùng comment.id local
                       }}
-                      className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                      className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors hover:cursor-pointer"
                     >
-                      <Edit2 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Sửa</span>
+                      <Reply className="h-4 w-4" />
+                      <span className="hidden sm:inline">Trả lời</span>
                     </button>
-                    <button
-                      onClick={() => handleDelete(comment.id)}
-                      className="text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Xóa</span>
-                    </button>
-                  </>
-                )}
-              </div>
+                  )}
 
-              <AnimatePresence>
+                  {canManage && !isLocalEditing && (
+                    <>
+                      <button
+                        onClick={handleStartEdit}
+                        className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors hover:cursor-pointer"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Sửa</span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(comment.id)}
+                        className="text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors hover:cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Xóa</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <AnimatePresence mode="wait">
                 {showReplyForm && (
                   <motion.div
+                    key={`reply-${comment.id}`} // ← Key stable
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
                     className="flex gap-2 px-2"
                   >
-                    <textarea
-                      ref={replyTextareaRef}
-                      value={replyContent}
-                      onChange={e => handleInputChange(e.target.value, 'reply')}
+                    <CommentTextarea
+                      textareaRef={localReplyTextareaRef}
+                      value={localReplyContent} // ← LOCAL state
+                      onChange={handleLocalTyping}
                       onBlur={() => {
-                        if (typingTimerRef.current) {
-                          clearTimeout(typingTimerRef.current);
+                        if (localTypingTimerRef.current) {
+                          clearTimeout(localTypingTimerRef.current);
                         }
                         stopTyping(comment.id);
+                        localIsTypingRef.current = false;
                       }}
-                      onFocus={() => handleFocus('reply')}
+                      onFocus={() => {
+                        if (!localIsTypingRef.current) {
+                          emitTyping(comment.id);
+                          localIsTypingRef.current = true;
+                        }
+                      }}
+                      onKeyDown={e => {
+                        handleMentionKeyDown(
+                          e as any,
+                          localReplyTextareaRef.current!,
+                        );
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          handleLocalReplySubmit();
+                        }
+                      }}
                       placeholder={`Trả lời ${comment.author.username}...`}
                       className="bg-background focus:ring-primary flex-1 resize-none rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                       rows={2}
@@ -475,10 +599,12 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
                     <div className="flex flex-col gap-2">
                       <Button
                         size="sm"
-                        onClick={() => handleReplySubmit(comment.id)}
-                        disabled={isSubmitting || !replyContent.trim()}
+                        onClick={handleLocalReplySubmit} // ← LOCAL submit
+                        disabled={
+                          isSubmittingReply || !localReplyContent.trim()
+                        }
                       >
-                        {isSubmitting ? (
+                        {isSubmittingReply ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
                           <Send className="h-3 w-3" />
@@ -489,8 +615,12 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
                         variant="ghost"
                         onClick={() => {
                           setShowReplyForm(false);
-                          setReplyContent('');
-                          setReplyTo(null);
+                          setLocalReplyContent('');
+                          if (localTypingTimerRef.current) {
+                            clearTimeout(localTypingTimerRef.current);
+                          }
+                          stopTyping(comment.id);
+                          localIsTypingRef.current = false;
                         }}
                       >
                         <X className="h-3 w-3" />
@@ -539,16 +669,17 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
         ) : (
           <div className="space-y-3">
             <div className="relative">
-              <textarea
-                ref={textareaRef}
+              <CommentTextarea
+                textareaRef={textareaRef}
                 value={newComment}
-                onChange={e => handleInputChange(e.target.value, 'new')}
+                onChange={(value: string) => handleInputChange(value, 'new')}
                 onFocus={() => handleFocus('new')} // ✅ Thêm onFocus
                 onBlur={() => {
                   if (typingTimerRef.current) {
                     clearTimeout(typingTimerRef.current);
                   }
                   stopTyping();
+                  isTypingRef.current = false;
                 }}
                 onKeyDown={e => {
                   handleMentionKeyDown(e as any, textareaRef.current!);
@@ -603,10 +734,47 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
                   )}
                 </div>
               )}
+
+              <AnimatePresence>
+                {showStickerPicker && (
+                  <StickerPicker
+                    onSelect={sticker => {
+                      setSelectedSticker(sticker);
+                      setShowStickerPicker(false);
+                    }}
+                    onClose={() => setShowStickerPicker(false)}
+                    className="top-32 z-[120]"
+                  />
+                )}
+              </AnimatePresence>
             </div>
 
+            {selectedSticker && (
+              <div className="relative inline-block">
+                <Image
+                  src={selectedSticker.imageUrl}
+                  alt="Selected sticker"
+                  width={60}
+                  height={60}
+                  unoptimized
+                  className="rounded-lg"
+                />
+                <button
+                  onClick={() => setSelectedSticker(null)}
+                  className="bg-destructive text-destructive-foreground absolute -top-2 -right-2 rounded-full p-1"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
-              <Button type="button" variant="ghost" size="sm">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowStickerPicker(!showStickerPicker)}
+              >
                 <Smile className="h-4 w-4" />
               </Button>
               <Button
@@ -650,10 +818,10 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
                 />
               </div>
               <span>
-                {Array.from(typingUsers.values())
+                {/* {Array.from(typingUsers.values())
                   .map(u => u.username)
-                  .join(', ')}{' '}
-                đang soạn...
+                  .join(', ')}{' '} */}
+                Someone is typing...
               </span>
             </motion.div>
           )}
@@ -674,7 +842,7 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
         ) : comments.length > 0 ? (
           <>
             <div className="space-y-6">
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {comments.map(comment => (
                   <CommentItem key={comment.id} comment={comment} />
                 ))}

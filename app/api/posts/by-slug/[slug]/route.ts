@@ -3,6 +3,69 @@ import { PostService } from '@/libs/services/post.service';
 import { getCurrentUser } from '@/libs/server/rbac';
 import { getApiTranslations } from '@/i18n/i18n';
 
+// Utility function to generate slug from text
+function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD') // Normalize Vietnamese characters
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .replace(/[^\w\s-]/g, '') // Remove special chars
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .trim();
+}
+
+// Extract headings and inject IDs into HTML content
+function injectHeadingIds(htmlContent: string): {
+  content: string;
+  headings: Array<{ id: string; text: string; level: number }>;
+} {
+  const headings: Array<{ id: string; text: string; level: number }> = [];
+  const headingCounters = new Map<string, number>(); // To handle duplicate headings
+
+  const contentWithIds = htmlContent.replace(
+    /<h([2-4])([^>]*)>(.*?)<\/h\1>/gi,
+    (match, level, attributes, text) => {
+      // Extract plain text from heading (remove HTML tags if any)
+      const plainText = text.replace(/<[^>]*>/g, '').trim();
+
+      // Generate base slug
+      let baseSlug = generateSlug(plainText);
+
+      // Handle duplicates by adding counter
+      const count = headingCounters.get(baseSlug) || 0;
+      headingCounters.set(baseSlug, count + 1);
+
+      const id = count > 0 ? `${baseSlug}-${count}` : baseSlug;
+
+      // Store heading info
+      headings.push({
+        id,
+        text: plainText,
+        level: parseInt(level),
+      });
+
+      // Check if id already exists in attributes
+      const hasId = /id\s*=\s*["'][^"']*["']/i.test(attributes);
+
+      if (hasId) {
+        // Replace existing id
+        return `<h${level}${attributes.replace(/id\s*=\s*["'][^"']*["']/i, `id="${id}"`)}>${text}</h${level}>`;
+      } else {
+        // Add new id
+        return `<h${level} id="${id}"${attributes}>${text}</h${level}>`;
+      }
+    },
+  );
+
+  return {
+    content: contentWithIds,
+    headings,
+  };
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
@@ -21,8 +84,8 @@ export async function GET(
 
     const { post, relatedPosts, translations, contentInfo } = result;
 
-    const originalLang = post.language; // 'en' or 'vi'
-    const requestedLang = locale; // from URL: /en/blog or /vi/blog
+    const originalLang = post.language;
+    const requestedLang = locale;
 
     let displayContent = {
       title: post.title,
@@ -58,13 +121,20 @@ export async function GET(
       }
     }
 
+    // Inject heading IDs and extract table of contents
+    const { content: processedContent, headings } = injectHeadingIds(
+      displayContent.content,
+    );
+
     return NextResponse.json({
       post: {
         ...post,
         ...displayContent,
+        content: processedContent, // Content with IDs injected
       },
       relatedPosts,
       translations,
+      tableOfContents: headings, // Add TOC data
       contentInfo: {
         isTranslated: displayContent.isTranslated,
         originalLanguage: originalLang,

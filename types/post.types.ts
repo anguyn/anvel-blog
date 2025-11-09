@@ -13,7 +13,6 @@ export interface Post extends PostPrisma {
   excerpt: string | null;
   content: string;
   contentFormat: 'MARKDOWN' | 'HTML' | 'RICH_TEXT';
-
   metaTitle: string | null;
   metaDescription: string | null;
   metaKeywords: string[];

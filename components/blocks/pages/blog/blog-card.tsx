@@ -63,8 +63,8 @@ export function BlogCard({
     return (
       <Link href={`/${locale}/blog/${post.slug}`}>
         <div className="group relative overflow-hidden rounded-xl transition-all hover:shadow-lg">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="relative aspect-video min-h-72 overflow-hidden rounded-lg lg:aspect-auto lg:h-full">
+          <div className="grid gap-6 lg:grid-cols-2 [@media(min-width:2560px)]:grid-cols-5">
+            <div className="relative aspect-video min-h-72 overflow-hidden rounded-lg lg:aspect-[2/1] lg:w-full [@media(min-width:2560px)]:col-span-2">
               {post.featuredImage ? (
                 <Image
                   src={post.featuredImage}
@@ -107,7 +107,7 @@ export function BlogCard({
               </h2>
 
               {post.excerpt && (
-                <p className="text-muted-foreground mb-4 line-clamp-3">
+                <p className="text-muted-foreground mb-4 line-clamp-3 leading-normal">
                   {post.excerpt}
                 </p>
               )}
@@ -188,7 +188,7 @@ export function BlogCard({
           </h3>
 
           {post.excerpt && (
-            <p className="text-muted-foreground mb-3 line-clamp-3 text-sm">
+            <p className="text-muted-foreground mb-3 line-clamp-3 text-sm leading-normal">
               {post.excerpt}
             </p>
           )}

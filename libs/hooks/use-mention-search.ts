@@ -15,10 +15,10 @@ export function useMentionSearch(postId: string) {
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const [mentionStartPos, setMentionStartPos] = useState<number | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const searchAbortController = useRef<AbortController | null>(null);
 
-  // Search users for mention with debounce
   const searchUsers = useCallback(
     debounce(async (query: string) => {
       if (!query || query.length < 2) {
@@ -57,9 +57,8 @@ export function useMentionSearch(postId: string) {
     [postId],
   );
 
-  // Handle input for mentions
   const handleMentionInput = useCallback(
-    (value: string, cursorPos: number) => {
+    (value: string, cursorPos: number, element: HTMLElement | null) => {
       const beforeCursor = value.slice(0, cursorPos);
       const lastAtIndex = beforeCursor.lastIndexOf('@');
 
@@ -67,6 +66,7 @@ export function useMentionSearch(postId: string) {
         setShowMentions(false);
         setMentionStartPos(null);
         setMentionUsers([]);
+        setAnchorEl(null);
         return;
       }
 
@@ -76,20 +76,26 @@ export function useMentionSearch(postId: string) {
         setShowMentions(false);
         setMentionStartPos(null);
         setMentionUsers([]);
+        setAnchorEl(null);
         return;
       }
 
       const charBeforeAt =
         lastAtIndex > 0 ? beforeCursor[lastAtIndex - 1] : ' ';
-      if (charBeforeAt !== ' ' && lastAtIndex !== 0) {
+      if (charBeforeAt !== ' ' && charBeforeAt !== '\n' && lastAtIndex !== 0) {
         setShowMentions(false);
         setMentionStartPos(null);
+        setAnchorEl(null);
         return;
       }
 
       setShowMentions(true);
       setMentionStartPos(lastAtIndex);
       setMentionSearch(afterAt);
+
+      if (element) {
+        setAnchorEl(element);
+      }
 
       if (afterAt.length >= 2) {
         searchUsers(afterAt);
@@ -100,50 +106,9 @@ export function useMentionSearch(postId: string) {
     [searchUsers],
   );
 
-  // Select mention from list - Fixed version
-  const selectMention = useCallback(
-    (user: MentionUser, textarea: HTMLTextAreaElement | null) => {
-      if (!textarea || mentionStartPos === null) return;
-
-      const value = textarea.value;
-      const beforeMention = value.slice(0, mentionStartPos);
-      const afterCursor = value.slice(textarea.selectionStart);
-
-      const newValue = `${beforeMention}@${user.username} ${afterCursor}`;
-      const newCursorPos = mentionStartPos + user.username.length + 2;
-
-      // Update via React's controlled component pattern
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLTextAreaElement.prototype,
-        'value',
-      )?.set;
-
-      if (nativeInputValueSetter) {
-        nativeInputValueSetter.call(textarea, newValue);
-      } else {
-        textarea.value = newValue;
-      }
-
-      // Trigger React onChange
-      const inputEvent = new Event('input', { bubbles: true });
-      textarea.dispatchEvent(inputEvent);
-
-      // Set cursor position
-      setTimeout(() => {
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-        textarea.focus();
-      }, 0);
-
-      // Close mentions
-      closeMentions();
-    },
-    [mentionStartPos],
-  );
-
-  // Handle keyboard navigation in mention list
   const handleMentionKeyDown = useCallback(
-    (e: KeyboardEvent, textarea: HTMLTextAreaElement) => {
-      if (!showMentions || mentionUsers.length === 0) return;
+    (e: KeyboardEvent) => {
+      if (!showMentions || mentionUsers.length === 0) return false;
 
       switch (e.key) {
         case 'ArrowDown':
@@ -151,42 +116,43 @@ export function useMentionSearch(postId: string) {
           setSelectedMentionIndex(prev =>
             prev < mentionUsers.length - 1 ? prev + 1 : 0,
           );
-          break;
+          return true;
 
         case 'ArrowUp':
           e.preventDefault();
           setSelectedMentionIndex(prev =>
             prev > 0 ? prev - 1 : mentionUsers.length - 1,
           );
-          break;
+          return true;
 
         case 'Enter':
         case 'Tab':
           if (mentionUsers.length > 0) {
             e.preventDefault();
-            selectMention(mentionUsers[selectedMentionIndex], textarea);
+            return mentionUsers[selectedMentionIndex];
           }
           break;
 
         case 'Escape':
           e.preventDefault();
           closeMentions();
-          break;
+          return true;
       }
+
+      return false;
     },
-    [showMentions, mentionUsers, selectedMentionIndex, selectMention],
+    [showMentions, mentionUsers, selectedMentionIndex],
   );
 
-  // Close mentions
   const closeMentions = useCallback(() => {
     setShowMentions(false);
     setMentionStartPos(null);
     setMentionSearch('');
     setMentionUsers([]);
     setIsSearching(false);
+    setAnchorEl(null);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (searchAbortController.current) {
@@ -200,10 +166,11 @@ export function useMentionSearch(postId: string) {
     mentionSearch,
     mentionUsers,
     selectedMentionIndex,
+    mentionStartPos,
     isSearching,
+    anchorEl,
     handleMentionInput,
     handleMentionKeyDown,
-    selectMention,
     closeMentions,
   };
 }

@@ -188,7 +188,6 @@ export function BlogHeroSection({
   const [palette, setPalette] = useState<ColorPalette | null>(null);
   const [isClient, setIsClient] = useState(false);
 
-  // Set isClient on mount to avoid hydration mismatch
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -210,7 +209,6 @@ export function BlogHeroSection({
     }
   }, [isClient, post.featuredImage, post.category?.color]);
 
-  // Use a simple default style for SSR and initial render
   const defaultStyle = {
     background:
       'linear-gradient(to bottom, rgba(59, 130, 246, 0.05), transparent)',
@@ -264,10 +262,13 @@ export function BlogHeroSection({
             <Link href={`/${locale}`} className="hover:text-foreground">
               Home
             </Link>
+
             <span>/</span>
+
             <Link href={`/${locale}/blog`} className="hover:text-foreground">
               Blog
             </Link>
+
             {post.category && (
               <>
                 <span>/</span>
@@ -277,6 +278,13 @@ export function BlogHeroSection({
                 >
                   {post.category.name}
                 </Link>
+              </>
+            )}
+
+            {post.title && (
+              <>
+                <span>/</span>
+                <span>{post.title}</span>
               </>
             )}
           </nav>
@@ -317,7 +325,7 @@ export function BlogHeroSection({
                       </Badge>
                     )}
                   </div>
-                  <h1 className="mb-4 text-4xl leading-tight font-bold md:text-4xl xl:text-5xl">
+                  <h1 className="mb-4 text-4xl leading-tight font-bold md:text-4xl [@media(min-width:2560px)]:text-5xl">
                     {post.title}
                   </h1>
                   {post.excerpt && (

@@ -37,6 +37,8 @@ export interface Comment {
   replies?: Comment[];
   _optimistic?: boolean;
   _pending?: boolean;
+  hasMoreReplies?: boolean;
+  nextRepliesCursor?: string | null;
 }
 
 interface UseCommentsOptions {
@@ -46,23 +48,16 @@ interface UseCommentsOptions {
 
 export function useComments({ postId, enabled = true }: UseCommentsOptions) {
   const { socket, isConnected } = useSocket();
+  const [totalComments, setTotalComments] = useState(0);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [typingUsers, setTypingUsers] = useState<
     Map<string, { userId: string; username: string }>
   >(new Map());
   const [isPending, startTransition] = useTransition();
-
-  // const typingTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  // const socketRef = useRef(socket);
-  // const isConnectedRef = useRef(isConnected);
-
-  // useEffect(() => {
-  //   socketRef.current = socket;
-  //   isConnectedRef.current = isConnected;
-  // }, [socket, isConnected]);
 
   const fetchComments = useCallback(
     async (cursor?: string | null) => {
@@ -71,34 +66,74 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           `/api/posts/${postId}/comments`,
           window.location.origin,
         );
-        if (cursor) url.searchParams.set('cursor', cursor);
+
+        // ✅ FIX: Dùng cursor được truyền vào, không phải state
+        if (cursor) {
+          url.searchParams.set('cursor', cursor);
+          setIsLoadingMore(true);
+        } else {
+          setIsLoading(true);
+        }
 
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch comments');
 
         const data = await res.json();
 
+        setTotalComments(data.totalComments || 0);
+        console.log('totalComments:', data.totalComments);
+        console.log('Result comments:', data.comments);
+
         if (cursor) {
-          setComments(prev => [...prev, ...data.comments]);
+          // Load more: append new comments
+          setComments(prev => {
+            const existingIds = new Set(prev.map(c => c.id));
+            const newComments = data.comments.filter(
+              (c: Comment) => !existingIds.has(c.id),
+            );
+            return [...prev, ...newComments];
+          });
         } else {
+          // Initial load
           setComments(data.comments);
         }
 
-        setNextCursor(data.nextCursor);
-        setHasMore(data.hasMore);
+        // ✅ IMPORTANT: Luôn update nextCursor từ API response
+        console.log('Received nextCursor:', data.nextCursor);
+        setNextCursor(data.nextCursor || null);
+        setHasMore(data.hasMore || false);
       } catch (error) {
         console.error('Error fetching comments:', error);
       } finally {
-        setIsLoading(false);
+        if (cursor) {
+          setIsLoadingMore(false);
+        } else {
+          setIsLoading(false);
+        }
       }
     },
     [postId],
   );
 
   const loadMore = useCallback(() => {
-    if (!hasMore || isLoading) return;
+    console.log(
+      'Load more called - nextCursor:',
+      nextCursor,
+      'hasMore:',
+      hasMore,
+      'isLoadingMore:',
+      isLoadingMore,
+    );
+
+    // ✅ FIX: Check nextCursor, không phải hasMore trước
+    if (!hasMore || !nextCursor || isLoadingMore || isLoading) {
+      console.log('Load more rejected - conditions not met');
+      return;
+    }
+
+    // ✅ Pass nextCursor vào fetchComments
     fetchComments(nextCursor);
-  }, [hasMore, isLoading, nextCursor, fetchComments]);
+  }, [hasMore, nextCursor, isLoadingMore, isLoading]);
 
   const createComment = useCallback(
     (
@@ -114,9 +149,6 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
       },
     ) => {
       return new Promise<Comment>((resolve, reject) => {
-        // const currentSocket = socketRef.current;
-        // const currentIsConnected = isConnectedRef.current;
-
         if (!socket || !isConnected) {
           return reject(new Error('Socket not connected'));
         }
@@ -220,14 +252,13 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           return reject(new Error('Socket not connected'));
         }
 
-        // Optimistic update - chỉ update content và isEdited
         const previousComments = comments;
         startTransition(() => {
           setComments(prev =>
             prev.map(c =>
               c.id === commentId
                 ? {
-                    ...c, // ✅ Giữ nguyên tất cả fields (replies, author, etc.)
+                    ...c,
                     content,
                     isEdited: true,
                     _pending: true,
@@ -272,9 +303,6 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
   const likeComment = useCallback(
     (commentId: string) => {
       return new Promise<void>((resolve, reject) => {
-        // const currentSocket = socketRef.current;
-        // const currentIsConnected = isConnectedRef.current;
-
         if (!socket || !isConnected) {
           return reject(new Error('Socket not connected'));
         }
@@ -319,14 +347,10 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
   const unlikeComment = useCallback(
     (commentId: string) => {
       return new Promise<void>((resolve, reject) => {
-        // const currentSocket = socketRef.current;
-        // const currentIsConnected = isConnectedRef.current;
-
         if (!socket || !isConnected) {
           return reject(new Error('Socket not connected'));
         }
 
-        // Optimistic update
         startTransition(() => {
           setComments(prev =>
             prev.map(c =>
@@ -370,9 +394,6 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
   const deleteComment = useCallback(
     (commentId: string) => {
       return new Promise<void>((resolve, reject) => {
-        // const currentSocket = socketRef.current;
-        // const currentIsConnected = isConnectedRef.current;
-
         if (!socket || !isConnected) {
           return reject(new Error('Socket not connected'));
         }
@@ -421,6 +442,46 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
       socket.emit(SOCKET_EVENTS.COMMENT_STOP_TYPING, { postId, parentId });
     },
     [postId, socket, isConnected],
+  );
+
+const loadMoreReplies = useCallback(
+    async (parentId: string, cursor: string | null) => {
+      try {
+        const url = new URL(
+          `/api/posts/${postId}/comments`,
+          window.location.origin,
+        );
+        url.searchParams.set('parentId', parentId);
+        if (cursor) url.searchParams.set('cursor', cursor);
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch replies');
+
+        const data = await res.json();
+
+        setComments(prev =>
+          prev.map(c => {
+            if (c.id !== parentId) return c;
+
+            // ✅ FIX: Lọc bỏ replies trùng lặp
+            const existingReplyIds = new Set((c.replies || []).map(r => r.id));
+            const newReplies = data.comments.filter(
+              (reply: Comment) => !existingReplyIds.has(reply.id),
+            );
+
+            return {
+              ...c,
+              replies: [...(c.replies || []), ...newReplies],
+              hasMoreReplies: data.hasMore,
+              nextRepliesCursor: data.nextCursor,
+            };
+          }),
+        );
+      } catch (error) {
+        console.error('Error loading replies:', error);
+      }
+    },
+    [postId],
   );
 
   useEffect(() => {
@@ -574,7 +635,9 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
 
   return {
     comments,
+    totalComments,
     isLoading,
+    isLoadingMore,
     hasMore,
     typingUsers,
     isPending,
@@ -586,6 +649,7 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
     deleteComment,
     emitTyping,
     stopTyping,
+    loadMoreReplies,
     refetch: () => fetchComments(),
   };
 }

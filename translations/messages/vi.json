@@ -122,7 +122,8 @@
     "dontHaveAccount": "Chưa có tài khoản?",
     "followTerms": "Bằng cách tiếp tục, bạn đồng ý với",
     "tos": "Điều khoản dịch vụ",
-    "pp": "Chính sách bảo mật"
+    "pp": "Chính sách bảo mật",
+    "and": "và"
   },
   "register": {
     "email": "Email",

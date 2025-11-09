@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #ffffff;
@@ -8,11 +8,21 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-archivo: var(--font-archivo), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-montserrat: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-Manrope: var(--font-Manrope), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-roboto: var(--font-roboto), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans:
+    var(--font-sans), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-archivo:
+    var(--font-archivo), ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-montserrat:
+    var(--font-montserrat), ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-Manrope:
+    var(--font-Manrope), ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-roboto:
+    var(--font-roboto), ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
   /* Light Mode Colors (Default) */
   --color-background: oklch(100% 0 0);
@@ -178,7 +188,9 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
     margin: 0;
   }
 
@@ -210,7 +222,11 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: color-mix(in oklch, var(--color-muted-foreground) 50%, transparent);
+  background-color: color-mix(
+    in oklch,
+    var(--color-muted-foreground) 50%,
+    transparent
+  );
   border-radius: 9999px;
 }
 
@@ -254,10 +270,12 @@ html {
 }
 
 .skeleton {
-  background: linear-gradient(90deg,
-      var(--color-muted) 25%,
-      color-mix(in oklch, var(--color-muted-foreground) 10%, transparent) 50%,
-      var(--color-muted) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-muted) 25%,
+    color-mix(in oklch, var(--color-muted-foreground) 10%, transparent) 50%,
+    var(--color-muted) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
 }
@@ -294,7 +312,8 @@ html {
 .ProseMirror img.ProseMirror-selectednode:not([data-text-wrap]) {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 20%, transparent);
+  box-shadow: 0 0 0 3px
+    color-mix(in oklch, var(--color-primary) 20%, transparent);
 }
 
 /* Hide default outline for custom image nodes (we handle it in React component) */
@@ -413,7 +432,8 @@ html {
   padding: 1.5rem !important;
   margin: 1em 0 !important;
   overflow-x: auto;
-  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Monaco,
+  font-family:
+    ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Monaco,
     'Courier New', monospace !important;
   font-size: 0.875rem !important;
   line-height: 1.7 !important;
@@ -720,11 +740,11 @@ html {
 .blog-content h4,
 .blog-content h5,
 .blog-content h6 {
-  @apply font-bold scroll-mt-24;
+  @apply scroll-mt-24 font-bold;
 }
 
 .blog-content h1 {
-  @apply text-4xl mt-8 mb-4;
+  @apply mt-8 mb-4 text-4xl;
 }
 
 .blog-content h1:first-child {
@@ -732,15 +752,15 @@ html {
 }
 
 .blog-content h2 {
-  @apply text-3xl mt-8 mb-4 border-b pb-2;
+  @apply mt-8 mb-4 border-b pb-2 text-3xl;
 }
 
 .blog-content h3 {
-  @apply text-2xl mt-6 mb-3;
+  @apply mt-6 mb-3 text-2xl;
 }
 
 .blog-content h4 {
-  @apply text-xl mt-5 mb-2;
+  @apply mt-5 mb-2 text-xl;
 }
 
 /* Paragraphs - Proper Line Spacing */
@@ -797,28 +817,28 @@ html {
 
 /* Blockquote */
 .blog-content blockquote {
-  @apply border-l-4 border-primary pl-6 my-6 italic text-muted-foreground leading-relaxed;
+  @apply border-primary text-muted-foreground my-6 border-l-4 pl-6 leading-relaxed italic;
 }
 
 /* Modern Code Block with Header and Copy Button */
 .blog-content .code-block-wrapper {
-  @apply relative my-8 rounded-lg overflow-hidden;
+  @apply relative my-8 overflow-hidden rounded-lg;
   background: #1e1e1e;
 }
 
 .blog-content .code-block-header {
-  @apply flex justify-between items-center px-4 py-2 border-b;
+  @apply flex items-center justify-between border-b px-4 py-2;
   background: #2d2d2d;
   border-color: #3e3e3e;
 }
 
 .blog-content .code-block-lang {
-  @apply text-xs font-mono uppercase tracking-wider;
+  @apply font-mono text-xs tracking-wider uppercase;
   color: #858585;
 }
 
 .blog-content .code-copy-btn {
-  @apply px-2 py-1 rounded border flex items-center gap-1 transition-all cursor-pointer;
+  @apply flex cursor-pointer items-center gap-1 rounded border px-2 py-1 transition-all;
   background: transparent;
   border-color: #3e3e3e;
   color: #858585;
@@ -832,7 +852,7 @@ html {
 
 /* Code Block Syntax Highlighting */
 .blog-content pre {
-  @apply p-6 m-0 overflow-x-auto font-mono text-sm;
+  @apply m-0 overflow-x-auto p-6 font-mono text-sm;
   background: #1e1e1e !important;
   color: #d4d4d4 !important;
   line-height: 1.7 !important;
@@ -928,7 +948,7 @@ html {
 
 /* Inline Code */
 .blog-content code {
-  @apply bg-muted text-foreground px-1.5 py-0.5 rounded font-mono text-sm;
+  @apply bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-sm;
 }
 
 .blog-content pre code {
@@ -937,17 +957,17 @@ html {
 
 /* Images */
 .blog-content img {
-  @apply rounded-lg my-8 w-full;
+  @apply my-8 w-full rounded-lg;
 }
 
 /* Tables - Proper Display */
 .blog-content table {
-  @apply w-full border-collapse my-8 overflow-hidden;
+  @apply my-8 w-full border-collapse overflow-hidden;
 }
 
 .blog-content th,
 .blog-content td {
-  @apply border border-border px-4 py-3 text-left;
+  @apply border-border border px-4 py-3 text-left;
 }
 
 .blog-content th {
@@ -956,7 +976,7 @@ html {
 
 /* Horizontal Rule */
 .blog-content hr {
-  @apply my-8 border-t-2 border-border;
+  @apply border-border my-8 border-t-2;
 }
 
 /* Strong and Emphasis */
@@ -1029,7 +1049,7 @@ html {
 }
 
 .blog-content figcaption {
-  @apply text-sm text-center text-muted-foreground mt-2;
+  @apply text-muted-foreground mt-2 text-center text-sm;
 }
 
 /* Video wrapper */
@@ -1040,7 +1060,7 @@ html {
 
 .video-wrapper iframe,
 .video-wrapper video {
-  @apply absolute top-0 left-0 w-full h-full;
+  @apply absolute top-0 left-0 h-full w-full;
 }
 
 /* ========================================
@@ -1067,8 +1087,9 @@ html {
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
-              0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   padding: 4px;
   max-height: 200px;
   overflow-y: auto;
@@ -1175,7 +1196,7 @@ html {
   }
 
   .blog-content a::after {
-    content: " (" attr(href) ")";
+    content: ' (' attr(href) ')';
     @apply text-xs text-gray-600;
   }
 
@@ -1207,7 +1228,8 @@ html {
 }
 
 @keyframes pulse-subtle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     background-color: transparent;
   }
@@ -1256,4 +1278,82 @@ html {
   background: rgba(59, 130, 246, 0.2) !important;
   box-shadow: inset 0 0 0 2px var(--color-primary) !important;
   outline: none !important;
+}
+
+/* Mention Comment */
+.mention {
+  display: inline;
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  font-weight: 600;
+  padding: 0 0.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  user-select: all;
+}
+
+.mention:hover {
+  background-color: hsl(var(--primary) / 0.2);
+}
+
+[contenteditable]:empty:before {
+  content: attr(data-placeholder);
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+}
+
+.mention-highlight-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: inherit;
+  border: 1px solid transparent;
+  font: inherit;
+  color: transparent;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
+  pointer-events: none;
+  line-height: inherit;
+  letter-spacing: inherit;
+  z-index: 0;
+}
+
+.mention-highlight {
+  background-color: hsl(var(--primary) / 0.15);
+  color: hsl(var(--primary));
+  font-weight: 500;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.mention-textarea {
+  position: relative;
+  background: transparent;
+  z-index: 1;
+  resize: none;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .mention-highlight {
+    background-color: hsl(var(--primary) / 0.25);
+  }
+}
+
+/* Mention display trong comment */
+.comment-mention {
+  color: hsl(var(--primary));
+  font-weight: 600;
+  background-color: hsl(var(--primary) / 0.1);
+  padding: 0 4px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.comment-mention:hover {
+  background-color: hsl(var(--primary) / 0.2);
+  text-decoration: underline;
 }

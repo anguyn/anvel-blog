@@ -24,6 +24,7 @@ type PostResponse = {
   post: Post;
   relatedPosts: Post[];
   translations: any[];
+  tableOfContents: Array<{ id: string; text: string; level: number }>;
   contentInfo: {
     isTranslated: boolean;
     originalLanguage: string;
@@ -197,7 +198,8 @@ export default async function BlogDetailPage({
     notFound();
   }
 
-  const { post, relatedPosts, translations, contentInfo } = result;
+  const { post, relatedPosts, translations, contentInfo, tableOfContents } =
+    result;
 
   const { translate } = await getTranslate();
 
@@ -307,10 +309,10 @@ export default async function BlogDetailPage({
               post={post}
               locale={locale}
               translations={blogTranslations}
-              // session={session}
             />
 
             <BlogSidebar
+              tableOfContents={tableOfContents}
               post={post}
               locale={locale}
               translations={blogTranslations}

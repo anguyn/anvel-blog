@@ -3,9 +3,10 @@ import { auth } from '@/libs/server/auth';
 import { prisma } from '@/libs/prisma';
 import { z } from 'zod';
 
-const COMMENTS_PER_PAGE = 20;
+const COMMENTS_PER_PAGE = 2;
+const INITIAL_REPLIES_PER_COMMENT = 3;
+const REPLIES_PER_PAGE = 3;
 
-// GET - Fetch comments with pagination and cursor
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -36,6 +37,11 @@ export async function GET(
     } else {
       where.parentId = parentId;
     }
+
+    // Fetch total comments count (chỉ cho top-level)
+    const totalComments = isTopLevel
+      ? await prisma.comment.count({ where })
+      : null;
 
     // Base include structure
     const baseInclude = {
@@ -89,26 +95,27 @@ export async function GET(
       }),
     };
 
-    // Fetch comments
-    const comments = await prisma.comment.findMany({
+    console.log('📝 Fetching:', {
+      isTopLevel,
+      cursor,
+      limit,
+      parentId,
+    });
+
+    // ✅ FIX: Tính toán limit đúng cho từng case
+    const effectiveLimit = isTopLevel
+      ? limit
+      : cursor
+        ? REPLIES_PER_PAGE
+        : INITIAL_REPLIES_PER_COMMENT;
+
+    // Build query
+    const findManyArgs: any = {
       where,
-      take: limit + 1,
-      ...(cursor && {
-        cursor: { id: cursor },
-        skip: 1,
-      }),
-      orderBy: { createdAt: 'desc' },
+      take: effectiveLimit + 1, // +1 để detect hasMore
+      orderBy: { createdAt: isTopLevel ? 'desc' : 'asc' }, // ✅ Replies sắp xếp asc
       include: {
         ...baseInclude,
-        // Only include replies if fetching top-level comments
-        ...(isTopLevel && {
-          replies: {
-            where: { status: 'PUBLISHED' },
-            orderBy: { createdAt: 'asc' },
-            include: replyInclude,
-          },
-        }),
-        // Include likes for current user
         ...(currentUserId && {
           likes: {
             where: { userId: currentUserId },
@@ -116,11 +123,27 @@ export async function GET(
           },
         }),
       },
-    });
+    };
+
+    if (cursor) {
+      findManyArgs.cursor = { id: cursor };
+      findManyArgs.skip = 1;
+    }
+
+    // Fetch comments
+    const comments = await prisma.comment.findMany(findManyArgs);
+
+    console.log(
+      `📌 Raw: ${comments.length} comments (limit: ${effectiveLimit}, cursor: ${cursor ? '✓' : '✗'})`,
+    );
 
     // Check if there are more comments
-    const hasMore = comments.length > limit;
+    const hasMore = comments.length > effectiveLimit;
     const returnComments = hasMore ? comments.slice(0, -1) : comments;
+
+    console.log(
+      `✅ Return: ${returnComments.length} comments, hasMore: ${hasMore}`,
+    );
 
     // Helper function to format a single comment
     const formatComment = (comment: any) => ({
@@ -144,19 +167,95 @@ export async function GET(
         : undefined,
     });
 
-    // Format response with replies
-    const formattedComments = returnComments.map(comment => ({
-      ...formatComment(comment),
-      replies: comment.replies?.map((reply: any) => formatComment(reply)) ?? [],
-    }));
+    let formattedComments: any[];
 
-    return NextResponse.json({
-      comments: formattedComments,
-      nextCursor: hasMore ? returnComments[returnComments.length - 1].id : null,
+    if (isTopLevel) {
+      // ✅ Fetch INITIAL replies cho mỗi comment (chỉ 3 cái đầu)
+      const commentIds = returnComments.map(c => c.id);
+
+      const allReplies = await prisma.comment.findMany({
+        where: {
+          parentId: { in: commentIds },
+          status: 'PUBLISHED',
+        },
+        orderBy: { createdAt: 'asc' }, // ✅ Replies luôn asc
+        take: INITIAL_REPLIES_PER_COMMENT * commentIds.length, // Lấy nhiều hơn để group
+        include: replyInclude,
+      });
+
+      // Group replies theo parentId
+      const repliesByParentId = new Map<string, any[]>();
+      allReplies.forEach(reply => {
+        if (!repliesByParentId.has(reply.parentId!)) {
+          repliesByParentId.set(reply.parentId!, []);
+        }
+        repliesByParentId.get(reply.parentId!)!.push(reply);
+      });
+
+      // Format comments với INITIAL replies
+      formattedComments = returnComments.map(comment => {
+        const allRepliesForComment = repliesByParentId.get(comment.id) || [];
+
+        // ✅ CHỈ LẤY 3 REPLIES ĐẦU TIÊN
+        const replies = allRepliesForComment.slice(
+          0,
+          INITIAL_REPLIES_PER_COMMENT,
+        );
+
+        // ✅ Check hasMoreReplies dựa vào replyCount từ DB
+        const hasMoreReplies = comment.replyCount > INITIAL_REPLIES_PER_COMMENT;
+
+        // ✅ nextRepliesCursor là ID của reply cuối cùng trong initial batch
+        const nextRepliesCursor =
+          hasMoreReplies && replies.length > 0
+            ? replies[replies.length - 1].id
+            : null;
+
+        return {
+          ...formatComment(comment),
+          replies: replies.map(formatComment),
+          hasMoreReplies,
+          nextRepliesCursor,
+        };
+      });
+    } else {
+      // ✅ Đang fetch MORE replies
+      formattedComments = returnComments.map(formatComment);
+
+      console.log('📋 Fetching MORE replies:', {
+        parentId,
+        cursor,
+        returned: returnComments.length,
+        hasMore,
+      });
+    }
+
+    // ✅ nextCursor cho comments hoặc replies
+    const nextCursor =
+      hasMore && returnComments.length > 0
+        ? returnComments[returnComments.length - 1].id
+        : null;
+
+    console.log('📤 Response:', {
+      count: returnComments.length,
+      nextCursor,
       hasMore,
+      isTopLevel,
     });
+
+    const response: any = {
+      comments: formattedComments,
+      nextCursor,
+      hasMore,
+    };
+
+    if (isTopLevel && totalComments !== null) {
+      response.totalComments = totalComments;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching comments:', error);
+    console.error('❌ Error fetching comments:', error);
     return NextResponse.json(
       { error: 'Failed to fetch comments' },
       { status: 500 },

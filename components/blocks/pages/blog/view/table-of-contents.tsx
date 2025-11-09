@@ -45,6 +45,7 @@ export function TableOfContents({ headings, title }: TableOfContentsProps) {
   }, [headings]);
 
   const scrollToHeading = (id: string) => {
+    console.log('Heading id: ', id);
     const element = document.getElementById(id);
     if (element) {
       const offset = 80;

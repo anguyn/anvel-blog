@@ -240,3 +240,33 @@ export function debounce<T extends (...args: any[]) => any>(
     }, delay);
   };
 }
+
+export function formatTimeAgo(date: string | Date): string {
+  const now = new Date().getTime();
+  const then = new Date(date).getTime();
+  const seconds = Math.floor((now - then) / 1000);
+
+  if (seconds < 10) return 'vừa mới đăng';
+  if (seconds < 60) return `${seconds} giây trước`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} phút trước`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} ngày trước`;
+  if (days < 30) return `${Math.floor(days / 7)} tuần trước`;
+
+  const dateObj = new Date(date);
+  const isThisYear = dateObj.getFullYear() === new Date().getFullYear();
+
+  return dateObj.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    ...(isThisYear ? {} : { year: 'numeric' }),
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}

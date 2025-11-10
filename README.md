@@ -1,112 +1,102 @@
-# 🚀 Code Snippet Sharing Platform
+# 🧠 Anvel — Personal Blog & Code Snippet Platform
 
-A simple web application where developers can share their code snippets, tag them by language or topic, and get a basic estimation of time complexity.
-
-This project was developed as part of the **Developer Technical Test** for **YrismVN**.
+A personal web platform built with **Next.js** where developers can share their **code snippets**, write **blog posts**, and manage everything through a **modular architecture**.  
+The project also includes a **Node.js service** for handling **automation tasks**, **background jobs**, and **realtime updates**.
 
 ---
 
 ## 🧩 Features
 
 ### ✅ Core Features
+- **Blog System:** Create and publish personal blog posts with Markdown editor support.  
+- **Code Snippets:** Share, edit, and delete code snippets easily.  
+- **Tag System:** Organize posts and snippets by language or topic (e.g., JavaScript, AI, Automation).  
+- **Public Profiles:** Showcase your posts and snippets under your profile.  
+- **Search & Filter:** Quickly find relevant snippets or blog posts.  
+- **Responsive Design:** Optimized for both desktop and mobile.  
+- **Internationalization (i18n):** Supports **English** and **Vietnamese**.  
+- **Authentication:** Basic email/password login & registration (mocked for demo).  
+- **SEO Ready:** Custom meta tags and titles for each post and snippet.
 
-- **CRUD Snippets:** Create, edit, and delete your code snippets easily.
-- **Tag System:** Tag snippets by language (e.g., JavaScript, Python) and topic (e.g., Algorithm, UI).
-- **Snippet Details:** Each snippet has a unique sharable URL.
-- **Public Profiles:** View a user's shared snippets on their profile page.
-- **Search & Filter:** Quickly find snippets by keyword or tag.
-- **Responsive Design:** Optimized for both desktop and mobile.
-- **Internationalization (i18n):** Supports English and Vietnamese.
-- **Authentication:** Basic email/password login & registration (mocked for demo).
-- **SEO Ready:** Basic meta tags and titles for better visibility.
+---
 
 ### ⚡ Bonus Features
-
-- **Time Complexity Analyzer:** Automatically estimates code complexity (e.g., `O(n)`, `O(n²)`, `O(log n)`).
-- **Image Thumbnails:** Snippets can include a small thumbnail preview.
-- **Infinite Scroll / Pagination:** Load snippets smoothly with pagination or auto-scroll.
-- **Dark Mode:** (Optional if implemented).
+- **Realtime Updates:** Powered by the Node.js automation service (e.g., auto-sync, background jobs).  
+- **Time Complexity Analyzer:** Estimates algorithmic complexity (e.g., O(n), O(n²), O(log n)).  
+- **Image Thumbnails:** Optionally attach preview thumbnails to snippets.  
+- **Dark Mode:** Smooth theme toggle experience.  
+- **Infinite Scroll / Pagination:** Load snippets and blog posts efficiently.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Framework:** [Next.js 14](https://nextjs.org/)
-- **Styling:** [TailwindCSS](https://tailwindcss.com/)
-- **UI Components:** [shadcn/ui](https://ui.shadcn.com/)
-- **State Management:** [Zustand](https://github.com/pmndrs/zustand)
-- **i18n:** [next-intl](https://next-intl-docs.vercel.app/)
-- **Form Handling:** [React Hook Form](https://react-hook-form.com/)
-- **Deployment:** [Render](https://render.com/)
+| Layer | Tech |
+|-------|------|
+| **Frontend** | [Next.js 14](https://nextjs.org/) |
+| **Styling** | [TailwindCSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) |
+| **State Management** | [Zustand](https://github.com/pmndrs/zustand) |
+| **Forms** | [React Hook Form](https://react-hook-form.com/) |
+| **i18n** | [next-intl](https://next-intl-docs.vercel.app/) |
+| **Backend Service** | **Node.js** (automation, cron jobs, realtime) |
+| **Deployment** | [Render](https://render.com/) |
 
 ---
 
-## 🧠 How to Run Locally
+## ⚙️ How to Run Locally
 
 ### 1️⃣ Clone the Repository
-
 ```bash
 git clone https://github.com/anguyn/anvel.git
-cd project-repo
+cd anvel
 ```
 
 ### 2️⃣ Install Dependencies
-
 Make sure you have **Node.js v18+** installed.
-
 ```bash
 yarn install
 ```
 
 ### 3️⃣ Add Environment Variables
-
-Create a `.env.local` file in the project root (you can also use the `.env` file attached in the email).
-
-Example:
-
+Create a `.env.local` file in the project root:
 ```env
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api
 ```
 
 ### 4️⃣ Run the Development Server
-
 ```bash
 yarn dev
 ```
-
-The app should now be available at:  
-👉 http://localhost:3000
+Visit 👉 [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 📷 Demo (Live)
+## 🧠 Node.js Automation Service
+The **Node.js service** (separate module) handles:
+- Background jobs and cron tasks  
+- Real-time sync via WebSocket/EventSource  
+- Automated data updates and analysis tasks  
 
-**Live Demo:** [https://anvel-quzx.onrender.com/](https://anvel-quzx.onrender.com/)  
-_(Please note that since this uses a free-tier deployment on Render, it may take 1–5 minutes to wake up if inactive.)_
+> The service runs independently but integrates seamlessly with the main Next.js frontend.
+
+---
+
+## 📷 Live Demo
+**URL:** [https://anvel.site/](https://anvel.site/)  
+_Note: Render free tier may take 1–5 minutes to wake up if idle._
 
 ---
 
 ## 👤 Test Account
+| Email | Password |
+| ------ | -------- |
+| admin@anvel.com | Admin@123456 |
 
-| Email                | Password |
-| -------------------- | -------- |
-| anguynvn99@gmail.com | An@1234  |
-
----
-
-## 💬 Notes
-
-- This project was completed within the given time frame (30–45 minutes).
-- Some parts might be simplified or incomplete due to time constraints.
-- The focus was on structure, modular design, and demonstrating problem-solving skills.
 
 ---
 
 ## 📧 Contact
-
-If there are any issues accessing the project or running it locally, please feel free to contact me.
-
 **An Nguyen**  
-📩 anguynvn99@gmail.com  
+📩 [anguynvn99@gmail.com](mailto:anguynvn99@gmail.com)  
 📞 07837676750

@@ -23,7 +23,6 @@ export function CollapsibleSection({
 
   return (
     <div className={cn('bg-card rounded-lg border', className)}>
-      {/* Header */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -40,7 +39,6 @@ export function CollapsibleSection({
         )}
       </button>
 
-      {/* Content */}
       {isOpen && (
         <div className="animate-in fade-in slide-in-from-top-2 space-y-4 p-4 pt-0 duration-200">
           {children}

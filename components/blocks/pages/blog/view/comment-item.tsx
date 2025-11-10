@@ -379,7 +379,6 @@ function CommentItemComponent({
             )}
           </AnimatePresence>
 
-          {/* Render replies directly without virtualization */}
           {comment.replies && comment.replies.length > 0 && (
             <div className="mt-3 space-y-3">
               {comment.replies.map(reply => (

@@ -376,7 +376,6 @@ export function ProfileSettingsForm({
               />
             </motion.div>
 
-            {/* Username */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -401,7 +400,6 @@ export function ProfileSettingsForm({
               </p>
             </motion.div>
 
-            {/* Bio */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -444,7 +442,6 @@ export function ProfileSettingsForm({
               />
             </motion.div>
 
-            {/* Website */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}

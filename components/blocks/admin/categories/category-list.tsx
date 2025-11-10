@@ -165,7 +165,6 @@ export function CategoryList({
                 )}
               </div>
 
-              {/* Show available translations */}
               {hasTranslations(category) && (
                 <div className="mt-3 border-t pt-3">
                   <div className="text-muted-foreground mb-1 text-xs">
@@ -209,7 +208,6 @@ export function CategoryList({
         ))}
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

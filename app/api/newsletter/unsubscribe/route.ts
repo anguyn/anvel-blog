@@ -12,18 +12,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, token } = unsubscribeSchema.parse(body);
 
-    // Build where clause
     const whereClause: any = {
       email: email.toLowerCase(),
       isActive: true,
     };
 
-    // If token provided, use it for verification
     if (token) {
       whereClause.token = token;
     }
 
-    // Find active subscription
     const subscription = await prisma.emailSubscription.findFirst({
       where: whereClause,
     });
@@ -38,7 +35,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Unsubscribe
     await prisma.emailSubscription.update({
       where: { id: subscription.id },
       data: {
@@ -48,11 +44,7 @@ export async function POST(request: NextRequest) {
     });
 
     // TODO: Send unsubscribe confirmation email
-    // await sendUnsubscribeConfirmationEmail({
-    //   email: subscription.email,
-    // });
 
-    // Log activity
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 90);
 

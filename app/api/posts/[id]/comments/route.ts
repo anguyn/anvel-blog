@@ -24,7 +24,6 @@ export async function GET(
     const session = await auth();
     const currentUserId = session?.user?.id;
 
-    // Build where clause
     const where: any = {
       postId,
       status: 'PUBLISHED',
@@ -38,12 +37,10 @@ export async function GET(
       where.parentId = parentId;
     }
 
-    // Fetch total comments count (chỉ cho top-level)
     const totalComments = isTopLevel
       ? await prisma.comment.count({ where })
       : null;
 
-    // Base include structure
     const baseInclude = {
       author: {
         select: {
@@ -84,7 +81,6 @@ export async function GET(
       },
     };
 
-    // Reply include with likes if user is authenticated
     const replyInclude = {
       ...baseInclude,
       ...(currentUserId && {
@@ -102,18 +98,16 @@ export async function GET(
       parentId,
     });
 
-    // ✅ FIX: Tính toán limit đúng cho từng case
     const effectiveLimit = isTopLevel
       ? limit
       : cursor
         ? REPLIES_PER_PAGE
         : INITIAL_REPLIES_PER_COMMENT;
 
-    // Build query
     const findManyArgs: any = {
       where,
-      take: effectiveLimit + 1, // +1 để detect hasMore
-      orderBy: { createdAt: isTopLevel ? 'desc' : 'asc' }, // ✅ Replies sắp xếp asc
+      take: effectiveLimit + 1,
+      orderBy: { createdAt: isTopLevel ? 'desc' : 'asc' },
       include: {
         ...baseInclude,
         ...(currentUserId && {
@@ -130,22 +124,11 @@ export async function GET(
       findManyArgs.skip = 1;
     }
 
-    // Fetch comments
     const comments = await prisma.comment.findMany(findManyArgs);
 
-    console.log(
-      `📌 Raw: ${comments.length} comments (limit: ${effectiveLimit}, cursor: ${cursor ? '✓' : '✗'})`,
-    );
-
-    // Check if there are more comments
     const hasMore = comments.length > effectiveLimit;
     const returnComments = hasMore ? comments.slice(0, -1) : comments;
 
-    console.log(
-      `✅ Return: ${returnComments.length} comments, hasMore: ${hasMore}`,
-    );
-
-    // Helper function to format a single comment
     const formatComment = (comment: any) => ({
       id: comment.id,
       content: comment.content,
@@ -170,7 +153,6 @@ export async function GET(
     let formattedComments: any[];
 
     if (isTopLevel) {
-      // ✅ Fetch INITIAL replies cho mỗi comment (chỉ 3 cái đầu)
       const commentIds = returnComments.map(c => c.id);
 
       const allReplies = await prisma.comment.findMany({
@@ -178,12 +160,11 @@ export async function GET(
           parentId: { in: commentIds },
           status: 'PUBLISHED',
         },
-        orderBy: { createdAt: 'asc' }, // ✅ Replies luôn asc
-        take: INITIAL_REPLIES_PER_COMMENT * commentIds.length, // Lấy nhiều hơn để group
+        orderBy: { createdAt: 'asc' },
+        take: INITIAL_REPLIES_PER_COMMENT * commentIds.length,
         include: replyInclude,
       });
 
-      // Group replies theo parentId
       const repliesByParentId = new Map<string, any[]>();
       allReplies.forEach(reply => {
         if (!repliesByParentId.has(reply.parentId!)) {
@@ -192,20 +173,16 @@ export async function GET(
         repliesByParentId.get(reply.parentId!)!.push(reply);
       });
 
-      // Format comments với INITIAL replies
       formattedComments = returnComments.map(comment => {
         const allRepliesForComment = repliesByParentId.get(comment.id) || [];
 
-        // ✅ CHỈ LẤY 3 REPLIES ĐẦU TIÊN
         const replies = allRepliesForComment.slice(
           0,
           INITIAL_REPLIES_PER_COMMENT,
         );
 
-        // ✅ Check hasMoreReplies dựa vào replyCount từ DB
         const hasMoreReplies = comment.replyCount > INITIAL_REPLIES_PER_COMMENT;
 
-        // ✅ nextRepliesCursor là ID của reply cuối cùng trong initial batch
         const nextRepliesCursor =
           hasMoreReplies && replies.length > 0
             ? replies[replies.length - 1].id
@@ -219,29 +196,13 @@ export async function GET(
         };
       });
     } else {
-      // ✅ Đang fetch MORE replies
       formattedComments = returnComments.map(formatComment);
-
-      console.log('📋 Fetching MORE replies:', {
-        parentId,
-        cursor,
-        returned: returnComments.length,
-        hasMore,
-      });
     }
 
-    // ✅ nextCursor cho comments hoặc replies
     const nextCursor =
       hasMore && returnComments.length > 0
         ? returnComments[returnComments.length - 1].id
         : null;
-
-    console.log('📤 Response:', {
-      count: returnComments.length,
-      nextCursor,
-      hasMore,
-      isTopLevel,
-    });
 
     const response: any = {
       comments: formattedComments,
@@ -299,10 +260,8 @@ export async function POST(
     const validated = createCommentSchema.parse(body);
     const { content, parentId, mentions, stickerId } = validated;
 
-    // Validate mentions - verify users exist and extract exact usernames
     let validatedMentions: any[] = [];
     if (mentions && mentions.length > 0) {
-      // Get unique user IDs
       const uniqueUserIds = [...new Set(mentions.map(m => m.userId))];
 
       const mentionedUsers = await prisma.user.findMany({
@@ -313,20 +272,18 @@ export async function POST(
         select: { id: true, username: true },
       });
 
-      // Only include mentions for users that exist
       validatedMentions = mentions
         .filter(m => mentionedUsers.some(u => u.id === m.userId))
         .map(m => {
           const user = mentionedUsers.find(u => u.id === m.userId)!;
           return {
             userId: m.userId,
-            username: user.username, // Use actual username from DB
+            username: user.username,
             position: m.position,
           };
         });
     }
 
-    // Create comment
     const comment = await prisma.$transaction(async tx => {
       const newComment = await tx.comment.create({
         data: {

@@ -191,7 +191,6 @@ export default async function UserProfilePage({
 
       <div className="container mx-auto px-4 py-8">
         <div className="mx-auto space-y-8">
-          {/* Server Component - Header */}
           <UserProfileHeader
             user={user}
             isOwner={isOwner}
@@ -199,7 +198,6 @@ export default async function UserProfilePage({
             translations={translations}
           />
 
-          {/* Server Component - Stats */}
           <UserProfileStats
             snippetsCount={displaySnippets.length}
             viewsCount={displaySnippets.reduce(
@@ -224,7 +222,6 @@ export default async function UserProfilePage({
             translations={translations}
           />
 
-          {/* Server Component - Top Languages */}
           {displaySnippets.length > 0 && (
             <UserTopLanguages
               snippets={displaySnippets}
@@ -232,7 +229,6 @@ export default async function UserProfilePage({
             />
           )}
 
-          {/* Client Component - Snippets with interaction */}
           <UserSnippetsSection
             snippets={displaySnippets}
             isOwner={isOwner}

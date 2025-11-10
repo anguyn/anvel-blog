@@ -27,7 +27,6 @@ async function getConfigsData() {
     }),
   ]);
 
-  // Group configs by category
   const groupedConfigs = allConfigs.reduce(
     (acc, config) => {
       if (!acc[config.category]) {
@@ -65,7 +64,6 @@ export default async function ConfigsPage({ params }: PageProps) {
   return (
     <AdminLayout>
       <div className="bg-background min-h-screen">
-        {/* Header */}
         <div className="bg-card sticky top-16 z-10 border-b">
           <div className="container mx-auto px-4 py-2">
             <div className="mb-4 flex items-center justify-between">
@@ -83,7 +81,6 @@ export default async function ConfigsPage({ params }: PageProps) {
               <ReloadCacheButton />
             </div>
 
-            {/* Stats */}
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardContent className="pt-6">
@@ -113,7 +110,6 @@ export default async function ConfigsPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="container mx-auto px-4 py-8">
           <Suspense fallback={<ConfigsLoading />}>
             <ConfigTabs

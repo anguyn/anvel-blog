@@ -4,7 +4,6 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { getApiTranslations } from '@/i18n/i18n';
 
-// Validate password strength
 function validatePassword(
   password: string,
   t: any,
@@ -61,14 +60,13 @@ export async function GET(request: Request) {
       );
     }
 
-    // Return expiry time
     const expiresIn = Math.floor(
       (resetToken.expires.getTime() - Date.now()) / 1000,
     );
 
     return NextResponse.json({
       valid: true,
-      expiresIn, // seconds remaining
+      expiresIn,
       expiresAt: resetToken.expires.toISOString(),
     });
   } catch (error) {
@@ -95,7 +93,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate password
     const passwordValidation = validatePassword(password, t);
     if (!passwordValidation.valid) {
       return NextResponse.json(
@@ -124,7 +121,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check user status
     if (
       resetToken.user.status === 'BANNED' ||
       resetToken.user.status === 'SUSPENDED'
@@ -135,11 +131,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(password, 12);
     const newSecurityStamp = crypto.randomBytes(32).toString('hex');
 
-    // Update password
     await prisma.user.update({
       where: { id: resetToken.userId },
       data: {
@@ -148,17 +142,14 @@ export async function POST(request: Request) {
       },
     });
 
-    // Delete all reset tokens for this user
     await prisma.passwordResetToken.deleteMany({
       where: { userId: resetToken.userId },
     });
 
-    // Invalidate all sessions (optional - for security)
     await prisma.session.deleteMany({
       where: { userId: resetToken.userId },
     });
 
-    // Log activity
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 90);
 

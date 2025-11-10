@@ -15,7 +15,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get encrypted secret
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { twoFactorSecret: true, twoFactorEnabled: true },
@@ -35,7 +34,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Decrypt and verify token
     const encryptionKey = process.env.ENCRYPTION_KEY!;
     const secret = decryptSecret(user.twoFactorSecret, encryptionKey);
 
@@ -48,16 +46,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Enable 2FA
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
         twoFactorEnabled: true,
-        securityStamp: crypto.randomUUID(), // Force re-login
+        securityStamp: crypto.randomUUID(),
       },
     });
 
-    // Log activity
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 180);
 

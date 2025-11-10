@@ -61,9 +61,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { uploadMediaAction } from '@/app/actions/media.action';
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
 
 // Custom debounce implementation
 function debounce<T extends (...args: any[]) => any>(
@@ -89,10 +86,6 @@ function debounce<T extends (...args: any[]) => any>(
   return debounced;
 }
 
-// ============================================
-// INTERFACES & TYPES
-// ============================================
-
 interface PostFormProps {
   post?: PostWithRelations;
   categories: Array<{
@@ -103,10 +96,6 @@ interface PostFormProps {
   }>;
   tags: Array<{ id: string; name: string; slug: string }>;
 }
-
-// ============================================
-// VALIDATION SCHEMA
-// ============================================
 
 const postFormSchema = z
   .object({
@@ -146,10 +135,6 @@ const postFormSchema = z
 
 type PostFormData = z.infer<typeof postFormSchema>;
 
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
 const generateSlug = (text: string) => {
   return text
     .toLowerCase()
@@ -162,10 +147,6 @@ const generateSlug = (text: string) => {
     .trim();
 };
 
-// ============================================
-// MAIN COMPONENT
-// ============================================
-
 export function PostForm({
   post,
   categories: initialCategories,
@@ -174,10 +155,6 @@ export function PostForm({
   const t = useTranslations('posts.form');
   const router = useRouter();
   const isEditMode = !!post;
-
-  // ============================================
-  // STATE MANAGEMENT
-  // ============================================
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState(initialCategories);
@@ -188,7 +165,6 @@ export function PostForm({
   >('idle');
   const [lastSaved, setLastSaved] = useState<Date | undefined>();
 
-  // Gallery & Video
   const [galleryImages, setGalleryImages] = useState<MediaItem[]>(
     post?.media?.map(m => m.media) || [],
   );
@@ -206,15 +182,10 @@ export function PostForm({
 
   const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
 
-  // Dialogs
   const [showPreview, setShowPreview] = useState(false);
   const [showCreateTag, setShowCreateTag] = useState(false);
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-
-  // ============================================
-  // FORM SETUP
-  // ============================================
 
   const form = useForm<PostFormData>({
     resolver: zodResolver(postFormSchema),
@@ -251,11 +222,6 @@ export function PostForm({
     formState: { isDirty, errors },
   } = form;
 
-  // ============================================
-  // OPTIMIZED WATCHERS - Only watch what's necessary
-  // ============================================
-
-  // Use getValues() instead of watch() where possible to avoid re-renders
   const currentType = form.watch('type');
   const currentVisibility = form.watch('visibility');
   const currentStatus = form.watch('status');
@@ -267,17 +233,9 @@ export function PostForm({
     [categories, currentLanguage],
   );
 
-  // ============================================
-  // UNSAVED CHANGES WARNING
-  // ============================================
-
   const { confirmNavigation } = useUnsavedChanges({
     hasUnsavedChanges: isDirty,
   });
-
-  // ============================================
-  // AUTO-SAVE WITH DEBOUNCE
-  // ============================================
 
   const performAutoSave = useCallback(
     async (data: PostFormData) => {
@@ -319,13 +277,11 @@ export function PostForm({
     [isEditMode, post],
   );
 
-  // Debounced auto-save - only save after 2 seconds of no changes
   const debouncedAutoSave = useMemo(
     () => debounce(performAutoSave, 2000),
     [performAutoSave],
   );
 
-  // Auto-save trigger on form change
   useEffect(() => {
     if (!autoSaveEnabled || !isDirty) return;
 
@@ -339,17 +295,12 @@ export function PostForm({
     };
   }, [autoSaveEnabled, isDirty, form, debouncedAutoSave]);
 
-  // ============================================
-  // SLUG GENERATION WITH DEBOUNCE
-  // ============================================
-
   const updateSlug = useMemo(
     () =>
       debounce((title: string) => {
         const currentSlug = getValues('slug');
         const postSlug = generateSlug(post?.title || '');
 
-        // Only auto-generate if slug is empty or matches the original post slug
         if (!currentSlug || currentSlug === postSlug) {
           setValue('slug', generateSlug(title), { shouldDirty: true });
         }
@@ -401,10 +352,6 @@ export function PostForm({
   //   }
   // }, [currentLanguage, categories, getValues, setValue, t]);
 
-  // ============================================
-  // FEATURED IMAGE
-  // ============================================
-
   const handleFeaturedImageSelect = useCallback(
     (images: MediaItem[]) => {
       console.log('Images: ', images);
@@ -418,10 +365,6 @@ export function PostForm({
   const handleFeaturedImageRemove = useCallback(() => {
     setValue('featuredImage', '', { shouldDirty: true });
   }, [setValue]);
-
-  // ============================================
-  // FORM SUBMISSION - PREVENT ACCIDENTAL SUBMIT
-  // ============================================
 
   const handleSubmit = useCallback(
     async (data: PostFormData, action: 'draft' | 'publish' | 'schedule') => {
@@ -485,7 +428,6 @@ export function PostForm({
 
           form.reset(data);
 
-          // ✅ Reset file state
           setFeaturedImageFile(null);
 
           router.push('/admin/posts');
@@ -502,7 +444,7 @@ export function PostForm({
     },
     [
       isSubmitting,
-      featuredImageFile, // ✅ Add dependency
+      featuredImageFile,
       currentType,
       galleryImages,
       videoSettings,
@@ -514,20 +456,13 @@ export function PostForm({
     ],
   );
 
-  // Wrap form onSubmit to prevent default and handle properly
   const onFormSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
       e.stopPropagation();
-
-      // form.handleSubmit(data => handleSubmit(data, 'publish'))();
     },
     [form, handleSubmit],
   );
-
-  // ============================================
-  // TAG & CATEGORY CREATION
-  // ============================================
 
   const handleTagCreated = useCallback(
     (tag: { id: string; name: string; slug: string }) => {
@@ -551,10 +486,6 @@ export function PostForm({
     [setValue],
   );
 
-  // ============================================
-  // EMAIL VALIDATION
-  // ============================================
-
   const validateEmail = useCallback(
     (email: string): boolean | string => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -566,17 +497,9 @@ export function PostForm({
     [t],
   );
 
-  // ============================================
-  // PREVIEW HANDLER
-  // ============================================
-
   const handlePreview = useCallback(() => {
     setShowPreview(true);
   }, []);
-
-  // ============================================
-  // RENDER
-  // ============================================
 
   return (
     <>
@@ -654,11 +577,8 @@ export function PostForm({
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-24">
-          {/* Left Column - Main Content */}
           <div className="space-y-6 lg:col-span-19">
-            {/* Language Selector */}
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
               <div className="space-y-2">
                 <Label htmlFor="language" className="flex items-center gap-2">
@@ -693,7 +613,6 @@ export function PostForm({
               </div>
             </div>
 
-            {/* Title */}
             <div className="space-y-2">
               <Label htmlFor="title">
                 {t('title')} <span className="text-destructive">*</span>
@@ -717,7 +636,6 @@ export function PostForm({
               </div>
             </div>
 
-            {/* Slug */}
             <div className="space-y-2">
               <Label htmlFor="slug">
                 {t('slug')} <span className="text-destructive">*</span>
@@ -737,7 +655,6 @@ export function PostForm({
               )}
             </div>
 
-            {/* Excerpt */}
             <div className="space-y-2">
               <Label htmlFor="excerpt">
                 {t('excerpt')}{' '}
@@ -760,7 +677,6 @@ export function PostForm({
               </div>
             </div>
 
-            {/* Featured Image */}
             {currentType !== PostType.GALLERY && (
               <div className="space-y-2">
                 <Label>{t('featuredImage')}</Label>
@@ -782,7 +698,6 @@ export function PostForm({
               </div>
             )}
 
-            {/* Content Editor - Memoized to prevent unnecessary re-renders */}
             <div className="space-y-2">
               <Label>
                 {t('content')} <span className="text-destructive">*</span>
@@ -806,7 +721,6 @@ export function PostForm({
               )}
             </div>
 
-            {/* Gallery Manager */}
             {currentType === PostType.GALLERY && (
               <div className="space-y-2">
                 <GalleryManager
@@ -816,7 +730,6 @@ export function PostForm({
               </div>
             )}
 
-            {/* Video Settings */}
             {currentType === PostType.VIDEO && (
               <div className="space-y-2">
                 <VideoSettings
@@ -830,9 +743,7 @@ export function PostForm({
             )}
           </div>
 
-          {/* Right Column - Sidebar */}
           <div className="space-y-4 lg:col-span-5">
-            {/* Auto-Save Toggle */}
             <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -858,7 +769,6 @@ export function PostForm({
               defaultOpen={true}
             >
               <div className="space-y-4">
-                {/* Post Type */}
                 <div className="space-y-2">
                   <Label htmlFor="type">{t('postType')}</Label>
                   <Controller
@@ -926,7 +836,6 @@ export function PostForm({
                   />
                 </div>
 
-                {/* Publish Date */}
                 {currentStatus === PostStatus.PUBLISHED && (
                   <div className="space-y-2">
                     <Label htmlFor="publishedAt">
@@ -941,7 +850,6 @@ export function PostForm({
                   </div>
                 )}
 
-                {/* Schedule Date */}
                 {currentStatus === PostStatus.SCHEDULED && (
                   <div className="space-y-2">
                     <Label htmlFor="scheduledFor">
@@ -961,18 +869,15 @@ export function PostForm({
               </div>
             </CollapsibleSection>
 
-            {/* Visibility & Security */}
             <CollapsibleSection
               title={t('visibilityAndSecurity')}
               icon={<Shield className="h-4 w-4" />}
               defaultOpen={true}
             >
               <div className="space-y-4">
-                {/* Visibility Options */}
                 <div className="space-y-3">
                   <Label>{t('visibility')}</Label>
 
-                  {/* Public */}
                   <Label className="hover:bg-accent/50 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors">
                     <input
                       type="radio"
@@ -991,7 +896,6 @@ export function PostForm({
                     </div>
                   </Label>
 
-                  {/* Unlisted */}
                   <Label className="hover:bg-accent/50 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors">
                     <input
                       type="radio"
@@ -1010,7 +914,6 @@ export function PostForm({
                     </div>
                   </Label>
 
-                  {/* Private */}
                   <Label className="hover:bg-accent/50 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors">
                     <input
                       type="radio"
@@ -1047,7 +950,6 @@ export function PostForm({
                     </div>
                   </Label>
 
-                  {/* Restricted */}
                   <Label className="hover:bg-accent/50 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors">
                     <input
                       type="radio"
@@ -1067,7 +969,6 @@ export function PostForm({
                   </Label>
                 </div>
 
-                {/* Password Field */}
                 {currentVisibility === PostVisibility.PASSWORD && (
                   <div className="animate-in fade-in slide-in-from-top-2 space-y-2">
                     <Label htmlFor="password">
@@ -1091,7 +992,6 @@ export function PostForm({
                   </div>
                 )}
 
-                {/* Allowed Users */}
                 {currentVisibility === PostVisibility.RESTRICTED && (
                   <div className="animate-in fade-in slide-in-from-top-2 space-y-2">
                     <Label>
@@ -1118,7 +1018,6 @@ export function PostForm({
               </div>
             </CollapsibleSection>
 
-            {/* Categorization */}
             <CollapsibleSection
               title={t('categorization')}
               icon={<Folder className="h-4 w-4" />}
@@ -1173,7 +1072,6 @@ export function PostForm({
                   )}
                 </div>
 
-                {/* Tags */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>{t('tags')}</Label>
@@ -1229,14 +1127,12 @@ export function PostForm({
               </div>
             </CollapsibleSection>
 
-            {/* SEO Settings */}
             <CollapsibleSection
               title={t('seoSettings')}
               icon={<Info className="h-4 w-4" />}
               defaultOpen={false}
             >
               <div className="space-y-4">
-                {/* Meta Title */}
                 <div className="space-y-2">
                   <Label htmlFor="metaTitle">{t('metaTitle')}</Label>
                   <Input
@@ -1252,7 +1148,6 @@ export function PostForm({
                   />
                 </div>
 
-                {/* Meta Description */}
                 <div className="space-y-2">
                   <Label htmlFor="metaDescription">
                     {t('metaDescription')}
@@ -1269,7 +1164,6 @@ export function PostForm({
                   />
                 </div>
 
-                {/* SEO Preview */}
                 <div className="pt-2">
                   <SEOPreview
                     title={getValues('metaTitle') || getValues('title')}
@@ -1280,7 +1174,6 @@ export function PostForm({
                   />
                 </div>
 
-                {/* Meta Keywords */}
                 <div className="space-y-2">
                   <Label>{t('metaKeywords')}</Label>
                   <Controller
@@ -1296,7 +1189,6 @@ export function PostForm({
                   />
                 </div>
 
-                {/* OG Image */}
                 <div className="space-y-2">
                   <Label>{t('ogImage')}</Label>
                   <p className="text-muted-foreground text-xs">
@@ -1341,14 +1233,12 @@ export function PostForm({
               </div>
             </CollapsibleSection>
 
-            {/* Featured Options */}
             <CollapsibleSection
               title={t('featuredOptions')}
               icon={<Sparkles className="h-4 w-4" />}
               defaultOpen={false}
             >
               <div className="space-y-4">
-                {/* Is Featured */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="isFeatured">{t('featuredPost')}</Label>
@@ -1369,7 +1259,6 @@ export function PostForm({
                   />
                 </div>
 
-                {/* Is Pinned */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="isPinned">{t('pinnedPost')}</Label>
@@ -1395,7 +1284,6 @@ export function PostForm({
         </div>
       </form>
 
-      {/* Dialogs */}
       <PostPreviewDialog
         open={showPreview}
         onOpenChange={setShowPreview}

@@ -22,7 +22,6 @@ export async function POST(
       );
     }
 
-    // Find post by slug
     const post = await prisma.post.findUnique({
       where: { slug },
       select: {
@@ -45,7 +44,6 @@ export async function POST(
       );
     }
 
-    // Verify password using existing PostService method
     const isValid = await PostService.verifyPostPassword(post.id, password);
 
     if (!isValid) {
@@ -55,17 +53,15 @@ export async function POST(
       );
     }
 
-    // Create JWT token with post access
     const token = await new SignJWT({
       postId: post.id,
       slug: post.slug,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('24h') // Token expires in 24 hours
+      .setExpirationTime('24h')
       .sign(JWT_SECRET);
 
-    // Set httpOnly session cookie (expires when browser closes)
     const response = NextResponse.json({
       success: true,
       message: 'Password verified successfully',
@@ -78,7 +74,6 @@ export async function POST(
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      // No maxAge or expires = session cookie (deleted when browser closes)
     });
 
     return response;

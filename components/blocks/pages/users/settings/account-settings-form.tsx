@@ -54,13 +54,11 @@ export function AccountSettingsForm({
   const [language, setLanguage] = useState(user.language || 'en');
   const [timezone, setTimezone] = useState(user.timezone || 'Asia/Ho_Chi_Minh');
 
-  // Deactivate modal
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [deactivateStep, setDeactivateStep] = useState(1);
   const [deactivateEmail, setDeactivateEmail] = useState('');
   const [deactivatePassword, setDeactivatePassword] = useState('');
 
-  // Delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteStep, setDeleteStep] = useState(1);
   const [deleteEmail, setDeleteEmail] = useState('');
@@ -75,7 +73,6 @@ export function AccountSettingsForm({
     setIsLoading(true);
     try {
       // TODO: Implement API call
-      // await fetch('/api/user/preferences', { ... });
       console.log('Language changed to:', language);
       alert('Language updated successfully');
       window.location.href = `/${language}/settings/account`;
@@ -101,14 +98,12 @@ export function AccountSettingsForm({
 
   const handleDeactivate = async () => {
     if (deactivateStep === 1) {
-      // Step 1: Enter email
       if (deactivateEmail !== user.email) {
         alert('Email does not match');
         return;
       }
       setDeactivateStep(2);
     } else {
-      // Step 2: Enter password (if not OAuth)
       if (user.hasPassword && !deactivatePassword) {
         alert('Please enter your password');
         return;
@@ -117,10 +112,8 @@ export function AccountSettingsForm({
       setIsLoading(true);
       try {
         // TODO: Implement deactivate API
-        // await fetch('/api/user/deactivate', { ... });
         console.log('Account deactivated');
         alert('Account deactivated successfully. You will be logged out.');
-        // Redirect to logout
       } catch (error) {
         alert('Failed to deactivate account');
       } finally {
@@ -131,14 +124,12 @@ export function AccountSettingsForm({
 
   const handleDelete = async () => {
     if (deleteStep === 1) {
-      // Step 1: Enter email
       if (deleteEmail !== user.email) {
         alert('Email does not match');
         return;
       }
       setDeleteStep(2);
     } else if (deleteStep === 2) {
-      // Step 2: Enter password/username
       if (user.hasPassword) {
         if (!deletePassword) {
           alert('Please enter your password');
@@ -152,7 +143,6 @@ export function AccountSettingsForm({
       }
       setDeleteStep(3);
     } else {
-      // Step 3: Enter confirmation text
       if (deleteConfirmText !== randomConfirmText) {
         alert('Confirmation text does not match');
         return;
@@ -161,7 +151,6 @@ export function AccountSettingsForm({
       setIsLoading(true);
       try {
         // TODO: Implement delete API
-        // await fetch('/api/user/delete', { ... });
         console.log('Account deleted permanently');
         alert('Account deleted successfully. You will be logged out.');
         // Redirect to home
@@ -226,7 +215,6 @@ export function AccountSettingsForm({
               transition={{ duration: 0.3, delay: 0.1 }}
             >
               <div className="space-y-6">
-                {/* Language */}
                 <div>
                   <div className="mb-4 flex items-center gap-3">
                     <div className="rounded-lg bg-[var(--color-secondary)] p-2">

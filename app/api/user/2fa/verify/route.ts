@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get the pending secret from database
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { pending2FASecret: true },
@@ -43,7 +42,6 @@ export async function POST(req: NextRequest) {
 
     const secret = user.pending2FASecret;
 
-    // Verify the token
     const isValid = verify2FAToken(token, secret);
 
     if (!isValid) {
@@ -53,13 +51,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate backup codes
     const backupCodesPlain = generateBackupCodes(10);
     const backupCodesHashed = await Promise.all(
       backupCodesPlain.map(code => hashBackupCode(code)),
     );
 
-    // Encrypt the secret before storing
     const encryptionKey = process.env.ENCRYPTION_KEY;
     if (!encryptionKey) {
       throw new Error('ENCRYPTION_KEY not configured');
@@ -67,23 +63,19 @@ export async function POST(req: NextRequest) {
 
     const encryptedSecret = encryptSecret(secret, encryptionKey);
 
-    // Generate new security stamp to invalidate all sessions
     const newSecurityStamp = crypto.randomBytes(32).toString('hex');
 
-    // Save to database
     await prisma.$transaction(async tx => {
-      // Enable 2FA for user
       await tx.user.update({
         where: { id: session.user.id },
         data: {
           twoFactorEnabled: true,
           twoFactorSecret: encryptedSecret,
-          pending2FASecret: null, // Clear pending secret
+          pending2FASecret: null,
           securityStamp: newSecurityStamp,
         },
       });
 
-      // Save backup codes
       await tx.backupCode.createMany({
         data: backupCodesHashed.map(code => ({
           userId: session.user.id!,
@@ -92,7 +84,6 @@ export async function POST(req: NextRequest) {
         })),
       });
 
-      // Log activity
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 365);
 

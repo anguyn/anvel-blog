@@ -34,12 +34,10 @@ export function PostPreviewDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-screen w-screen max-w-none flex-col gap-0 p-0">
-        {/* Hidden title for accessibility */}
         <DialogTitle className="sr-only">
           Preview: {post.title || 'Untitled Post'}
         </DialogTitle>
 
-        {/* Header - Fixed */}
         <div className="flex-shrink-0 border-b">
           <div className="flex items-center justify-between px-6 py-4">
             <div>
@@ -60,10 +58,8 @@ export function PostPreviewDialog({
           </div>
         </div>
 
-        {/* Content - Scrollable */}
         <div className="flex-1 overflow-y-auto">
           <article className="mx-auto max-w-4xl px-6 py-12 md:px-8 lg:px-12">
-            {/* Category */}
             {post.category && (
               <div className="mb-6">
                 <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1.5 text-sm font-medium">
@@ -72,19 +68,16 @@ export function PostPreviewDialog({
               </div>
             )}
 
-            {/* Title */}
             <h1 className="mb-6 text-4xl leading-[1.2] font-bold tracking-tight md:text-5xl md:leading-[1.15]">
               {post.title || 'Untitled Post'}
             </h1>
 
-            {/* Excerpt */}
             {post.excerpt && (
               <p className="text-muted-foreground mb-8 text-xl leading-[1.6]">
                 {post.excerpt}
               </p>
             )}
 
-            {/* Meta Info */}
             <div className="text-muted-foreground mb-10 flex flex-wrap items-center gap-3 border-b pb-6 text-sm">
               <div className="flex items-center gap-2.5">
                 {post.author.image ? (
@@ -114,7 +107,6 @@ export function PostPreviewDialog({
               <span className="leading-none">Preview Mode</span>
             </div>
 
-            {/* Featured Image */}
             {post.featuredImage && (
               <div className="mb-12 overflow-hidden rounded-xl">
                 <img
@@ -125,7 +117,6 @@ export function PostPreviewDialog({
               </div>
             )}
 
-            {/* Content - HTML from Tiptap with inline styles */}
             <div
               className="prose-content"
               dangerouslySetInnerHTML={{
@@ -135,7 +126,6 @@ export function PostPreviewDialog({
               }}
             />
 
-            {/* Tags */}
             {post.tags && post.tags.length > 0 && (
               <div className="mt-12 flex flex-wrap gap-2 border-t pt-10">
                 <p className="text-muted-foreground mb-3 w-full text-sm font-medium">
@@ -154,7 +144,6 @@ export function PostPreviewDialog({
           </article>
         </div>
 
-        {/* Footer - Fixed */}
         <div className="flex-shrink-0 border-t">
           <div className="flex items-center justify-between px-6 py-4">
             <p className="text-muted-foreground text-sm leading-none">
@@ -170,7 +159,6 @@ export function PostPreviewDialog({
           </div>
         </div>
 
-        {/* Global styles for preview content */}
         <style jsx global>{`
           /* Preview content inherits Tiptap HTML inline styles */
           .prose-content {

@@ -14,7 +14,6 @@ export function useUnsavedChanges({
 }: UseUnsavedChangesProps) {
   const router = useRouter();
 
-  // Handle browser/tab close
   useEffect(() => {
     if (!hasUnsavedChanges) return;
 
@@ -31,7 +30,6 @@ export function useUnsavedChanges({
     };
   }, [hasUnsavedChanges, message]);
 
-  // Handle navigation within app
   useEffect(() => {
     if (!hasUnsavedChanges) return;
 
@@ -39,16 +37,10 @@ export function useUnsavedChanges({
       if (hasUnsavedChanges) {
         const confirmed = window.confirm(message);
         if (!confirmed) {
-          // This won't actually prevent navigation in Next.js App Router
-          // but we can show a warning
           throw new Error('Navigation cancelled');
         }
       }
     };
-
-    // Note: Next.js App Router doesn't have a direct way to intercept navigation
-    // This is a limitation we need to work around by disabling navigation buttons
-    // when there are unsaved changes
 
     return () => {
       // Cleanup

@@ -57,7 +57,6 @@ export class MediaService {
     let width: number | null = null;
     let height: number | null = null;
 
-    // Upload to R2 with appropriate options
     const uploadResult = await uploadToR2(file, filename, mimeType, {
       folder,
       maxWidth: mediaType === MediaType.IMAGE ? 1920 : undefined,
@@ -67,13 +66,11 @@ export class MediaService {
       generateThumbnail: mediaType === MediaType.IMAGE,
     });
 
-    // Get dimensions from upload result
     if (mediaType === MediaType.IMAGE) {
       width = uploadResult.width || null;
       height = uploadResult.height || null;
     }
 
-    // Save to database
     const media = await prisma.media.create({
       data: {
         filename: uploadResult.key.split('/').pop() || filename,
@@ -115,7 +112,6 @@ export class MediaService {
       throw new Error('UNAUTHORIZED');
     }
 
-    // Delete from R2
     await deleteFromR2(media.url);
     if (media.thumbnailUrl) {
       await deleteFromR2(media.thumbnailUrl);
@@ -195,7 +191,6 @@ export class MediaService {
       throw new Error('MEDIA_NOT_FOUND');
     }
 
-    // Check permission if userId provided
     if (
       userId &&
       media.uploadedById !== userId &&
@@ -254,7 +249,6 @@ export class MediaService {
       throw new Error('SOME_MEDIA_NOT_FOUND_OR_UNAUTHORIZED');
     }
 
-    // Delete from R2
     const deletePromises = mediaList.flatMap(media => {
       const promises = [deleteFromR2(media.url)];
       if (media.thumbnailUrl) {

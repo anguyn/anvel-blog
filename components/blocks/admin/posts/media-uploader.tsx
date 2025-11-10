@@ -43,17 +43,14 @@ export function MediaUploader({
 
       for (const file of acceptedFiles) {
         try {
-          // Check file size
           if (file.size > maxSize * 1024 * 1024) {
             toast.error(`${file.name} is too large. Max size is ${maxSize}MB`);
             continue;
           }
 
-          // Create FormData
           const formData = new FormData();
           formData.append('file', file);
 
-          // Upload
           const result = await uploadMediaAction(formData);
 
           if (result.success && result.media) {
@@ -92,7 +89,6 @@ export function MediaUploader({
     const removedFile = uploadedFiles[index];
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
 
-    // Remove from selection if selected
     if (localSelectedIds.includes(removedFile.id)) {
       const newSelectedIds = localSelectedIds.filter(
         id => id !== removedFile.id,
@@ -109,16 +105,13 @@ export function MediaUploader({
     let newSelectedIds: string[];
 
     if (localSelectedIds.includes(media.id)) {
-      // Deselect
       newSelectedIds = localSelectedIds.filter(id => id !== media.id);
     } else {
-      // Select
       newSelectedIds = [...localSelectedIds, media.id];
     }
 
     setLocalSelectedIds(newSelectedIds);
 
-    // Get selected media items
     const selectedFiles = uploadedFiles.filter(f =>
       newSelectedIds.includes(f.id),
     );
@@ -127,7 +120,6 @@ export function MediaUploader({
 
   return (
     <div className="space-y-4">
-      {/* Dropzone */}
       <div
         {...getRootProps()}
         className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
@@ -162,7 +154,6 @@ export function MediaUploader({
         </div>
       </div>
 
-      {/* Uploaded Files Preview */}
       {uploadedFiles.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -183,7 +174,6 @@ export function MediaUploader({
                     : ''
                 }`}
               >
-                {/* Image Preview */}
                 {file.type === 'IMAGE' && (
                   <img
                     src={file.thumbnailUrl || file.url}
@@ -192,14 +182,12 @@ export function MediaUploader({
                   />
                 )}
 
-                {/* Video Preview */}
                 {file.type === 'VIDEO' && (
                   <div className="bg-muted flex aspect-square w-full items-center justify-center">
                     <ImageIcon className="text-muted-foreground h-8 w-8" />
                   </div>
                 )}
 
-                {/* Document Preview */}
                 {file.type === 'DOCUMENT' && (
                   <div className="bg-muted flex aspect-square w-full items-center justify-center">
                     <div className="text-center">
@@ -211,7 +199,6 @@ export function MediaUploader({
                   </div>
                 )}
 
-                {/* Actions */}
                 <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
                   <Button
                     variant="destructive"
@@ -223,7 +210,6 @@ export function MediaUploader({
                   </Button>
                 </div>
 
-                {/* Select Button */}
                 {onSelect && (
                   <div className="bg-background/90 absolute right-0 bottom-0 left-0 p-2 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
                     <Button
@@ -243,7 +229,6 @@ export function MediaUploader({
                   </div>
                 )}
 
-                {/* File Info */}
                 <div className="bg-background/90 p-2 backdrop-blur-sm">
                   <p className="truncate text-xs" title={file.filename}>
                     {file.filename}

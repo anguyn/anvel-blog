@@ -40,7 +40,6 @@ export default async function NotificationsSettingsPage({
     notifications: t.settings.notifications,
     appearance: t.settings.appearance,
 
-    // Notifications specific
     notificationSettings: t.settings.notificationSettings,
     notificationDescription: t.settings.notificationDescription,
 
@@ -50,7 +49,6 @@ export default async function NotificationsSettingsPage({
     pushNotifications: t.settings.pushNotifications,
     pushNotificationsDescription: t.settings.pushNotificationsDescription,
 
-    // Email preferences
     newComment: t.settings.newComment,
     newCommentDescription: t.settings.newCommentDescription,
     commentReply: t.settings.commentReply,
@@ -60,7 +58,6 @@ export default async function NotificationsSettingsPage({
     mentionInComment: t.settings.mentionInComment,
     mentionInCommentDescription: t.settings.mentionInCommentDescription,
 
-    // Marketing
     marketingEmails: t.settings.marketingEmails,
     marketingEmailsDescription: t.settings.marketingEmailsDescription,
     weeklyDigest: t.settings.weeklyDigest,
@@ -68,7 +65,6 @@ export default async function NotificationsSettingsPage({
     productUpdates: t.settings.productUpdates,
     productUpdatesDescription: t.settings.productUpdatesDescription,
 
-    // Summary
     notificationSummary: t.settings.notificationSummary,
     notificationSummaryDescription: t.settings.notificationSummaryDescription,
     instantly: t.settings.instantly,

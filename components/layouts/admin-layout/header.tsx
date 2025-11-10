@@ -57,7 +57,6 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
       className="bg-card/95 sticky top-0 z-40 h-16 border-b backdrop-blur-xl"
     >
       <div className="flex h-full items-center justify-between px-4">
-        {/* Left side */}
         <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
@@ -104,7 +103,6 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
               )}
             </AnimatePresence>
 
-            {/* Mobile title - always shown on small screens */}
             <div className="block sm:hidden">
               <h1 className="from-foreground to-muted-foreground bg-gradient-to-r bg-clip-text text-lg font-semibold">
                 BusAdmin
@@ -114,7 +112,6 @@ const DashboardHeader = ({}: DashboardHeaderProps) => {
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-4">
-          {/* Theme controls - hidden on very small screens */}
           <div className="hidden sm:block">
             <ThemeLocaleControls />
           </div>

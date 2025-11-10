@@ -41,7 +41,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Check if password is strong enough (at least medium)
     if (passwordValidation.strength === 'weak') {
       return NextResponse.json(
         {
@@ -55,7 +54,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Get user with password
     const user = await prisma.user.findUnique({
       where: { id: currentUser.id },
       select: { id: true, password: true, email: true },
@@ -72,7 +70,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Verify current password
     const isValidPassword = await bcrypt.compare(
       currentPassword,
       user.password,
@@ -88,7 +85,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Check if new password is same as current
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
     if (isSamePassword) {
       return NextResponse.json(
@@ -101,13 +97,10 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    // Generate new security stamp to invalidate all other sessions
     const newSecurityStamp = crypto.randomBytes(32).toString('hex');
 
-    // Update password and security stamp
     await prisma.user.update({
       where: { id: currentUser.id },
       data: {
@@ -116,7 +109,6 @@ export async function PATCH(req: NextRequest) {
       },
     });
 
-    // Log activity
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 365);
 
@@ -135,7 +127,6 @@ export async function PATCH(req: NextRequest) {
       .catch(() => {});
 
     // TODO: Send email notification about password change
-    // await sendPasswordChangedEmail({ email: user.email, ... });
 
     return NextResponse.json({
       success: true,

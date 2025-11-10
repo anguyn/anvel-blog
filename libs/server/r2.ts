@@ -20,15 +20,15 @@ export interface UploadOptions {
   folder?: string; // e.g., 'avatars', 'posts', 'media'
   maxWidth?: number;
   maxHeight?: number;
-  quality?: number; // 1-100 for webp
-  convertToWebP?: boolean; // Default true for images
+  quality?: number;
+  convertToWebP?: boolean;
   generateThumbnail?: boolean;
   thumbnailSize?: { width: number; height: number };
 }
 
 export interface UploadResult {
-  url: string; // Public R2 URL
-  key: string; // R2 key for deletion
+  url: string;
+  key: string;
   thumbnailUrl?: string;
   thumbnailKey?: string;
   size: number;
@@ -63,7 +63,6 @@ export async function uploadToR2(
   let fileExtension = originalFileName.split('.').pop() || 'bin';
   let metadata: { width?: number; height?: number } = {};
 
-  // Process images
   if (isImage) {
     try {
       let image = sharp(file);
@@ -72,7 +71,6 @@ export async function uploadToR2(
       metadata.width = imageMetadata.width;
       metadata.height = imageMetadata.height;
 
-      // Resize if needed
       if (
         (imageMetadata.width && imageMetadata.width > maxWidth) ||
         (imageMetadata.height && imageMetadata.height > maxHeight)
@@ -83,32 +81,27 @@ export async function uploadToR2(
         });
       }
 
-      // Convert to WebP for better compression (except GIF)
       if (convertToWebP && imageMetadata.format !== 'gif') {
         processedBuffer = await image.webp({ quality, effort: 6 }).toBuffer();
 
         finalContentType = 'image/webp';
         fileExtension = 'webp';
 
-        // Update dimensions after processing
         const processedMetadata = await sharp(processedBuffer).metadata();
         metadata.width = processedMetadata.width;
         metadata.height = processedMetadata.height;
       } else {
-        // Keep original format but still apply resize
         processedBuffer = await image.toBuffer();
       }
     } catch (error) {
       console.error('Image processing error:', error);
-      // If processing fails, use original buffer
     }
   }
 
-  // Generate unique filename
   const timestamp = Date.now();
   const randomStr = crypto.randomBytes(8).toString('hex');
   const sanitizedName = originalFileName
-    .replace(/\.[^/.]+$/, '') // Remove extension
+    .replace(/\.[^/.]+$/, '')
     .replace(/[^a-zA-Z0-9-_]/g, '-')
     .toLowerCase()
     .slice(0, 50);
@@ -116,14 +109,13 @@ export async function uploadToR2(
   const fileName = `${sanitizedName}-${timestamp}-${randomStr}.${fileExtension}`;
   const key = `${folder}/${fileName}`;
 
-  // Upload main file
   await r2Client.send(
     new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME!,
       Key: key,
       Body: processedBuffer,
       ContentType: finalContentType,
-      CacheControl: 'public, max-age=31536000', // 1 year
+      CacheControl: 'public, max-age=31536000',
       Metadata: {
         originalName: originalFileName,
         uploadedAt: new Date().toISOString(),
@@ -141,7 +133,6 @@ export async function uploadToR2(
     ...metadata,
   };
 
-  // Generate thumbnail if requested and is image
   if (generateThumbnail && isImage) {
     try {
       const thumbnailBuffer = await sharp(file)
@@ -206,11 +197,10 @@ export async function uploadAvatar(
 export async function deleteFromR2(keyOrUrl: string): Promise<void> {
   let key = keyOrUrl;
 
-  // If full URL provided, extract key
   if (keyOrUrl.startsWith('http')) {
     try {
       const url = new URL(keyOrUrl);
-      key = url.pathname.substring(1); // Remove leading slash
+      key = url.pathname.substring(1);
     } catch (error) {
       console.error('Invalid URL:', keyOrUrl);
       throw new Error('Invalid R2 URL');
@@ -243,7 +233,7 @@ export async function deleteFileWithThumbnail(
     promises.push(deleteFromR2(result.thumbnailKey));
   }
 
-  await Promise.allSettled(promises); // Use allSettled to not fail if one fails
+  await Promise.allSettled(promises);
 }
 
 /**
@@ -269,7 +259,7 @@ export async function deleteAvatar(avatarKeyOrUrl: string): Promise<void> {
 
   const thumbnailFileName = fileName
     .replace(/\.[^.]+$/, '-thumb.webp')
-    .replace('-thumb-thumb', '-thumb'); // phòng lỗi double thumb
+    .replace('-thumb-thumb', '-thumb');
 
   const thumbnailKey = `${folder}/thumbnails/${thumbnailFileName}`;
 

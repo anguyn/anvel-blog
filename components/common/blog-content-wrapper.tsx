@@ -97,7 +97,6 @@ export function BlogContentWrapper({
       const languageMatch = classNames.match(/language-(\w+)/);
       const language = languageMatch ? languageMatch[1] : 'plaintext';
 
-      // Create placeholder
       const placeholder = document.createElement('div');
       placeholder.setAttribute('data-code-block', index.toString());
       placeholder.setAttribute('data-language', language);
@@ -105,7 +104,6 @@ export function BlogContentWrapper({
       preElement.replaceWith(placeholder);
     });
 
-    // Split content by placeholders
     const parts: React.ReactNode[] = [];
     let currentHtml = '';
     let partIndex = 0;
@@ -115,7 +113,6 @@ export function BlogContentWrapper({
         node.nodeType === Node.ELEMENT_NODE &&
         (node as Element).classList.contains('code-block-content')
       ) {
-        // Push accumulated HTML
         if (currentHtml.trim()) {
           parts.push(
             <div
@@ -126,7 +123,6 @@ export function BlogContentWrapper({
           currentHtml = '';
         }
 
-        // Push code block
         const code = node.textContent || '';
         const language =
           (node as Element).getAttribute('data-language') || 'plaintext';
@@ -139,7 +135,6 @@ export function BlogContentWrapper({
           />,
         );
       } else {
-        // Accumulate HTML
         if (node.nodeType === Node.ELEMENT_NODE) {
           currentHtml += (node as Element).outerHTML;
         } else if (node.nodeType === Node.TEXT_NODE) {
@@ -148,7 +143,6 @@ export function BlogContentWrapper({
       }
     });
 
-    // Push remaining HTML
     if (currentHtml.trim()) {
       parts.push(
         <div

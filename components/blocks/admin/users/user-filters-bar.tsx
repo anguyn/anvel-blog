@@ -61,7 +61,6 @@ export function UserFiltersBar({ onFilterChange, roles }: UserFiltersBarProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Search */}
         <div className="relative max-w-md flex-1">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
@@ -72,7 +71,6 @@ export function UserFiltersBar({ onFilterChange, roles }: UserFiltersBarProps) {
           />
         </div>
 
-        {/* Filter Toggle */}
         <Button
           variant="outline"
           size="sm"
@@ -92,10 +90,8 @@ export function UserFiltersBar({ onFilterChange, roles }: UserFiltersBarProps) {
         </Button>
       </div>
 
-      {/* Expanded Filters */}
       {showFilters && (
         <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
-          {/* Status Filter */}
           <div className="flex-1">
             <label className="mb-2 block text-sm font-medium">Status</label>
             <Select value={status} onValueChange={handleStatusChange}>
@@ -112,7 +108,6 @@ export function UserFiltersBar({ onFilterChange, roles }: UserFiltersBarProps) {
             </Select>
           </div>
 
-          {/* Role Filter */}
           <div className="flex-1">
             <label className="mb-2 block text-sm font-medium">Role</label>
             <Select value={roleId} onValueChange={handleRoleChange}>
@@ -138,7 +133,6 @@ export function UserFiltersBar({ onFilterChange, roles }: UserFiltersBarProps) {
             </Select>
           </div>
 
-          {/* Clear Button */}
           {hasActiveFilters && (
             <Button
               variant="ghost"

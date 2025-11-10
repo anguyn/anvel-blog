@@ -22,7 +22,6 @@ export async function POST(request: Request) {
       where: { email: email.toLowerCase() },
     });
 
-    // Security: Always return success
     if (
       !user ||
       !user.password ||
@@ -35,12 +34,10 @@ export async function POST(request: Request) {
       });
     }
 
-    // Delete old tokens
     await prisma.passwordResetToken.deleteMany({
       where: { userId: user.id },
     });
 
-    // Generate token
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto
       .createHash('sha256')
@@ -61,7 +58,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send email
     const resetUrl = `${process.env.NEXTAUTH_URL}/${user.language || 'vi'}/reset-password?token=${resetToken}`;
 
     const emailResult = await sendPasswordResetEmail({
@@ -77,7 +73,6 @@ export async function POST(request: Request) {
       console.log('Rate limit hit for password reset:', user.email);
     }
 
-    // Log activity
     const logExpiresAt = new Date();
     logExpiresAt.setDate(logExpiresAt.getDate() + 90);
 

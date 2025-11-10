@@ -12,8 +12,6 @@ interface DropdownMenuProps {
 const DropdownMenu = ({ children, open, onOpenChange }: DropdownMenuProps) => {
   const [internalOpen, setInternalOpen] = React.useState(false);
 
-  // Nếu có open và onOpenChange từ bên ngoài thì dùng (controlled)
-  // Nếu không thì dùng state nội bộ (uncontrolled)
   const isControlled = open !== undefined && onOpenChange !== undefined;
   const isOpen = isControlled ? open : internalOpen;
   const setIsOpen = isControlled ? onOpenChange : setInternalOpen;

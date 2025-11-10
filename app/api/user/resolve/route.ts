@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { getCurrentUser } from '@/libs/server/rbac';
 
 const resolveMentionsSchema = z.object({
-  usernames: z.array(z.string().min(2).max(30)).max(10), // Max 10 mentions per comment
+  usernames: z.array(z.string().min(2).max(30)).max(10),
   postId: z.string().optional(),
 });
 
@@ -18,12 +18,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { usernames, postId } = resolveMentionsSchema.parse(body);
 
-    // Get unique, lowercase usernames
     const uniqueUsernames = [
       ...new Set(usernames.map(u => u.toLowerCase().trim())),
     ];
 
-    // Find users by exact username match
     const users = await prisma.user.findMany({
       where: {
         status: 'ACTIVE',
@@ -34,11 +32,10 @@ export async function POST(req: NextRequest) {
       },
       select: {
         id: true,
-        username: true, // Return actual username (with proper casing)
+        username: true,
       },
     });
 
-    // Return only the minimal data needed
     return NextResponse.json({
       users: users.map(u => ({
         id: u.id,

@@ -42,7 +42,6 @@ export default async function EditPostPage({
     redirect(`/${locale}/login?callbackUrl=/${locale}/admin/posts/${id}/edit`);
   }
 
-  // Get post with all relations
   const post = await prisma.post.findUnique({
     where: { id },
     include: {
@@ -106,7 +105,6 @@ export default async function EditPostPage({
     redirect(`/${locale}/admin/posts`);
   }
 
-  // Get categories
   const categories = await prisma.category.findMany({
     where: { isActive: true },
     orderBy: { name: 'asc' },
@@ -125,7 +123,6 @@ export default async function EditPostPage({
     language: 'vi' | 'en';
   }[];
 
-  // Get tags
   const tags = await prisma.tag.findMany({
     orderBy: { name: 'asc' },
     select: {

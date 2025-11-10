@@ -67,7 +67,6 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           window.location.origin,
         );
 
-        // ✅ FIX: Dùng cursor được truyền vào, không phải state
         if (cursor) {
           url.searchParams.set('cursor', cursor);
           setIsLoadingMore(true);
@@ -81,11 +80,8 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
         const data = await res.json();
 
         setTotalComments(data.totalComments || 0);
-        console.log('totalComments:', data.totalComments);
-        console.log('Result comments:', data.comments);
 
         if (cursor) {
-          // Load more: append new comments
           setComments(prev => {
             const existingIds = new Set(prev.map(c => c.id));
             const newComments = data.comments.filter(
@@ -94,12 +90,9 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
             return [...prev, ...newComments];
           });
         } else {
-          // Initial load
           setComments(data.comments);
         }
 
-        // ✅ IMPORTANT: Luôn update nextCursor từ API response
-        console.log('Received nextCursor:', data.nextCursor);
         setNextCursor(data.nextCursor || null);
         setHasMore(data.hasMore || false);
       } catch (error) {
@@ -116,22 +109,10 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
   );
 
   const loadMore = useCallback(() => {
-    console.log(
-      'Load more called - nextCursor:',
-      nextCursor,
-      'hasMore:',
-      hasMore,
-      'isLoadingMore:',
-      isLoadingMore,
-    );
-
-    // ✅ FIX: Check nextCursor, không phải hasMore trước
     if (!hasMore || !nextCursor || isLoadingMore || isLoading) {
-      console.log('Load more rejected - conditions not met');
       return;
     }
 
-    // ✅ Pass nextCursor vào fetchComments
     fetchComments(nextCursor);
   }, [hasMore, nextCursor, isLoadingMore, isLoading]);
 
@@ -153,7 +134,6 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           return reject(new Error('Socket not connected'));
         }
 
-        // Optimistic update
         const tempId = `temp-${Date.now()}`;
         const optimisticComment: Comment = {
           id: tempId,
@@ -209,13 +189,11 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           },
           (response: any) => {
             if (response.error) {
-              // Rollback optimistic update
               startTransition(() => {
                 setComments(prev => prev.filter(c => c.id !== tempId));
               });
               reject(new Error(response.error));
             } else {
-              // Replace optimistic với real comment
               startTransition(() => {
                 if (!options?.parentId) {
                   setComments(prev =>
@@ -273,7 +251,6 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           { commentId, postId, content },
           (response: any) => {
             if (response.error) {
-              // Rollback
               setComments(previousComments);
               reject(new Error(response.error));
             } else {
@@ -282,9 +259,9 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
                   prev.map(c =>
                     c.id === commentId
                       ? {
-                          ...c, // ✅ Giữ nguyên replies và các field khác
-                          ...response.comment, // Merge với data mới từ server
-                          replies: c.replies, // ✅ Đảm bảo replies không bị mất
+                          ...c,
+                          ...response.comment,
+                          replies: c.replies,
                           _pending: false,
                         }
                       : c,
@@ -307,7 +284,6 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           return reject(new Error('Socket not connected'));
         }
 
-        // Optimistic update
         startTransition(() => {
           setComments(prev =>
             prev.map(c =>
@@ -323,7 +299,6 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           { commentId, postId },
           (response: any) => {
             if (response.error) {
-              // Rollback
               startTransition(() => {
                 setComments(prev =>
                   prev.map(c =>
@@ -370,7 +345,6 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
           { commentId, postId },
           (response: any) => {
             if (response.error) {
-              // Rollback
               startTransition(() => {
                 setComments(prev =>
                   prev.map(c =>
@@ -444,7 +418,7 @@ export function useComments({ postId, enabled = true }: UseCommentsOptions) {
     [postId, socket, isConnected],
   );
 
-const loadMoreReplies = useCallback(
+  const loadMoreReplies = useCallback(
     async (parentId: string, cursor: string | null) => {
       try {
         const url = new URL(
@@ -463,7 +437,6 @@ const loadMoreReplies = useCallback(
           prev.map(c => {
             if (c.id !== parentId) return c;
 
-            // ✅ FIX: Lọc bỏ replies trùng lặp
             const existingReplyIds = new Set((c.replies || []).map(r => r.id));
             const newReplies = data.comments.filter(
               (reply: Comment) => !existingReplyIds.has(reply.id),
@@ -492,7 +465,6 @@ const loadMoreReplies = useCallback(
     const handleCommentCreated = (comment: Comment) => {
       startTransition(() => {
         setComments(prev => {
-          // Tránh duplicate
           if (prev.some(c => c.id === comment.id)) return prev;
 
           if (!comment.parentId) {
@@ -518,9 +490,9 @@ const loadMoreReplies = useCallback(
           prev.map(c =>
             c.id === comment.id
               ? {
-                  ...c, // ✅ Giữ nguyên replies
-                  ...comment, // Merge data mới
-                  replies: c.replies, // ✅ Preserve replies
+                  ...c,
+                  ...comment,
+                  replies: c.replies,
                 }
               : c,
           ),

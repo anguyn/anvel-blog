@@ -93,7 +93,6 @@ export function BlogFilters({
 
   return (
     <>
-      {/* Filters Bar */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <form onSubmit={handleSearch} className="flex-1 lg:max-w-md">
           <div className="relative">
@@ -158,7 +157,6 @@ export function BlogFilters({
         </div>
       </div>
 
-      {/* Active Filters */}
       {(searchParams.category ||
         searchParams.tag ||
         searchParams.search ||

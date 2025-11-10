@@ -84,7 +84,6 @@ export function MediaGallery({ media }: MediaGalleryProps) {
         </CardContent>
       </Card>
 
-      {/* Lightbox */}
       {selectedIndex !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
           <button

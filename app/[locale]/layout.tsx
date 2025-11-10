@@ -23,7 +23,7 @@ import { SocketProvider } from '@/providers/socket';
 
 interface LocaleLayoutProps extends PropsWithChildren {
   params: Promise<{ locale: string }>;
-  modal?: React.ReactNode; // Parallel route slot
+  modal?: React.ReactNode;
 }
 
 interface MetaData {

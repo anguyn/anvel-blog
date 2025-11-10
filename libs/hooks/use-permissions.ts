@@ -99,10 +99,8 @@ export function useCanEdit(resourceUserId?: string) {
   const canEdit = useMemo(() => {
     if (!session?.user) return false;
 
-    // User is the owner
     const isOwner = resourceUserId === session.user.id;
 
-    // User has manage permission
     const hasManagePermission = hasPermission('posts:manage');
 
     return isOwner || hasManagePermission;

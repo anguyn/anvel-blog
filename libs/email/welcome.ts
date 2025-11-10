@@ -16,7 +16,7 @@ export async function sendWelcomeEmail(params: SendWelcomeEmailParams) {
         name: params.name,
         locale: params.locale,
       },
-      priority: 5, // HIGH
+      priority: 5,
       userId: params.userId,
       emailType: 'normal',
     });

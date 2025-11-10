@@ -21,7 +21,6 @@ export async function GET(req: NextRequest) {
     if (category) {
       configs = await ConfigService.getByCategory(category);
     } else {
-      // Get all configs grouped by category
       const allConfigs = await prisma.systemConfig.findMany({
         orderBy: [{ category: 'asc' }, { key: 'asc' }],
       });

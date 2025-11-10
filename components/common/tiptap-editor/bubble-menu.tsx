@@ -29,14 +29,12 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
   const [linkUrl, setLinkUrl] = useState('');
 
   const shouldShow = ({ state }: any) => {
-    // Don't show if image is selected
     if (state.selection instanceof NodeSelection) {
       if (state.selection.node?.type.name === 'image') {
         return false;
       }
     }
 
-    // Show for text selection
     const { $from, $to } = state.selection;
     return $from.pos !== $to.pos;
   };
@@ -188,7 +186,6 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         </Button>
       </TiptapBubbleMenu>
 
-      {/* Link Input Popup */}
       {showLinkInput && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-[var(--color-background)] p-4 shadow-xl">
@@ -223,7 +220,6 @@ export default function BubbleMenu({ editor }: BubbleMenuProps) {
         </div>
       )}
 
-      {/* Color Picker Popup */}
       {showColorPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <ColorPicker

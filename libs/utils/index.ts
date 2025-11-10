@@ -85,18 +85,15 @@ export function titleCase(str: string): string {
 }
 
 /**
- * Convert R2 public URL to proxied URL through our API
- * This hides the actual R2 URL from users
+ * Convert R2 public URL to proxied URL
  */
 export function getProxiedImageUrl(r2Url: string): string {
   if (!r2Url) return '';
 
-  // If already a proxied URL, return as is
   if (r2Url.startsWith('/api/images/') || r2Url.startsWith('/images/')) {
     return r2Url;
   }
 
-  // Extract path from R2 URL
   const r2PublicUrl =
     process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL;
   if (!r2PublicUrl) {
@@ -106,7 +103,6 @@ export function getProxiedImageUrl(r2Url: string): string {
 
   const path = r2Url.replace(r2PublicUrl + '/', '');
 
-  // Return proxied URL
   return `/api/images/${path}`;
 }
 
@@ -115,7 +111,7 @@ export function getProxiedImageUrl(r2Url: string): string {
  */
 export function getAvatarUrl(avatarPath: string | null | undefined): string {
   if (!avatarPath) {
-    return '/images/default-avatar.png'; // Fallback avatar
+    return '/images/default-avatar.png';
   }
 
   return getProxiedImageUrl(avatarPath);
@@ -123,7 +119,6 @@ export function getAvatarUrl(avatarPath: string | null | undefined): string {
 
 /**
  * Get image URL with optional transformations
- * Note: Transformations are done on upload, this just returns the URL
  */
 export function getImageUrl(
   imagePath: string | null | undefined,
@@ -137,9 +132,7 @@ export function getImageUrl(
 
   let url = imagePath;
 
-  // If thumbnail requested and path doesn't already point to thumbnail
   if (options?.thumbnail && !url.includes('/thumbnails/')) {
-    // Try to construct thumbnail path
     const parts = url.split('/');
     const filename = parts.pop();
     const folder = parts.join('/');
@@ -178,7 +171,7 @@ export function getThumbnailUrlFromAvatar(url: string): string {
 
   try {
     const parsed = new URL(url);
-    const path = parsed.pathname.substring(1); // "avatars/avatar-123.webp"
+    const path = parsed.pathname.substring(1);
     const parts = path.split('/');
     const fileName = parts.pop()!;
     const folder = parts.join('/');
@@ -209,7 +202,6 @@ export function throttle<T extends (...args: any[]) => any>(
       lastCall = now;
       func(...args);
     } else {
-      // Schedule the call for later
       if (timeoutId) {
         clearTimeout(timeoutId);
       }

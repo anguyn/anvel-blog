@@ -29,7 +29,6 @@ export default function DrawTool({ onInsert, onClose }: DrawToolProps) {
   const [historyStep, setHistoryStep] = useState(-1);
   const [showCursor, setShowCursor] = useState(false);
 
-  // Effect để điều khiển cursor custom
   useEffect(() => {
     const canvas = canvasRef.current;
     const cursor = cursorRef.current;
@@ -62,15 +61,12 @@ export default function DrawTool({ onInsert, onClose }: DrawToolProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
     canvas.width = 800;
     canvas.height = 600;
 
-    // Fill white background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Save initial state
     saveState();
   }, []);
 
@@ -203,7 +199,6 @@ export default function DrawTool({ onInsert, onClose }: DrawToolProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-4xl rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] shadow-xl">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--color-border)] p-4">
           <h2 className="text-lg font-semibold">Drawing Tool</h2>
           <button
@@ -214,9 +209,7 @@ export default function DrawTool({ onInsert, onClose }: DrawToolProps) {
           </button>
         </div>
 
-        {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2 border-b border-[var(--color-border)] bg-[var(--color-muted)] p-3">
-          {/* Tools */}
           <button
             onClick={() => setTool('pen')}
             className={`flex items-center gap-2 rounded px-3 py-2 text-sm hover:cursor-pointer ${
@@ -242,7 +235,6 @@ export default function DrawTool({ onInsert, onClose }: DrawToolProps) {
 
           <div className="h-8 w-px bg-[var(--color-border)]" />
 
-          {/* Color Picker */}
           <div className="flex items-center gap-2">
             <label className="text-sm">Color:</label>
             <input
@@ -253,7 +245,6 @@ export default function DrawTool({ onInsert, onClose }: DrawToolProps) {
             />
           </div>
 
-          {/* Line Width */}
           <div className="flex items-center gap-2">
             <label className="text-sm">Size:</label>
             <input
@@ -269,7 +260,6 @@ export default function DrawTool({ onInsert, onClose }: DrawToolProps) {
 
           <div className="h-8 w-px bg-[var(--color-border)]" />
 
-          {/* History */}
           <button
             onClick={undo}
             disabled={historyStep <= 0}
@@ -309,7 +299,6 @@ export default function DrawTool({ onInsert, onClose }: DrawToolProps) {
                 height: '600px',
               }}
             />
-            {/* Custom Cursor */}
             <div
               ref={cursorRef}
               className={`pointer-events-none absolute rounded-full ${

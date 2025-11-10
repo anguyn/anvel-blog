@@ -5,13 +5,9 @@ import { routing } from '@/i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
-// Helper function để check route matching với wildcard support
 function matchesRoute(path: string, patterns: string[]): boolean {
   return patterns.some(pattern => {
-    // Convert wildcard pattern to regex
-    const regexPattern = pattern
-      .replace(/\*/g, '.*') // * -> .*
-      .replace(/\//g, '\\/'); // escape /
+    const regexPattern = pattern.replace(/\*/g, '.*').replace(/\//g, '\\/');
 
     const regex = new RegExp(`^${regexPattern}(?:/|$)`);
     return regex.test(path);
@@ -21,12 +17,10 @@ function matchesRoute(path: string, patterns: string[]): boolean {
 export default async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
-  // ✅ Skip parallel routes (@modal, @auth, etc.)
   if (pathname.includes('/@')) {
     return NextResponse.next();
   }
 
-  // ✅ Skip intercepting routes - chỉ chạy intl middleware
   if (pathname.match(/\/\([.]+\)/)) {
     return intlMiddleware(request);
   }
@@ -57,10 +51,5 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/',
-    '/(en|vi)/:path*',
-    // Exclude: api, _next, _vercel, static files
-    '/((?!api|_next|_vercel|.*\\..*).*)',
-  ],
+  matcher: ['/', '/(en|vi)/:path*', '/((?!api|_next|_vercel|.*\\..*).*)'],
 };

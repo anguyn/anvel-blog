@@ -25,9 +25,8 @@ export function Pagination({
     onPageChange(page);
   };
 
-  // Helper tạo dãy trang hiển thị
   const getPageNumbers = () => {
-    const delta = 2; // số trang liền kề hiển thị
+    const delta = 2;
     const range = [];
     for (
       let i = Math.max(1, currentPage - delta);

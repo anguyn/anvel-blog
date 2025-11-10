@@ -29,7 +29,6 @@ export async function sendVerificationEmail(
 
     return { success: true, data: result };
   } catch (error: any) {
-    // Handle rate limit error (429)
     if (error.statusCode === 429) {
       return {
         success: false,
@@ -40,7 +39,6 @@ export async function sendVerificationEmail(
       };
     }
 
-    // Handle other errors
     return {
       success: false,
       error: 'send_failed',

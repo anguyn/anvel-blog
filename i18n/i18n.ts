@@ -41,7 +41,6 @@ export function detectApiLocale(request: Request | NextRequest): LocaleProps {
     }
   }
 
-  // Strategy 5: Default
   return i18n.defaultLocale;
 }
 
@@ -68,7 +67,6 @@ export async function getApiTranslations(request: Request | NextRequest) {
 
   const dict = dictionaries[locale];
 
-  // Tạo hàm dịch động
   const translate = (
     path: string,
     params?: Record<string, string | number>,
@@ -84,7 +82,6 @@ export async function getApiTranslations(request: Request | NextRequest) {
     return value;
   };
 
-  // Gắn hàm vào object t luôn (vừa là object, vừa callable)
   const t = Object.assign(translate, dict);
 
   return {

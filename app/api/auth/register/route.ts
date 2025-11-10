@@ -6,7 +6,6 @@ import crypto from 'crypto';
 import { getApiTranslations } from '@/i18n/i18n';
 import { sendVerificationEmail } from '@/libs/email/verification';
 
-// Enhanced password validation
 function validatePassword(
   password: string,
   t: any,
@@ -38,7 +37,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, password, name } = body;
 
-    // Validate required fields
     if (!email || !password || !name) {
       return NextResponse.json(
         { error: t.user.missingFields || 'All fields are required' },
@@ -46,7 +44,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate email
     const emailRegex =
       /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     if (!emailRegex.test(email) || email.length > 254) {
@@ -56,7 +53,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate password strength
     const passwordValidation = validatePassword(password, t);
     if (!passwordValidation.valid) {
       return NextResponse.json(
@@ -68,7 +64,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate name
     if (name.length < 2 || name.length > 50) {
       return NextResponse.json(
         {
@@ -79,7 +74,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
@@ -91,10 +85,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Generate username
     let username = slugify(name, { lower: true, strict: true });
     let usernameExists = await prisma.user.findUnique({ where: { username } });
     let counter = 1;
@@ -104,17 +96,14 @@ export async function POST(request: Request) {
       counter++;
     }
 
-    // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const tokenExpiry = new Date();
     tokenExpiry.setHours(tokenExpiry.getHours() + 24); // 24 hours
 
-    // Get default role
     const defaultRole = await prisma.role.findUnique({
       where: { name: 'USER' },
     });
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase(),
@@ -122,7 +111,7 @@ export async function POST(request: Request) {
         name,
         username,
         roleId: defaultRole?.id,
-        status: 'PENDING', // User pending until email verified
+        status: 'PENDING',
         language: locale,
         securityStamp: crypto.randomUUID(),
       },
@@ -135,7 +124,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Create verification token
     await prisma.verificationToken.create({
       data: {
         identifier: user.email,
@@ -144,7 +132,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send verification email
     const verificationUrl = `${process.env.NEXTAUTH_URL}/${locale}/verify-email?token=${verificationToken}`;
 
     try {
@@ -158,7 +145,6 @@ export async function POST(request: Request) {
       });
 
       if (!emailResult.success && emailResult.error === 'rate_limit') {
-        // Email rate limited, but registration succeeded
         return NextResponse.json(
           {
             success: true,
@@ -179,10 +165,8 @@ export async function POST(request: Request) {
       }
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
-      // Don't fail registration if email fails
     }
 
-    // Log registration
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 

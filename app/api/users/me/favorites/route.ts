@@ -12,7 +12,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10'); // Giảm xuống 10 để phù hợp với snippets page
+    const limit = parseInt(searchParams.get('limit') || '10');
 
     const [favorites, total] = await Promise.all([
       prisma.favorite.findMany({

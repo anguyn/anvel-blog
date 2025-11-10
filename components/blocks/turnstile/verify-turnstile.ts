@@ -63,7 +63,6 @@ export async function verifyTurnstileToken(
       };
     }
 
-    // Optional: Validate action if provided
     if (options?.action && data.action !== options.action) {
       console.error(
         '[Turnstile] Action mismatch:',
@@ -91,15 +90,12 @@ export async function verifyTurnstileToken(
  * Helper để lấy IP từ request headers
  */
 export function getClientIp(headers: Headers): string | undefined {
-  // Cloudflare sets CF-Connecting-IP
   const cfIp = headers.get('cf-connecting-ip');
   if (cfIp) return cfIp;
 
-  // Fallback to X-Forwarded-For
   const forwarded = headers.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0].trim();
 
-  // Fallback to X-Real-IP
   const realIp = headers.get('x-real-ip');
   if (realIp) return realIp;
 

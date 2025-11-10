@@ -28,13 +28,11 @@ interface ColorPalette {
   accent: string;
 }
 
-// Hàm lấy top 3 màu dominant từ ảnh
 const extractColorPalette = (imageSrc: string): Promise<ColorPalette> => {
   return new Promise(resolve => {
     const img = new window.Image();
     img.crossOrigin = 'anonymous';
 
-    // Thử thêm timestamp để bypass cache
     img.src = imageSrc.includes('?')
       ? `${imageSrc}&t=${Date.now()}`
       : `${imageSrc}?t=${Date.now()}`;
@@ -49,7 +47,6 @@ const extractColorPalette = (imageSrc: string): Promise<ColorPalette> => {
           return;
         }
 
-        // Scale down để performance tốt hơn
         const scale = 0.1;
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
@@ -58,9 +55,8 @@ const extractColorPalette = (imageSrc: string): Promise<ColorPalette> => {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
 
-        // Color quantization - nhóm màu gần nhau
         const colorMap = new Map<string, number>();
-        const step = 4; // Sample mỗi 4 pixels để nhanh hơn
+        const step = 4;
 
         for (let i = 0; i < data.length; i += step * 4) {
           const r = Math.round(data[i] / 10) * 10;
@@ -68,7 +64,6 @@ const extractColorPalette = (imageSrc: string): Promise<ColorPalette> => {
           const b = Math.round(data[i + 2] / 10) * 10;
           const a = data[i + 3];
 
-          // Skip transparent và quá tối/sáng
           if (a < 125) continue;
           const brightness = (r + g + b) / 3;
           if (brightness < 30 || brightness > 240) continue;
@@ -77,20 +72,17 @@ const extractColorPalette = (imageSrc: string): Promise<ColorPalette> => {
           colorMap.set(key, (colorMap.get(key) || 0) + 1);
         }
 
-        // Sort theo frequency
         const sortedColors = Array.from(colorMap.entries())
           .sort((a, b) => b[1] - a[1])
-          .slice(0, 10); // Lấy top 10
+          .slice(0, 10);
 
         if (sortedColors.length === 0) {
           resolve(getDefaultPalette());
           return;
         }
 
-        // Lấy 3 màu khác biệt nhất
         const palette = getDistinctColors(sortedColors.map(c => c[0]));
 
-        console.log('Extracted palette:', palette);
         resolve(palette);
       } catch (error) {
         console.error('Canvas error:', error);
@@ -105,7 +97,6 @@ const extractColorPalette = (imageSrc: string): Promise<ColorPalette> => {
   });
 };
 
-// Lấy 3 màu khác biệt nhất
 const getDistinctColors = (colors: string[]): ColorPalette => {
   if (colors.length === 0) return getDefaultPalette();
 
@@ -113,7 +104,6 @@ const getDistinctColors = (colors: string[]): ColorPalette => {
   let secondary = colors[1] || primary;
   let accent = colors[2] || primary;
 
-  // Đảm bảo màu khác biệt nhau đủ
   for (let i = 1; i < colors.length; i++) {
     if (colorDistance(primary, colors[i]) > 50) {
       secondary = colors[i];
@@ -134,7 +124,6 @@ const getDistinctColors = (colors: string[]): ColorPalette => {
   return { primary, secondary, accent };
 };
 
-// Tính khoảng cách giữa 2 màu
 const colorDistance = (color1: string, color2: string): number => {
   const [r1, g1, b1] = color1.split(',').map(Number);
   const [r2, g2, b2] = color2.split(',').map(Number);
@@ -167,7 +156,7 @@ const getDefaultPalette = (): ColorPalette => {
       primary: '14, 165, 233',
       secondary: '34, 197, 94',
       accent: '234, 179, 8',
-    }, // Cyan-Green-Yellow
+    },
   ];
   return palettes[Math.floor(Math.random() * palettes.length)];
 };

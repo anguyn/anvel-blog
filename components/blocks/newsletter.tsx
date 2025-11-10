@@ -76,7 +76,6 @@ export function Newsletter({ locale, translations }: NewsletterProps) {
 
   return (
     <section className="relative overflow-hidden border-t border-[var(--color-border)] py-20 md:py-32">
-      {/* Animated Background */}
       <div className="absolute inset-0 -z-10">
         <motion.div
           animate={{
@@ -105,7 +104,6 @@ export function Newsletter({ locale, translations }: NewsletterProps) {
           className="mx-auto max-w-5xl"
         >
           <div className="relative overflow-hidden rounded-3xl border border-[var(--color-border)] bg-[var(--color-background)]/80 p-8 backdrop-blur-sm md:p-12">
-            {/* Decorative Elements */}
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
@@ -118,7 +116,6 @@ export function Newsletter({ locale, translations }: NewsletterProps) {
             />
 
             <div className="relative">
-              {/* Icon */}
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 whileInView={{ scale: 1, rotate: 0 }}
@@ -138,7 +135,6 @@ export function Newsletter({ locale, translations }: NewsletterProps) {
                 </motion.div>
               </motion.div>
 
-              {/* Title */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -154,7 +150,6 @@ export function Newsletter({ locale, translations }: NewsletterProps) {
                 </p>
               </motion.div>
 
-              {/* Form */}
               <motion.form
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -214,7 +209,6 @@ export function Newsletter({ locale, translations }: NewsletterProps) {
                   </motion.div>
                 </div>
 
-                {/* Status Messages */}
                 {status === 'success' && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
@@ -248,7 +242,6 @@ export function Newsletter({ locale, translations }: NewsletterProps) {
                 </motion.p>
               </motion.form>
 
-              {/* Features */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}

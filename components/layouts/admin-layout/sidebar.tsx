@@ -112,7 +112,6 @@ function MenuItem({
       )}
       onClick={handleClick}
     >
-      {/* Active indicator */}
       {shouldShowAsActive && level === 0 && (
         <motion.div
           layoutId="activeIndicator"
@@ -125,7 +124,6 @@ function MenuItem({
         />
       )}
 
-      {/* Icon with gradient background */}
       <div
         className={cn(
           'relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-all duration-150',
@@ -146,7 +144,6 @@ function MenuItem({
         />
       </div>
 
-      {/* Label and badge */}
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.div
@@ -204,7 +201,6 @@ function MenuItem({
   );
 
   if (!isSidebarOpen && hasChildren) {
-    // Tooltip for collapsed sidebar with children
     return (
       <div>
         <Tooltip>
@@ -227,7 +223,6 @@ function MenuItem({
   }
 
   if (!isSidebarOpen && item.href) {
-    // Tooltip for collapsed sidebar with single items
     return (
       <Link
         href={locale ? `/${locale}${item.href}` : item.href}
@@ -256,7 +251,6 @@ function MenuItem({
         menuContent
       )}
 
-      {/* Children items */}
       <AnimatePresence>
         {hasChildren && isExpanded && isSidebarOpen && (
           <motion.div
@@ -421,7 +415,6 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
 
   return (
     <>
-      {/* Mobile/Tablet overlay */}
       <AnimatePresence>
         {isSidebarOpen && !isDesktop && (
           <motion.div
@@ -435,7 +428,6 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
       <motion.aside
         initial={false}
         animate={{
@@ -449,10 +441,8 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
           'shadow-xl shadow-black/5',
         )}
       >
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/3 via-purple-500/3 to-pink-500/3 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5" />
 
-        {/* Header */}
         <div className="relative flex h-16 items-center justify-between border-b px-4">
           <AnimatePresence mode="wait">
             {isSidebarOpen ? (
@@ -464,7 +454,6 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
                 className="flex items-center space-x-3"
               >
                 <div className="relative">
-                  {/* <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg"> */}
                   {systemConfig?.logo && (
                     <Image
                       height={30}
@@ -474,7 +463,6 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
                       className="h-fit object-contain"
                     />
                   )}
-                  {/* </div> */}
                   <div className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-gradient-to-r from-emerald-400 to-green-500">
                     <Sparkles className="h-2 w-2 text-white" />
                   </div>
@@ -508,7 +496,6 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
                 exit={{ opacity: 0, scale: 0.8 }}
                 className="relative mx-auto"
               >
-                {/* <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg"> */}
                 {systemConfig?.logo && (
                   <Image
                     height={30}
@@ -518,7 +505,6 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
                     className="h-fit object-contain"
                   />
                 )}
-                {/* </div> */}
                 <div className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-gradient-to-r from-emerald-400 to-green-500">
                   <Sparkles className="h-2 w-2 text-white" />
                 </div>
@@ -526,7 +512,6 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
             )}
           </AnimatePresence>
 
-          {/* Toggle button - only show on desktop when sidebar is open */}
           {isDesktop && (
             <motion.button
               whileHover={{ scale: 1 }}
@@ -543,9 +528,7 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
           )}
         </div>
 
-        {/* Main content area with fixed height */}
         <div className="flex min-h-0 flex-1 flex-col border-r">
-          {/* User info */}
           {isSidebarOpen && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -582,7 +565,6 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
             </motion.div>
           )}
 
-          {/* Navigation - Scrollable */}
           <nav className="relative flex-1 space-y-1 overflow-y-auto p-3">
             {filteredMenuItems.map((item, index) => {
               const isActive =
@@ -609,7 +591,6 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
             })}
           </nav>
 
-          {/* Bottom section - Fixed at bottom */}
           {isSidebarOpen && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}

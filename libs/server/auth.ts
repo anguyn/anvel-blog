@@ -15,6 +15,7 @@ export const authConfig: NextAuthConfig = {
   basePath: '/api/auth',
   adapter: PrismaAdapter(prisma),
   session: {
+    // TODO: Change to database strategy
     strategy: 'jwt',
     maxAge: 7 * 24 * 60 * 60, // 7 days maximum
     updateAge: 24 * 60 * 60, // Refresh every 24 hours if active
@@ -89,7 +90,6 @@ export const authConfig: NextAuthConfig = {
             return null;
           }
 
-          // Check status
           if (user.status === 'BANNED') {
             console.error('[Auth] Account is banned');
             throw new Error('BANNED');
@@ -100,7 +100,6 @@ export const authConfig: NextAuthConfig = {
             throw new Error('SUSPENDED');
           }
 
-          // Check email verification
           if (
             !user.emailVerified &&
             process.env.REQUIRE_EMAIL_VERIFICATION === 'true'
@@ -109,7 +108,6 @@ export const authConfig: NextAuthConfig = {
             throw new Error('UNVERIFIED');
           }
 
-          // Verify password
           const isCorrectPassword = await bcrypt.compare(
             credentials.password as string,
             user.password,
@@ -127,7 +125,6 @@ export const authConfig: NextAuthConfig = {
             const token2FA = credentials.token2FA as string | undefined;
             const backupCode = credentials.backupCode as string | undefined;
 
-            // Must provide either 2FA token or backup code
             if (
               (!token2FA || token2FA === 'undefined' || token2FA === '') &&
               (!backupCode || backupCode === 'undefined' || backupCode === '')
@@ -138,7 +135,6 @@ export const authConfig: NextAuthConfig = {
 
             let is2FAValid = false;
 
-            // Try backup code first (if provided)
             if (backupCode && user.backupCodes.length > 0) {
               for (const storedCode of user.backupCodes) {
                 const isValidBackup = await bcrypt.compare(
@@ -147,7 +143,6 @@ export const authConfig: NextAuthConfig = {
                 );
 
                 if (isValidBackup) {
-                  // Mark backup code as used
                   await prisma.backupCode.update({
                     where: { id: storedCode.id },
                     data: {
@@ -158,7 +153,6 @@ export const authConfig: NextAuthConfig = {
 
                   is2FAValid = true;
 
-                  // Log backup code usage
                   const expiresAt = new Date();
                   expiresAt.setDate(expiresAt.getDate() + 180);
 
@@ -183,10 +177,8 @@ export const authConfig: NextAuthConfig = {
               }
             }
 
-            // Try TOTP token (if backup code failed or not provided)
             if (!is2FAValid && token2FA) {
               try {
-                // Dynamic import to avoid loading if not needed
                 const { decryptSecret, verify2FAToken } = await import('./2fa');
 
                 const encryptionKey = process.env.ENCRYPTION_KEY;
@@ -210,14 +202,12 @@ export const authConfig: NextAuthConfig = {
               }
             }
 
-            // If both failed, reject login
             if (!is2FAValid) {
               console.error('[Auth] Invalid 2FA code');
               throw new Error('INVALID_2FA');
             }
           }
 
-          // Update last login
           await prisma.user
             .update({
               where: { id: user.id },
@@ -225,7 +215,6 @@ export const authConfig: NextAuthConfig = {
             })
             .catch(() => {});
 
-          // Return user object with all necessary fields
           return {
             id: user.id,
             email: user.email!,
@@ -248,7 +237,6 @@ export const authConfig: NextAuthConfig = {
             rememberMe: credentials.rememberMe === 'true',
           } as any;
         } catch (error: any) {
-          // Re-throw specific errors for handling in signIn callback
           if (
             [
               'BANNED',
@@ -272,7 +260,6 @@ export const authConfig: NextAuthConfig = {
   callbacks: {
     async signIn({ user, account }) {
       try {
-        // OAuth login - Link to existing account
         if (account && account?.provider !== 'credentials') {
           const existingUser = await prisma.user.findUnique({
             where: { email: user.email! },
@@ -280,7 +267,6 @@ export const authConfig: NextAuthConfig = {
           });
 
           if (existingUser) {
-            // Check status
             if (existingUser.status === 'BANNED') {
               return '/login?error=banned';
             }
@@ -288,7 +274,6 @@ export const authConfig: NextAuthConfig = {
               return '/login?error=suspended';
             }
 
-            // Link account if not exists
             const existingAccount = await prisma.account.findFirst({
               where: {
                 provider: account.provider,
@@ -314,7 +299,6 @@ export const authConfig: NextAuthConfig = {
               });
             }
 
-            // Update user
             await prisma.user.update({
               where: { id: existingUser.id },
               data: {
@@ -324,10 +308,8 @@ export const authConfig: NextAuthConfig = {
               },
             });
 
-            // Set user.id for NextAuth to use existing user
             user.id = existingUser.id;
           } else {
-            // New OAuth user
             if (user.id) {
               const defaultRole = await prisma.role.findUnique({
                 where: { name: 'USER' },
@@ -346,7 +328,6 @@ export const authConfig: NextAuthConfig = {
           }
         }
 
-        // Log activity
         if (user.id) {
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + 30);
@@ -372,7 +353,6 @@ export const authConfig: NextAuthConfig = {
 
         return true;
       } catch (error: any) {
-        // Handle errors from authorize
         if (error.message === 'BANNED') {
           return '/login?error=banned';
         }
@@ -402,7 +382,6 @@ export const authConfig: NextAuthConfig = {
 
     async jwt({ token, user, trigger, session, account }) {
       console.log('[JWT Callback] Trigger:', trigger);
-      // Initial sign in
       if (user) {
         token.id = user.id!;
         token.securityStamp = (user as any).securityStamp;
@@ -418,19 +397,15 @@ export const authConfig: NextAuthConfig = {
         token.rememberMe = (user as any).rememberMe || false;
         token.twoFactorEnabled = (user as any).twoFactorEnabled || false;
 
-        // Set hasPassword based on login method
         if (account?.provider === 'credentials') {
-          // Credentials login always has password
           token.hasPassword = true;
         } else if (account?.provider && account.provider !== 'credentials') {
-          // OAuth login - check if user has password in database
           const userWithPassword = await prisma.user.findUnique({
             where: { id: user.id! },
             select: { password: true },
           });
           token.hasPassword = !!userWithPassword?.password;
         } else {
-          // Fallback - check user object
           token.hasPassword = (user as any).hasPassword || false;
         }
 
@@ -474,7 +449,7 @@ export const authConfig: NextAuthConfig = {
             securityStamp: true,
             status: true,
             twoFactorEnabled: true,
-            password: true, // Check password status
+            password: true,
           },
         });
 
@@ -596,9 +571,6 @@ export const authConfig: NextAuthConfig = {
         session.user.linkedin = (token.linkedin as string) || undefined;
         session.user.accessToken = generateAccessToken(token.id as string);
       }
-
-      // Don't override session.expires - let NextAuth handle it
-      // The token.exp we set in jwt() callback will automatically be used
 
       return session;
     },

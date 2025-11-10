@@ -66,7 +66,6 @@ export default function ForgotPasswordBlock({
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  // Resend timer (3 minutes from env)
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
@@ -74,7 +73,6 @@ export default function ForgotPasswordBlock({
     }
   }, [resendTimer]);
 
-  // Expiry timer (3 minutes for reset link)
   useEffect(() => {
     if (expiryTimer > 0) {
       const timer = setTimeout(() => setExpiryTimer(expiryTimer - 1), 1000);
@@ -98,11 +96,10 @@ export default function ForgotPasswordBlock({
         setIsSuccess(true);
         toast.success(translations.success);
 
-        // Set timers
         const resendCooldown = parseInt(
           process.env.NEXT_PUBLIC_RESEND_COOLDOWN || '180',
-        ); // 3 minutes
-        const linkExpiry = result.expiresIn || 180; // 3 minutes
+        );
+        const linkExpiry = result.expiresIn || 180;
 
         setResendTimer(resendCooldown);
         setExpiryTimer(linkExpiry);

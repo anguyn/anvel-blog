@@ -144,7 +144,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         console.log('System message:', data);
       });
 
-      setSocket(newSocket); // ✅ Trigger re-render
+      setSocket(newSocket);
       socketRef.current = newSocket;
     }
 
@@ -155,7 +155,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         console.log('🔌 Cleaning up socket on logout');
         socketRef.current.disconnect();
         socketRef.current = null;
-        setSocket(null); // ✅ Clear state
+        setSocket(null);
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
         }
@@ -172,11 +172,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // ✅ Fix: Dùng socket state thay vì socketRef
   const contextValue = useMemo(
     () => ({ socket, isConnected, disconnect }),
     [socket, isConnected, disconnect],
-    // ^^^^^^ - Đúng! socket state sẽ trigger re-render
   );
 
   return (

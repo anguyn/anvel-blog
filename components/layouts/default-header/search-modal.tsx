@@ -87,7 +87,6 @@ export function SearchModal({ isOpen, onClose, locale }: SearchModalProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -96,7 +95,6 @@ export function SearchModal({ isOpen, onClose, locale }: SearchModalProps) {
             className="fixed inset-0 z-[110] hidden bg-black/50 backdrop-blur-sm lg:block"
           />
 
-          {/* Search Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -105,7 +103,6 @@ export function SearchModal({ isOpen, onClose, locale }: SearchModalProps) {
             className="fixed top-20 left-1/2 z-[120] hidden w-full max-w-2xl -translate-x-1/2 lg:block"
           >
             <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] shadow-2xl">
-              {/* Search Input */}
               <form onSubmit={handleSearchSubmit}>
                 <div className="flex items-center gap-3 border-b border-[var(--color-border)] px-4 py-4">
                   <Search className="h-5 w-5 text-[var(--color-muted-foreground)]" />
@@ -123,7 +120,6 @@ export function SearchModal({ isOpen, onClose, locale }: SearchModalProps) {
                 </div>
               </form>
 
-              {/* Search Results */}
               <div className="max-h-96 overflow-y-auto">
                 {searchQuery && searchResults ? (
                   <SearchResultsList
@@ -140,7 +136,6 @@ export function SearchModal({ isOpen, onClose, locale }: SearchModalProps) {
                 ) : null}
               </div>
 
-              {/* Footer */}
               <div className="flex items-center justify-between border-t border-[var(--color-border)] px-4 py-3 text-xs text-[var(--color-muted-foreground)]">
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1">

@@ -3,58 +3,49 @@ import { PostService } from '@/libs/services/post.service';
 import { getCurrentUser } from '@/libs/server/rbac';
 import { getApiTranslations } from '@/i18n/i18n';
 
-// Utility function to generate slug from text
 function generateSlug(text: string): string {
   return text
     .toLowerCase()
-    .normalize('NFD') // Normalize Vietnamese characters
-    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/đ/g, 'd')
     .replace(/Đ/g, 'd')
-    .replace(/[^\w\s-]/g, '') // Remove special chars
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
     .trim();
 }
 
-// Extract headings and inject IDs into HTML content
 function injectHeadingIds(htmlContent: string): {
   content: string;
   headings: Array<{ id: string; text: string; level: number }>;
 } {
   const headings: Array<{ id: string; text: string; level: number }> = [];
-  const headingCounters = new Map<string, number>(); // To handle duplicate headings
+  const headingCounters = new Map<string, number>();
 
   const contentWithIds = htmlContent.replace(
     /<h([2-4])([^>]*)>(.*?)<\/h\1>/gi,
     (match, level, attributes, text) => {
-      // Extract plain text from heading (remove HTML tags if any)
       const plainText = text.replace(/<[^>]*>/g, '').trim();
 
-      // Generate base slug
-      let baseSlug = generateSlug(plainText);
+      const baseSlug = generateSlug(plainText);
 
-      // Handle duplicates by adding counter
       const count = headingCounters.get(baseSlug) || 0;
       headingCounters.set(baseSlug, count + 1);
 
       const id = count > 0 ? `${baseSlug}-${count}` : baseSlug;
 
-      // Store heading info
       headings.push({
         id,
         text: plainText,
         level: parseInt(level),
       });
 
-      // Check if id already exists in attributes
       const hasId = /id\s*=\s*["'][^"']*["']/i.test(attributes);
 
       if (hasId) {
-        // Replace existing id
         return `<h${level}${attributes.replace(/id\s*=\s*["'][^"']*["']/i, `id="${id}"`)}>${text}</h${level}>`;
       } else {
-        // Add new id
         return `<h${level} id="${id}"${attributes}>${text}</h${level}>`;
       }
     },
@@ -75,7 +66,6 @@ export async function GET(
     const { slug } = await params;
     const user = await getCurrentUser();
 
-    // Get post with translations, passing preferred language
     const result = await PostService.getPostBySlug(slug, user?.id, locale);
 
     if (!result) {
@@ -99,7 +89,6 @@ export async function GET(
       currentLanguage: originalLang,
     };
 
-    // If requested language is different from original, use translation
     if (requestedLang !== originalLang) {
       const translation = translations.find(t => t.language === requestedLang);
 
@@ -121,7 +110,6 @@ export async function GET(
       }
     }
 
-    // Inject heading IDs and extract table of contents
     const { content: processedContent, headings } = injectHeadingIds(
       displayContent.content,
     );
@@ -130,11 +118,11 @@ export async function GET(
       post: {
         ...post,
         ...displayContent,
-        content: processedContent, // Content with IDs injected
+        content: processedContent,
       },
       relatedPosts,
       translations,
-      tableOfContents: headings, // Add TOC data
+      tableOfContents: headings,
       contentInfo: {
         isTranslated: displayContent.isTranslated,
         originalLanguage: originalLang,

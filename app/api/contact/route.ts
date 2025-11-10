@@ -1,5 +1,3 @@
-// app/api/contact/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/libs/prisma';
 import { z } from 'zod';
@@ -24,19 +22,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = contactSchema.parse(body);
 
-    // Get current user if logged in
     const session = await auth();
     const userId = session?.user?.id || null;
 
-    // Get IP and user agent for security
     const ipAddress =
       request.headers.get('x-forwarded-for') ||
       request.headers.get('x-real-ip') ||
       'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
-    // Rate limiting check (simple implementation)
-    // Check if same email sent message in last hour
     const recentMessage = await prisma.contactMessage.findFirst({
       where: {
         email: validated.email.toLowerCase(),
@@ -56,7 +50,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create contact message
     const contactMessage = await prisma.contactMessage.create({
       data: {
         name: validated.name,
@@ -71,21 +64,8 @@ export async function POST(request: NextRequest) {
     });
 
     // TODO: Send notification email to admin
-    // await sendContactNotificationEmail({
-    //   name: contactMessage.name,
-    //   email: contactMessage.email,
-    //   subject: contactMessage.subject,
-    //   message: contactMessage.message,
-    //   messageId: contactMessage.id,
-    // });
-
     // TODO: Send confirmation email to user
-    // await sendContactConfirmationEmail({
-    //   email: contactMessage.email,
-    //   name: contactMessage.name,
-    // });
 
-    // Log activity
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 90);
 

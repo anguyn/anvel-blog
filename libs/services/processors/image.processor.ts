@@ -34,7 +34,6 @@ export class ImageProcessor {
 
     let resized = image;
 
-    // Resize if needed
     if (
       metadata.width &&
       metadata.height &&
@@ -46,7 +45,6 @@ export class ImageProcessor {
       });
     }
 
-    // Convert and optimize based on format
     let processed: Buffer;
     switch (format) {
       case 'webp':

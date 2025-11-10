@@ -154,7 +154,6 @@ export function CategoriesManagement({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
@@ -180,7 +179,6 @@ export function CategoriesManagement({
         </div>
       </div>
 
-      {/* Stats Card */}
       <Card>
         <CardHeader>
           <CardTitle>{t('total')}</CardTitle>
@@ -218,7 +216,6 @@ export function CategoriesManagement({
         </CardContent>
       </Card>
 
-      {/* Filters */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -230,7 +227,6 @@ export function CategoriesManagement({
           />
         </div>
 
-        {/* Language Filter */}
         <Select
           value={selectedLanguage}
           onValueChange={(value: 'vi' | 'en') => setSelectedLanguage(value)}
@@ -261,7 +257,6 @@ export function CategoriesManagement({
         </div>
       </div>
 
-      {/* Categories List */}
       <CategoryList
         categories={categoriesByLanguage}
         loading={loading}
@@ -270,7 +265,6 @@ export function CategoriesManagement({
         t={t}
       />
 
-      {/* Form Dialog */}
       <CategoryFormDialog
         open={showFormDialog}
         onOpenChange={setShowFormDialog}

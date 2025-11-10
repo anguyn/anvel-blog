@@ -35,14 +35,13 @@ export function DashboardLayoutClient({
     async function fetchSystemConfig() {
       try {
         const response = await fetch(`/api/system-config?lang=${locale}`, {
-          // cache: 'force-cache', // Cache ở browser
+          // cache: 'force-cache',
         });
 
         if (response.ok) {
           const result = await response.json();
           setSystemConfig(result.data);
         } else {
-          // Fallback config
           setSystemConfig({
             defaultTitle: 'Anvel',
             appName: 'Avnel - Blog & Snippet',
@@ -54,7 +53,6 @@ export function DashboardLayoutClient({
         }
       } catch (error) {
         console.error('Error fetching system config:', error);
-        // Use fallback
         setSystemConfig({
           defaultTitle: 'Anvel',
           appName: 'Avnel - Blog & Snippet',

@@ -84,7 +84,6 @@ export function GalleryManager({
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-semibold">Gallery Images</h3>
@@ -105,7 +104,6 @@ export function GalleryManager({
         </Button>
       </div>
 
-      {/* Empty State */}
       {images.length === 0 && (
         <div className="rounded-lg border-2 border-dashed p-8 text-center">
           <ImageIcon className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
@@ -125,7 +123,6 @@ export function GalleryManager({
         </div>
       )}
 
-      {/* Images Grid */}
       {images.length > 0 && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {images.map((image, index) => (
@@ -136,7 +133,6 @@ export function GalleryManager({
                 index === 0 && 'ring-primary ring-2',
               )}
             >
-              {/* Image */}
               <div className="bg-muted group relative aspect-video">
                 <img
                   src={image.url}
@@ -144,7 +140,6 @@ export function GalleryManager({
                   className="h-full w-full object-cover"
                 />
 
-                {/* Overlay Actions */}
                 <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                   {index !== 0 && (
                     <Button
@@ -168,7 +163,6 @@ export function GalleryManager({
                   </Button>
                 </div>
 
-                {/* Primary Badge */}
                 {index === 0 && (
                   <div className="bg-primary text-primary-foreground absolute top-2 left-2 flex items-center gap-1 rounded px-2 py-1 text-xs font-medium">
                     <Star className="h-3 w-3 fill-current" />
@@ -176,13 +170,11 @@ export function GalleryManager({
                   </div>
                 )}
 
-                {/* Position Indicator */}
                 <div className="absolute top-2 right-2 rounded bg-black/70 px-2 py-1 text-xs font-medium text-white">
                   {index + 1} / {images.length}
                 </div>
               </div>
 
-              {/* Caption Input */}
               <div className="space-y-2 p-3">
                 <Label className="text-xs">Caption (optional)</Label>
                 {editingCaption === image.id ? (
@@ -218,7 +210,6 @@ export function GalleryManager({
                 )}
               </div>
 
-              {/* Drag Handle (for future drag-drop implementation) */}
               <div className="flex items-center justify-between px-3 pb-3">
                 <div className="text-muted-foreground flex items-center gap-1 text-xs">
                   <GripVertical className="h-4 w-4" />

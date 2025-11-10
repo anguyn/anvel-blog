@@ -16,13 +16,11 @@ function TableToolbar({ editor, onClose }: TableToolbarProps) {
 
   useEffect(() => {
     const checkTableActive = () => {
-      // Check if cursor is inside table
       if (!editor.isActive('table')) {
         onClose();
       }
     };
 
-    // Subscribe to editor updates
     editor.on('update', checkTableActive);
     editor.on('selectionUpdate', checkTableActive);
 

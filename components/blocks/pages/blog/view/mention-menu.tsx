@@ -31,7 +31,6 @@ function getCaretPosition(
 } {
   const rect = element.getBoundingClientRect();
 
-  // Create a range at the mention start position
   const range = document.createRange();
   let charIndex = 0;
   let found = false;
@@ -49,7 +48,6 @@ function getCaretPosition(
       }
       charIndex += textLength;
     } else if (node.nodeType === Node.ELEMENT_NODE) {
-      // Skip mention spans
       if ((node as HTMLElement).classList?.contains('mention')) {
         const textLength = node.textContent?.length || 0;
         charIndex += textLength;
@@ -66,7 +64,6 @@ function getCaretPosition(
   traverse(element);
 
   if (!found) {
-    // Fallback to element position
     return {
       top: rect.top + window.scrollY,
       left: rect.left + window.scrollX,
@@ -103,7 +100,6 @@ export function MentionMenu({
       let top = coords.top + coords.height - 45;
       const left = coords.left;
 
-      // If menu would overflow viewport, show above cursor
       if (top + menuHeight > viewportHeight + window.scrollY) {
         top = coords.top - menuHeight - 4;
       }

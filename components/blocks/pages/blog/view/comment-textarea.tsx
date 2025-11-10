@@ -191,7 +191,6 @@ export const CommentTextarea = forwardRef<
         el.innerHTML = html;
         lastValueRef.current = value;
 
-        // Restore cursor position
         setTimeout(() => {
           if (ref && 'current' in ref && ref.current && cursorPos > 0) {
             ref.current.setSelectionRange(cursorPos, cursorPos);

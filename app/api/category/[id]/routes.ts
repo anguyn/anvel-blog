@@ -93,7 +93,6 @@ export async function PUT(
 
     const body = await request.json();
 
-    // Validate
     const schema = z.object({
       name: z.string().min(1, 'Name is required').max(100).optional(),
       slug: z.string().min(1).max(100).optional(),
@@ -107,7 +106,6 @@ export async function PUT(
       parentId: z.string().optional().nullable(),
       language: z.enum(['vi', 'en']).optional(),
       isActive: z.boolean().optional(),
-      // Translations
       translations: z
         .array(
           z.object({
@@ -122,7 +120,6 @@ export async function PUT(
 
     const data = schema.parse(body);
 
-    // Check slug conflict
     if (data.slug && data.slug !== existing.slug) {
       const slugExists = await prisma.category.findFirst({
         where: {
@@ -140,7 +137,6 @@ export async function PUT(
       }
     }
 
-    // Check parent reference
     if (data.parentId !== undefined) {
       if (data.parentId === id) {
         return NextResponse.json(
@@ -170,9 +166,7 @@ export async function PUT(
       }
     }
 
-    // Update category and translations in transaction
     const category = await prisma.$transaction(async tx => {
-      // Update main category
       const updated = await tx.category.update({
         where: { id },
         data: {
@@ -189,7 +183,6 @@ export async function PUT(
         },
       });
 
-      // Update translations if provided
       if (data.translations && data.translations.length > 0) {
         for (const trans of data.translations) {
           await tx.categoryTranslation.upsert({
@@ -227,7 +220,6 @@ export async function PUT(
       });
     });
 
-    // Log activity
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
@@ -312,12 +304,10 @@ export async function DELETE(
       );
     }
 
-    // Delete category (cascades to translations)
     await prisma.category.delete({
       where: { id },
     });
 
-    // Log activity
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 90);
 

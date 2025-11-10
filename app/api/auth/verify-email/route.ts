@@ -28,7 +28,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: t.auth.tokenInvalid }, { status: 400 });
     }
 
-    // Check if expired
     if (verificationToken.expires < new Date()) {
       await prisma.verificationToken.delete({ where: { token } });
       return NextResponse.json(
@@ -45,7 +44,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: t.auth.userNotFound }, { status: 404 });
     }
 
-    // Already verified
     if (user.emailVerified) {
       await prisma.verificationToken.delete({ where: { token } });
       return NextResponse.json({
@@ -55,7 +53,6 @@ export async function GET(request: Request) {
       });
     }
 
-    // Verify user
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -64,10 +61,8 @@ export async function GET(request: Request) {
       },
     });
 
-    // Delete token
     await prisma.verificationToken.delete({ where: { token } });
 
-    // Send welcome email
     try {
       await sendWelcomeEmail({
         email: user.email,
@@ -79,7 +74,6 @@ export async function GET(request: Request) {
       console.error('Failed to send welcome email:', error);
     }
 
-    // Log verification
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
@@ -130,7 +124,6 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      // Security: Don't reveal if email exists
       return NextResponse.json({
         success: true,
         message: t.auth.ifEmailExists,
@@ -144,12 +137,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Delete old tokens
     await prisma.verificationToken.deleteMany({
       where: { identifier: user.email },
     });
 
-    // Generate new token
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const tokenExpiry = new Date();
     tokenExpiry.setHours(tokenExpiry.getHours() + 24);
@@ -162,7 +153,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send email
     const verificationUrl = `${process.env.NEXTAUTH_URL}/${user.language || 'vi'}/verify-email?token=${verificationToken}`;
 
     const emailResult = await sendVerificationEmail({

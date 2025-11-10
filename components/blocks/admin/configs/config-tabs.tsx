@@ -85,7 +85,6 @@ export function ConfigTabs({ configs, features, metadata }: ConfigTabsProps) {
       </TabsList>
 
       <TabsContent value="configs" className="space-y-6">
-        {/* Search and Filter */}
         <div className="flex gap-4">
           <div className="relative flex-1">
             <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -111,7 +110,6 @@ export function ConfigTabs({ configs, features, metadata }: ConfigTabsProps) {
           </Select>
         </div>
 
-        {/* Configs by Category */}
         <div className="space-y-6">
           {Object.entries(filteredConfigs()).map(([category, items]) => (
             <ConfigCategory key={category} category={category} items={items} />

@@ -95,7 +95,6 @@ export function PostsListClient({
   );
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filter states
   const [statusFilter, setStatusFilter] = useState<PostStatus | 'all'>(
     (searchParams.get('status') as PostStatus) || 'all',
   );
@@ -106,7 +105,6 @@ export function PostsListClient({
     searchParams.get('categoryId') || 'all',
   );
 
-  // Load posts
   useEffect(() => {
     loadPosts();
   }, [searchParams]);
@@ -129,7 +127,6 @@ export function PostsListClient({
       if (type) params.set('type', type);
       if (categoryId) params.set('categoryId', categoryId);
 
-      // If not admin, only show own posts
       if (user.roleName !== 'ADMIN') {
         params.set('authorId', user.id);
       }
@@ -223,7 +220,6 @@ export function PostsListClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold">{t('title')}</h1>
@@ -241,7 +237,6 @@ export function PostsListClient({
         )}
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -298,11 +293,9 @@ export function PostsListClient({
         </Card>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
-            {/* Search & Toggle Filters */}
             <div className="flex flex-col gap-4 md:flex-row">
               <div className="relative flex-1">
                 <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
@@ -332,7 +325,6 @@ export function PostsListClient({
               )}
             </div>
 
-            {/* Advanced Filters */}
             {showFilters && (
               <div className="grid grid-cols-1 gap-4 border-t pt-4 md:grid-cols-3">
                 <div className="space-y-2">
@@ -426,7 +418,6 @@ export function PostsListClient({
         </CardContent>
       </Card>
 
-      {/* Posts Table */}
       <Card>
         <Table>
           <TableHeader>
@@ -567,7 +558,6 @@ export function PostsListClient({
           </TableBody>
         </Table>
 
-        {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="flex items-center justify-between border-t px-6 py-4">
             <div className="text-muted-foreground text-sm">

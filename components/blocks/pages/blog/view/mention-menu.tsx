@@ -100,7 +100,7 @@ export function MentionMenu({
       const viewportHeight = window.innerHeight;
       const menuHeight = Math.min(192, users.length * 60);
 
-      let top = coords.top + coords.height + 4;
+      let top = coords.top + coords.height - 45;
       const left = coords.left;
 
       // If menu would overflow viewport, show above cursor

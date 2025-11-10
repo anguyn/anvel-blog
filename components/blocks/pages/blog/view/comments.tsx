@@ -114,42 +114,25 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
       const comment = comments[index];
       if (!comment) return 150;
 
-      // Base height: avatar + padding + actions
-      let height = 80;
+      let height = 120;
+      height += Math.ceil(comment.content.length / 50) * 20;
 
-      // Content height (ước tính ~20px mỗi 60 ký tự)
-      const contentLines = Math.max(1, Math.ceil(comment.content.length / 60));
-      height += contentLines * 24;
-
-      // Sticker
       if (comment.sticker) {
-        height += 120;
+        height += 100;
       }
 
-      // Mentions và metadata
-      if (comment.mentions?.length > 0) {
-        height += 20;
-      }
-
-      // Replies
       if (comment.replies && comment.replies.length > 0) {
         comment.replies.forEach(reply => {
-          let replyHeight = 70; // Base reply height
-          const replyLines = Math.max(1, Math.ceil(reply.content.length / 60));
-          replyHeight += replyLines * 24;
-
-          if (reply.sticker) replyHeight += 120;
+          let replyHeight = 100;
+          replyHeight += Math.ceil(reply.content.length / 50) * 20;
+          if (reply.sticker) replyHeight += 100;
           height += replyHeight;
         });
       }
 
-      // "Load more replies" button
       if (comment.hasMoreReplies) {
-        height += 48;
+        height += 40;
       }
-
-      // Padding giữa các comments
-      height += 24;
 
       return height;
     },
@@ -160,11 +143,11 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
     count: comments.length,
     getScrollElement: () => parentRef.current?.parentElement || null,
     estimateSize: estimateCommentHeight,
-    overscan: 3, // Tăng overscan lên một chút
-    measureElement: element => {
-      const height = element?.getBoundingClientRect().height;
-      return height || 150; // Fallback nếu không đo được
-    },
+    overscan: 2,
+    measureElement:
+      typeof window !== 'undefined' && 'ResizeObserver' in window
+        ? element => element?.getBoundingClientRect().height
+        : undefined,
   });
 
   const insertMention = useCallback(
@@ -281,12 +264,6 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
       await createComment(newComment, { mentions });
       setNewComment('');
       setConfirmedMentions([]);
-
-      // Đợi một chút để DOM update xong
-      setTimeout(() => {
-        rowVirtualizer.measure(); // Force đo lại
-      }, 100);
-
       toast.success('Đã đăng bình luận!');
     } catch (error) {
       if (error instanceof Error) toast.error(error.message);
@@ -407,19 +384,6 @@ function BlogCommentsComponent({ postId, locale }: BlogCommentsProps) {
 
     return () => observer.disconnect();
   }, [hasMore, isLoading, isLoadingMore, loadMoreSentinelRef?.current]);
-
-  useEffect(() => {
-    // Khi có comment mới, đo lại tất cả items
-    rowVirtualizer.measure();
-  }, [comments.length, rowVirtualizer]);
-
-  useEffect(() => {
-  if (!isLoadingMore) {
-    requestAnimationFrame(() => {
-      rowVirtualizer.measure();
-    });
-  }
-}, [isLoadingMore]);
 
   return (
     <>

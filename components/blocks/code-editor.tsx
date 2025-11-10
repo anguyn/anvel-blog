@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
-import { vscodeDark } from '@uiw/codemirror-theme-vscode';
+import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
 import { javascript } from '@codemirror/lang-javascript';
 import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
@@ -63,7 +63,7 @@ export function CodeEditor({
       <CodeMirror
         value={value}
         height={height}
-        theme={resolvedTheme == 'dark' ? vscodeDark : 'light'}
+        theme={resolvedTheme == 'dark' ? vscodeDark : vscodeLight}
         extensions={[getLanguageExtension(language)]}
         onChange={onChange}
         placeholder={t('editorEnterCode')}

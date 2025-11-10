@@ -11,11 +11,15 @@ import {
 } from '@/components/common/card';
 import { CopyButton } from '@/components/custom/copy-button';
 import { Snippet } from '@/types';
-import { formatDate, getLanguageColor } from '@/libs/utils';
+import { formatDate, getLanguageColor, normalizeLanguage } from '@/libs/utils';
 import { Eye, Heart, Calendar, Code, User, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import {
+  vscDarkPlus,
+  oneLight,
+} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useTheme } from 'next-themes';
 import { useCurrentUser } from '@/libs/hooks/use-current-user';
 import { DeleteSnippetDialog } from '@/components/blocks/delete-snippet-dialog';
 import { cn } from '@/libs/utils';
@@ -56,9 +60,11 @@ export function SnippetViewBlock({
 }: SnippetViewBlockProps) {
   const languageColor = getLanguageColor(snippet.language.name);
   const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/${locale}/snippets/${snippet.slug}`;
+
   const { user } = useCurrentUser();
   const router = useRouter();
   const tC = useTranslations('common');
+  const { resolvedTheme } = useTheme();
 
   const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
   const [favoriteCount, setFavoriteCount] = useState(
@@ -228,8 +234,8 @@ export function SnippetViewBlock({
           <CardContent className="p-0">
             <div className="code-block">
               <SyntaxHighlighter
-                language={snippet.language.name}
-                style={vscDarkPlus}
+                language={normalizeLanguage(snippet.language?.name)}
+                style={resolvedTheme === 'dark' ? vscDarkPlus : oneLight}
                 customStyle={{
                   margin: 0,
                   borderRadius: '0 0 0.5rem 0.5rem',

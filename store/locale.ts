@@ -40,7 +40,7 @@ export const useLocaleStore = create<LocaleState>()(
       setHydrated: (isHydrated: boolean) => set({ isHydrated }),
     }),
     {
-      name: 'bus-locale',
+      name: 'blog-locale',
       storage: createJSONStorage(() => localStorage),
       partialize: state => ({ locale: state.locale }),
       skipHydration: true,

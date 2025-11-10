@@ -334,7 +334,7 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
         children: [
           {
             title: 'Blog Types',
-            href: '/admin/bus-types',
+            href: '/admin/blog-types',
             icon: Car,
           },
           {
@@ -345,7 +345,7 @@ export function DashboardSidebar({ systemConfig }: DashboardSidebarProps) {
           },
           {
             title: 'Blog Stops',
-            href: '/admin/bus-stops',
+            href: '/admin/blog-stops',
             icon: MapPin,
             badge: '287',
           },

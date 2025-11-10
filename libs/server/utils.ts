@@ -64,10 +64,6 @@ interface PostAccessPayload {
   slug: string;
 }
 
-/**
- * Verify if user has access to password-protected post
- * Token can be reused multiple times within 24 hours
- */
 export async function verifyPostAccess(
   slug: string,
 ): Promise<{ hasAccess: boolean; payload?: PostAccessPayload }> {
@@ -103,9 +99,6 @@ export async function verifyPostAccess(
   }
 }
 
-/**
- * Clear post access token (optional - for manual logout)
- */
 export async function clearPostAccess(slug: string): Promise<void> {
   try {
     const cookieStore = await cookies();

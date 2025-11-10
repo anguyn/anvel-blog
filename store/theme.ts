@@ -55,48 +55,50 @@ const setThemeCookie = (theme: ThemeMode) => {
 
 export const useThemeStore = create<ThemeState>()(
   persist(
-    (set, get) => ({
-      theme: 'system',
-      resolvedTheme: 'light',
-      isHydrated: false,
+    (set, get) => {
+      const resolvedTheme = resolveTheme('system');
 
-      get isDark() {
-        return get().resolvedTheme === 'dark';
-      },
+      return {
+        theme: 'system',
+        resolvedTheme,
+        isHydrated: false,
+        isDark: resolvedTheme === 'dark',
+        isLight: resolvedTheme === 'light',
 
-      get isLight() {
-        return get().resolvedTheme === 'light';
-      },
+        setTheme: (theme: ThemeMode) => {
+          const resolvedTheme = resolveTheme(theme);
 
-      setTheme: (theme: ThemeMode) => {
-        const resolvedTheme = resolveTheme(theme);
+          applyThemeToDOM(resolvedTheme);
+          setThemeCookie(theme);
 
-        applyThemeToDOM(resolvedTheme);
+          set({
+            theme,
+            resolvedTheme,
+            isDark: resolvedTheme === 'dark',
+            isLight: resolvedTheme === 'light',
+          });
+        },
 
-        setThemeCookie(theme);
+        toggleTheme: () => {
+          const { theme, resolvedTheme } = get();
+          let newTheme: ThemeMode;
 
-        set({ theme, resolvedTheme });
-      },
+          if (theme === 'system') {
+            newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+          } else {
+            newTheme = theme === 'dark' ? 'light' : 'dark';
+          }
 
-      toggleTheme: () => {
-        const { theme, resolvedTheme } = get();
-        let newTheme: ThemeMode;
+          get().setTheme(newTheme);
+        },
 
-        if (theme === 'system') {
-          newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
-        } else {
-          newTheme = theme === 'dark' ? 'light' : 'dark';
-        }
-
-        get().setTheme(newTheme);
-      },
-
-      setHydrated: (isHydrated: boolean) => {
-        set({ isHydrated });
-      },
-    }),
+        setHydrated: (isHydrated: boolean) => {
+          set({ isHydrated });
+        },
+      };
+    },
     {
-      name: 'bus-theme',
+      name: 'blog-theme',
       storage: createJSONStorage(() => localStorage),
       partialize: state => ({ theme: state.theme }),
       skipHydration: true,

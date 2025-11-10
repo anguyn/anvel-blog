@@ -105,13 +105,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       });
 
       newSocket.on('connect', () => {
-        console.log('✅ Socket connected:', newSocket.id);
+        // console.log('✅ Socket connected:', newSocket.id);
         setIsConnected(true);
         reconnectAttempts.current = 0;
       });
 
       newSocket.on('disconnect', reason => {
-        console.log('❌ Socket disconnected:', reason);
+        // console.log('❌ Socket disconnected:', reason);
         setIsConnected(false);
         if (reason === 'io server disconnect') {
           reconnectTimeoutRef.current = setTimeout(() => {
@@ -127,21 +127,21 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       });
 
       newSocket.on('connect_error', error => {
-        console.error('Socket connection error:', error);
+        // console.error('Socket connection error:', error);
         reconnectAttempts.current++;
 
         if (reconnectAttempts.current >= maxReconnectAttempts) {
-          console.error('Max reconnection attempts reached');
+          // console.error('Max reconnection attempts reached');
           newSocket.disconnect();
         }
       });
 
       newSocket.on('error', error => {
-        console.error('Socket error:', error);
+        // console.error('Socket error:', error);
       });
 
       newSocket.on('system:message', data => {
-        console.log('System message:', data);
+        // console.log('System message:', data);
       });
 
       setSocket(newSocket);
@@ -152,7 +152,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       if (status === 'unauthenticated' && socketRef.current) {
-        console.log('🔌 Cleaning up socket on logout');
+        // console.log('🔌 Cleaning up socket on logout');
         socketRef.current.disconnect();
         socketRef.current = null;
         setSocket(null);

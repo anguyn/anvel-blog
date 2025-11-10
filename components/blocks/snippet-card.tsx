@@ -8,11 +8,19 @@ import {
   CardHeader,
 } from '@/components/common/card';
 import { Badge } from '@/components/common/badge';
-import { formatDate, getLanguageColor, truncateCode } from '@/libs/utils';
+import {
+  getLanguageColor,
+  normalizeLanguage,
+  truncateCode,
+} from '@/libs/utils';
 import { Eye, Heart, User } from 'lucide-react';
 import Link from 'next/link';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import {
+  vscDarkPlus,
+  oneLight,
+} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useTheme } from 'next-themes';
 
 interface SnippetCardProps {
   snippet: Snippet;
@@ -21,6 +29,7 @@ interface SnippetCardProps {
 
 export function SnippetCard({ snippet, locale }: SnippetCardProps) {
   const languageColor = getLanguageColor(snippet.language?.name || 'other');
+  const { resolvedTheme } = useTheme();
 
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-lg">
@@ -48,8 +57,8 @@ export function SnippetCard({ snippet, locale }: SnippetCardProps) {
       <CardContent className="flex flex-1 flex-col pb-3">
         <div className="code-block flex-1">
           <SyntaxHighlighter
-            language={snippet.language?.name || 'other'}
-            style={vscDarkPlus}
+            language={normalizeLanguage(snippet.language?.name)}
+            style={resolvedTheme === 'dark' ? vscDarkPlus : oneLight}
             customStyle={{
               margin: 0,
               borderRadius: '0.5rem',

@@ -262,3 +262,145 @@ export function formatTimeAgo(date: string | Date): string {
     minute: '2-digit',
   });
 }
+
+export function normalizeLanguage(lang?: string): string {
+  if (!lang) return 'text';
+
+  const languageMap: Record<string, string> = {
+    // JavaScript & TypeScript
+    javascript: 'javascript',
+    js: 'javascript',
+    typescript: 'typescript',
+    ts: 'typescript',
+    jsx: 'jsx',
+    tsx: 'tsx',
+
+    // Web
+    html: 'markup',
+    xml: 'markup',
+    svg: 'markup',
+    css: 'css',
+    scss: 'scss',
+    sass: 'sass',
+    less: 'less',
+
+    // Backend
+    python: 'python',
+    py: 'python',
+    java: 'java',
+    c: 'c',
+    'c++': 'cpp',
+    cpp: 'cpp',
+    'c#': 'csharp',
+    csharp: 'csharp',
+    cs: 'csharp',
+    php: 'php',
+    ruby: 'ruby',
+    rb: 'ruby',
+    go: 'go',
+    golang: 'go',
+    rust: 'rust',
+    rs: 'rust',
+    swift: 'swift',
+    kotlin: 'kotlin',
+    kt: 'kotlin',
+    scala: 'scala',
+
+    // Shell & Scripts
+    bash: 'bash',
+    sh: 'bash',
+    shell: 'bash',
+    powershell: 'powershell',
+    ps1: 'powershell',
+    batch: 'batch',
+    cmd: 'batch',
+
+    // Data & Config
+    json: 'json',
+    yaml: 'yaml',
+    yml: 'yaml',
+    toml: 'toml',
+    csv: 'csv',
+    ini: 'ini',
+
+    // Database
+    sql: 'sql',
+    mysql: 'sql',
+    postgresql: 'sql',
+    postgres: 'sql',
+    plsql: 'plsql',
+    mongodb: 'javascript',
+
+    // Markup & Documentation
+    markdown: 'markdown',
+    md: 'markdown',
+    latex: 'latex',
+    tex: 'latex',
+    rst: 'rest',
+
+    // Mobile
+    dart: 'dart',
+    objectivec: 'objectivec',
+    'objective-c': 'objectivec',
+    objc: 'objectivec',
+
+    // Functional
+    haskell: 'haskell',
+    hs: 'haskell',
+    elixir: 'elixir',
+    ex: 'elixir',
+    erlang: 'erlang',
+    erl: 'erlang',
+    clojure: 'clojure',
+    clj: 'clojure',
+    fsharp: 'fsharp',
+    'f#': 'fsharp',
+    fs: 'fsharp',
+    ocaml: 'ocaml',
+    ml: 'ocaml',
+
+    // Other Popular
+    r: 'r',
+    matlab: 'matlab',
+    julia: 'julia',
+    perl: 'perl',
+    pl: 'perl',
+    lua: 'lua',
+    groovy: 'groovy',
+    vim: 'vim',
+    makefile: 'makefile',
+    make: 'makefile',
+    dockerfile: 'docker',
+    docker: 'docker',
+    nginx: 'nginx',
+    apache: 'apacheconf',
+
+    // Query & Template
+    graphql: 'graphql',
+    gql: 'graphql',
+    handlebars: 'handlebars',
+    hbs: 'handlebars',
+    mustache: 'mustache',
+    pug: 'pug',
+    jade: 'pug',
+    ejs: 'ejs',
+
+    // Misc
+    diff: 'diff',
+    git: 'git',
+    regex: 'regex',
+    wasm: 'wasm',
+    webassembly: 'wasm',
+    solidity: 'solidity',
+    sol: 'solidity',
+    prisma: 'prisma',
+
+    text: 'text',
+    plain: 'text',
+    txt: 'text',
+    other: 'text',
+  };
+
+  const normalized = lang.toLowerCase().trim();
+  return languageMap[normalized] || 'text';
+}

@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
       prisma.user.count({ where }),
     ]);
 
-    // Remove sensitive data
     const sanitizedUsers = users.map(user => ({
       ...user,
       password: undefined,
@@ -92,7 +91,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createUserSchema.parse(body);
 
-    // Check if email exists
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -111,11 +109,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password
     const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-    // Get default role if not specified
     let roleId = validatedData.roleId;
     if (!roleId) {
       const defaultRole = await prisma.role.findUnique({
@@ -129,14 +125,13 @@ export async function POST(request: NextRequest) {
         ...validatedData,
         password: hashedPassword,
         roleId,
-        emailVerified: new Date(), // Admin-created users are auto-verified
+        emailVerified: new Date(),
       },
       include: {
         role: true,
       },
     });
 
-    // Log activity
     await prisma.activityLog.create({
       data: {
         userId: session.user.id,

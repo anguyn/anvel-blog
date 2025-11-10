@@ -1,4 +1,3 @@
-// Chưa translate
 import { NextResponse } from 'next/server';
 import { prisma } from '@/libs/prisma';
 import { getApiTranslations } from '@/i18n/i18n';
@@ -60,10 +59,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
-    // Parse body
     const body = await request.json();
 
-    // Validate
     const schema = z.object({
       name: z.string().min(1, 'Name is required').max(50),
       slug: z.string().min(1).max(50).optional(),
@@ -78,7 +75,6 @@ export async function POST(request: Request) {
 
     const data = schema.parse(body);
 
-    // Generate slug if not provided
     const slug =
       data.slug ||
       data.name
@@ -88,7 +84,6 @@ export async function POST(request: Request) {
         .replace(/-+/g, '-')
         .trim();
 
-    // Check if slug already exists
     const existing = await prisma.tag.findUnique({
       where: { slug },
     });
@@ -100,7 +95,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create tag
     const tag = await prisma.tag.create({
       data: {
         name: data.name,

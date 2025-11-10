@@ -385,7 +385,6 @@ export function SecuritySettingsForm({
         </CardContent>
       </Card>
 
-      {/* Two-Factor Authentication Card */}
       <Card className="pt-6">
         <CardContent className="p-6">
           <motion.div
@@ -461,7 +460,6 @@ export function SecuritySettingsForm({
         </CardContent>
       </Card>
 
-      {/* Active Sessions Card */}
       <Card className="pt-6">
         <CardContent className="p-6">
           <motion.div
@@ -553,7 +551,6 @@ export function SecuritySettingsForm({
         </CardContent>
       </Card>
 
-      {/* Security Features (Coming Soon) */}
       <Card className="pt-6">
         <CardContent className="p-6">
           <motion.div

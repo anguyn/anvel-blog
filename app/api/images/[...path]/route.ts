@@ -13,17 +13,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { path } = await params;
     const imagePath = path.join('/');
 
-    // Validate path to prevent directory traversal
     if (imagePath.includes('..') || imagePath.includes('\\')) {
       return new NextResponse('Invalid path', { status: 400 });
     }
 
-    // Construct R2 URL
     const r2Url = `${process.env.R2_PUBLIC_URL}/${imagePath}`;
 
-    // Fetch from R2
     const response = await fetch(r2Url, {
-      // Cache for 1 year
       cf: {
         cacheTtl: 31536000,
         cacheEverything: true,
@@ -34,11 +30,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return new NextResponse('Image not found', { status: 404 });
     }
 
-    // Get image data
     const imageData = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') || 'image/jpeg';
 
-    // Return with proper headers
     return new NextResponse(imageData, {
       status: 200,
       headers: {

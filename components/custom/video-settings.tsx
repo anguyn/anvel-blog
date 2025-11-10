@@ -107,7 +107,6 @@ export function VideoSettings({
 
   return (
     <div className="space-y-6">
-      {/* Video Source Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 font-semibold">
@@ -138,13 +137,11 @@ export function VideoSettings({
           </div>
         </div>
 
-        {/* Upload Mode */}
         {mode === 'upload' && (
           <div className="space-y-4">
             {video ? (
               <div className="bg-card rounded-lg border p-4">
                 <div className="flex items-start gap-4">
-                  {/* Video Preview */}
                   <div className="bg-muted relative h-20 w-32 flex-shrink-0 overflow-hidden rounded">
                     {thumbnail ? (
                       <img
@@ -159,7 +156,6 @@ export function VideoSettings({
                     )}
                   </div>
 
-                  {/* Video Info */}
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{video.filename}</p>
                     <p className="text-muted-foreground text-sm">
@@ -179,7 +175,6 @@ export function VideoSettings({
                     </a>
                   </div>
 
-                  {/* Remove Button */}
                   <Button
                     type="button"
                     variant="ghost"
@@ -224,7 +219,6 @@ export function VideoSettings({
           </div>
         )}
 
-        {/* URL Mode */}
         {mode === 'url' && (
           <div className="space-y-2">
             <Label htmlFor="video-url">
@@ -245,7 +239,6 @@ export function VideoSettings({
         )}
       </div>
 
-      {/* Thumbnail Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 font-semibold">
@@ -257,7 +250,6 @@ export function VideoSettings({
         {thumbnail ? (
           <div className="bg-card rounded-lg border p-4">
             <div className="flex items-start gap-4">
-              {/* Thumbnail Preview */}
               <div className="bg-muted relative h-20 w-32 flex-shrink-0 overflow-hidden rounded">
                 <img
                   src={thumbnail}
@@ -266,7 +258,6 @@ export function VideoSettings({
                 />
               </div>
 
-              {/* Thumbnail Info */}
               <div className="min-w-0 flex-1">
                 <p className="font-medium">Thumbnail uploaded</p>
                 <p className="text-muted-foreground text-sm">
@@ -274,7 +265,6 @@ export function VideoSettings({
                 </p>
               </div>
 
-              {/* Remove Button */}
               <Button
                 type="button"
                 variant="ghost"
@@ -318,7 +308,6 @@ export function VideoSettings({
         )}
       </div>
 
-      {/* Duration (optional) */}
       <div className="space-y-2">
         <Label htmlFor="video-duration">
           Duration (minutes){' '}

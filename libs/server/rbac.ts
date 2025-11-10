@@ -33,7 +33,6 @@ export async function hasAnyPermission(
 
   const userPermissions = session.user.permissions || [];
 
-  // Admin has all permissions
   if (session.user.roleName === 'ADMIN') return true;
 
   return permissions.some(p => userPermissions.includes(p));
@@ -51,7 +50,6 @@ export async function hasAllPermissions(
 
   const userPermissions = session.user.permissions || [];
 
-  // Admin has all permissions
   if (session.user.roleName === 'ADMIN') return true;
 
   return permissions.every(p => userPermissions.includes(p));
@@ -96,20 +94,14 @@ export async function canPerformAction(
 
   if (!session?.user) return false;
 
-  // Check if user has the permission
   const hasPermissionResult = await hasPermission(permission);
 
-  // If no resourceUserId provided, just check permission
   if (!resourceUserId) {
     return hasPermissionResult;
   }
 
-  // Check ownership
   const isOwner = await isResourceOwner(resourceUserId);
 
-  // User can perform action if:
-  // 1. They have the general permission (e.g., "posts:manage"), OR
-  // 2. They are the owner and have the basic permission (e.g., "posts:update")
   const hasManagePermission = await hasPermission(
     permission.replace(/:(update|delete)$/, ':manage'),
   );

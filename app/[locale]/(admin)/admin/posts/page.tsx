@@ -35,7 +35,6 @@ export default async function AdminPostsPage({
     redirect(`/${locale}/forbidden`);
   }
 
-  // Get categories for filter
   const categories = await prisma.category.findMany({
     where: { isActive: true },
     orderBy: { name: 'asc' },
@@ -46,7 +45,6 @@ export default async function AdminPostsPage({
     },
   });
 
-  // Get tags for filter
   const tags = await prisma.tag.findMany({
     orderBy: { name: 'asc' },
     take: 50,
@@ -57,7 +55,6 @@ export default async function AdminPostsPage({
     },
   });
 
-  // Check permissions for actions
   const canCreate = await hasPermission(Permissions.POSTS_CREATE);
   const canUpdate = await hasPermission(Permissions.POSTS_UPDATE);
   const canDelete = await hasPermission(Permissions.POSTS_DELETE);

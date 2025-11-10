@@ -22,9 +22,7 @@ export function ArticleLayout({
 }: ArticleLayoutProps) {
   return (
     <article className="mx-auto">
-      {/* Header */}
       <header className="mb-8">
-        {/* Category */}
         {post.category && (
           <div className="mb-4">
             <span className="bg-primary/10 text-primary inline-block rounded-full px-3 py-1 text-sm font-medium">
@@ -33,19 +31,15 @@ export function ArticleLayout({
           </div>
         )}
 
-        {/* Title */}
         <h1 className="mb-4 text-4xl leading-tight font-bold md:text-5xl">
           {post.title}
         </h1>
 
-        {/* Excerpt */}
         {post.excerpt && (
           <p className="text-muted-foreground mb-6 text-xl">{post.excerpt}</p>
         )}
 
-        {/* Meta Info */}
         <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
-          {/* Author */}
           <div className="flex items-center gap-2">
             {post.author.image && (
               <Image
@@ -65,7 +59,6 @@ export function ArticleLayout({
 
           <span className="text-border">•</span>
 
-          {/* Published Date */}
           {post.publishedAt && (
             <>
               <div className="flex items-center gap-1">
@@ -80,7 +73,6 @@ export function ArticleLayout({
             </>
           )}
 
-          {/* Reading Time */}
           {post.readingTime && (
             <>
               <div className="flex items-center gap-1">
@@ -91,14 +83,12 @@ export function ArticleLayout({
             </>
           )}
 
-          {/* Views */}
           <div className="flex items-center gap-1">
             <Eye className="h-4 w-4" />
             <span>{post.viewCount} views</span>
           </div>
         </div>
 
-        {/* Tags */}
         {post.tags && post.tags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {post.tags.map(postTag => (
@@ -113,7 +103,6 @@ export function ArticleLayout({
         )}
       </header>
 
-      {/* Featured Image */}
       {post.featuredImage && (
         <div className="mb-8 overflow-hidden rounded-lg">
           <Image
@@ -127,7 +116,6 @@ export function ArticleLayout({
         </div>
       )}
 
-      {/* Action Bar */}
       <div className="bg-background/95 sticky top-0 z-10 mb-8 flex items-center justify-between border-y py-3 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <Button
@@ -158,15 +146,12 @@ export function ArticleLayout({
         </Button>
       </div>
 
-      {/* Content */}
       <div
         className="prose prose-lg prose-slate dark:prose-invert mb-12 max-w-none"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      {/* Footer */}
       <footer className="border-t pt-8">
-        {/* Author Bio */}
         <div className="mb-8 flex items-start gap-4">
           {post.author.image && (
             <Image
@@ -189,7 +174,6 @@ export function ArticleLayout({
           </div>
         </div>
 
-        {/* Share Again */}
         <div className="flex items-center justify-center gap-4 border-y py-6">
           <span className="text-muted-foreground text-sm">
             Enjoyed this article?

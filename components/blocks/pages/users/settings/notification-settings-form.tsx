@@ -41,17 +41,14 @@ export function NotificationsSettingsForm({
   const [newFollower, setNewFollower] = useState(true);
   const [mentionInComment, setMentionInComment] = useState(true);
 
-  // Push Notifications
   const [pushNotifications, setPushNotifications] = useState(
     user.pushNotifications ?? true,
   );
 
-  // Marketing
   const [marketingEmails, setMarketingEmails] = useState(false);
   const [weeklyDigest, setWeeklyDigest] = useState(true);
   const [productUpdates, setProductUpdates] = useState(true);
 
-  // Summary frequency
   const [summaryFrequency, setSummaryFrequency] = useState('daily');
 
   const handleToggle = async (key: string, value: boolean) => {
@@ -271,7 +268,6 @@ export function NotificationsSettingsForm({
                 />
               </div>
 
-              {/* Weekly Digest */}
               <div className="flex items-center justify-between border-b border-[var(--color-border)] py-3">
                 <div className="flex items-center gap-3">
                   <Mail className="h-4 w-4 text-[var(--color-muted-foreground)]" />
@@ -293,7 +289,6 @@ export function NotificationsSettingsForm({
                 />
               </div>
 
-              {/* Product Updates */}
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
                   <TrendingUp className="h-4 w-4 text-[var(--color-muted-foreground)]" />

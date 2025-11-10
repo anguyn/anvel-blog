@@ -39,7 +39,7 @@ export async function GET(
           },
         },
         username: {
-          startsWith: sanitizedQuery, // Exact prefix match for username
+          startsWith: sanitizedQuery,
           mode: 'insensitive',
         },
       },

@@ -99,7 +99,6 @@ export default function ColorPicker({
         </button>
       </div>
 
-      {/* Default Colors */}
       <div className="mb-4">
         <p className="mb-2 text-xs font-medium text-[var(--color-muted-foreground)]">
           Default Colors
@@ -124,7 +123,6 @@ export default function ColorPicker({
         </div>
       </div>
 
-      {/* Custom Color Input */}
       <div className="mb-4">
         <p className="mb-2 text-xs font-medium text-[var(--color-muted-foreground)]">
           Custom Color
@@ -153,7 +151,6 @@ export default function ColorPicker({
         </div>
       </div>
 
-      {/* Saved Colors */}
       {savedColors.length > 0 && (
         <div className="mb-4">
           <p className="mb-2 text-xs font-medium text-[var(--color-muted-foreground)]">
@@ -189,7 +186,6 @@ export default function ColorPicker({
         </div>
       )}
 
-      {/* Actions */}
       <div className="flex gap-2">
         <button
           onClick={handleSaveColor}

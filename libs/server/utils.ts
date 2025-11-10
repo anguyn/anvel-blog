@@ -79,10 +79,8 @@ export async function verifyPostAccess(
       return { hasAccess: false };
     }
 
-    // Verify JWT - checks signature and expiration
     const { payload } = await jwtVerify(token, JWT_SECRET);
 
-    // Type guard: validate payload has required fields
     if (
       typeof payload.slug !== 'string' ||
       typeof payload.postId !== 'string'
@@ -91,7 +89,6 @@ export async function verifyPostAccess(
       return { hasAccess: false };
     }
 
-    // Verify the token is for the correct post
     if (payload.slug !== slug) {
       return { hasAccess: false };
     }
@@ -101,7 +98,6 @@ export async function verifyPostAccess(
       payload: payload as unknown as PostAccessPayload,
     };
   } catch (error) {
-    // Token expired, invalid signature, or malformed
     console.error('Token verification failed:', error);
     return { hasAccess: false };
   }

@@ -60,7 +60,6 @@ export function validatePassword(
   }
 
   if (/(.)\1{2,}/.test(password)) {
-    // Repeated characters
     score -= 10;
   }
 

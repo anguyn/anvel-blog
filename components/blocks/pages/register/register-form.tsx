@@ -146,7 +146,6 @@ export function RegisterForm({ locale, translations }: RegisterFormProps) {
         return;
       }
 
-      // Show success dialog
       setRegisteredEmail(data.email);
       setShowSuccessDialog(true);
       setResendTimer(180); // 3 minutes cooldown
@@ -194,7 +193,6 @@ export function RegisterForm({ locale, translations }: RegisterFormProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Password strength checks
   const passwordChecks = {
     length: password.length >= 8,
     uppercase: /[A-Z]/.test(password),
@@ -229,7 +227,6 @@ export function RegisterForm({ locale, translations }: RegisterFormProps) {
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Name */}
         <div className="space-y-2">
           <Label htmlFor="name" className="text-sm font-medium">
             {translations.name} <span className="text-red-400">*</span>
@@ -246,7 +243,6 @@ export function RegisterForm({ locale, translations }: RegisterFormProps) {
           )}
         </div>
 
-        {/* Email */}
         <div className="space-y-2">
           <Label htmlFor="email" className="text-sm font-medium">
             {translations.email} <span className="text-red-400">*</span>
@@ -264,7 +260,6 @@ export function RegisterForm({ locale, translations }: RegisterFormProps) {
           )}
         </div>
 
-        {/* Password */}
         <div className="space-y-2">
           <Label htmlFor="password" className="text-sm font-medium">
             {translations.password} <span className="text-red-400">*</span>
@@ -325,7 +320,6 @@ export function RegisterForm({ locale, translations }: RegisterFormProps) {
           )}
         </div>
 
-        {/* Confirm Password */}
         <div className="space-y-2">
           <Label htmlFor="confirmPassword" className="text-sm font-medium">
             {translations.confirmPassword}{' '}
@@ -359,13 +353,11 @@ export function RegisterForm({ locale, translations }: RegisterFormProps) {
           )}
         </div>
 
-        {/* Submit */}
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {translations.createAccount}
         </Button>
 
-        {/* Footer */}
         <div className="text-center text-sm">
           <span className="text-muted-foreground">
             {translations.alreadyHaveAccount}{' '}
@@ -379,7 +371,6 @@ export function RegisterForm({ locale, translations }: RegisterFormProps) {
         </div>
       </form>
 
-      {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

@@ -3,15 +3,11 @@ import { PostService } from '@/libs/services/post.service';
 import { PostStatus, PostType, PostVisibility } from '@prisma/client';
 import type { PostFilters, PostSortOptions } from '@/types/post.types';
 
-// ============================================
 // GET /api/posts
-// ============================================
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
 
-    // Parse filters
     const filters: PostFilters = {};
 
     const statusParam = searchParams.get('status');
@@ -69,7 +65,6 @@ export async function GET(request: NextRequest) {
       filters.isPinned = isPinned === 'true';
     }
 
-    // Parse sorting
     const sortField = searchParams.get('sortField') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const sort: PostSortOptions = {
@@ -77,11 +72,9 @@ export async function GET(request: NextRequest) {
       order: sortOrder as 'asc' | 'desc',
     };
 
-    // Parse pagination
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
 
-    // Get posts
     const result = await PostService.getPostList({
       filters,
       sort,

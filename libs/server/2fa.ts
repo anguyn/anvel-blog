@@ -1,11 +1,9 @@
-// libs/2fa.ts
 import { authenticator } from 'otplib';
 import crypto from 'crypto';
 import QRCode from 'qrcode';
 
-// Cấu hình TOTP
 authenticator.options = {
-  window: 1, // Allow 1 step before/after (30s window each side)
+  window: 1,
 };
 
 export async function generate2FASecret(
@@ -15,7 +13,6 @@ export async function generate2FASecret(
   const secret = authenticator.generateSecret();
   const otpauthUrl = authenticator.keyuri(email, appName, secret);
 
-  // Generate QR code
   const qrCode = await QRCode.toDataURL(otpauthUrl);
 
   return { secret, qrCode, otpauthUrl };
@@ -52,7 +49,6 @@ export async function verifyBackupCode(
   return bcrypt.compare(code, hashedCode);
 }
 
-// Encrypt secret before storing (recommended)
 export function encryptSecret(secret: string, key: string): string {
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(

@@ -35,7 +35,6 @@ export async function getUsers(
 
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {};
 
     if (search) {
@@ -54,7 +53,6 @@ export async function getUsers(
       where.roleId = roleId;
     }
 
-    // Get users with pagination
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
@@ -152,7 +150,6 @@ export async function createUser(
   try {
     const session = await requirePermission('users:manage');
 
-    // Validate email uniqueness
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -177,13 +174,11 @@ export async function createUser(
       }
     }
 
-    // Hash password if provided
     let hashedPassword: string | undefined;
     if (data.password) {
       hashedPassword = await bcrypt.hash(data.password, 10);
     }
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         name: data.name,
@@ -193,7 +188,7 @@ export async function createUser(
         roleId: data.roleId || null,
         status: data.status,
         bio: data.bio || null,
-        emailVerified: new Date(), // Auto-verify admin-created users
+        emailVerified: new Date(),
       },
       include: {
         role: {
@@ -208,7 +203,6 @@ export async function createUser(
       },
     });
 
-    // Log activity
     await prisma.activityLog.create({
       data: {
         userId: session.user.id,
@@ -251,7 +245,6 @@ export async function updateUser(
   try {
     const session = await requirePermission('users:manage');
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -263,7 +256,6 @@ export async function updateUser(
       };
     }
 
-    // Validate username uniqueness if changed
     if (data.username && data.username !== existingUser.username) {
       const usernameExists = await prisma.user.findFirst({
         where: {
@@ -280,7 +272,6 @@ export async function updateUser(
       }
     }
 
-    // Prepare update data
     const updateData: any = {
       name: data.name,
       username: data.username || null,
@@ -289,17 +280,14 @@ export async function updateUser(
       bio: data.bio || null,
     };
 
-    // Hash password if provided
     if (data.password) {
       updateData.password = await bcrypt.hash(data.password, 10);
       updateData.passwordChangedAt = new Date();
-      // Update security stamp to invalidate existing sessions
       updateData.securityStamp = require('crypto')
         .randomBytes(32)
         .toString('hex');
     }
 
-    // Update user
     const user = await prisma.user.update({
       where: { id: userId },
       data: updateData,
@@ -322,7 +310,6 @@ export async function updateUser(
       changes: data,
     };
 
-    // Log activity
     await prisma.activityLog.create({
       data: {
         userId: session.user.id,
@@ -360,7 +347,6 @@ export async function deleteUser(userId: string): Promise<ApiResponse> {
   try {
     const session = await requirePermission('users:manage');
 
-    // Don't allow deleting self
     if (userId === session.user.id) {
       return {
         success: false,
@@ -368,7 +354,6 @@ export async function deleteUser(userId: string): Promise<ApiResponse> {
       };
     }
 
-    // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -380,12 +365,10 @@ export async function deleteUser(userId: string): Promise<ApiResponse> {
       };
     }
 
-    // Delete user
     await prisma.user.delete({
       where: { id: userId },
     });
 
-    // Log activity
     await prisma.activityLog.create({
       data: {
         userId: session.user.id,
@@ -427,7 +410,6 @@ export async function bulkUpdateUserStatus(
   try {
     const session = await requirePermission('users:manage');
 
-    // Don't allow updating self
     if (userIds.includes(session.user.id)) {
       return {
         success: false,
@@ -441,14 +423,12 @@ export async function bulkUpdateUserStatus(
       },
       data: {
         status,
-        // Update security stamp to invalidate sessions if suspended/banned
         ...(status !== 'ACTIVE' && {
           securityStamp: require('crypto').randomBytes(32).toString('hex'),
         }),
       },
     });
 
-    // Log activity
     await prisma.activityLog.create({
       data: {
         userId: session.user.id,

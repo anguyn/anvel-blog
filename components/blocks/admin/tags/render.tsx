@@ -112,7 +112,6 @@ export function TagsManagement({ locale, user }: TagsManagementProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
@@ -124,7 +123,6 @@ export function TagsManagement({ locale, user }: TagsManagementProps) {
         </Button>
       </div>
 
-      {/* Stats */}
       <Card>
         <CardHeader>
           <CardTitle>{t('total')}</CardTitle>
@@ -132,7 +130,6 @@ export function TagsManagement({ locale, user }: TagsManagementProps) {
         </CardHeader>
       </Card>
 
-      {/* Filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 sm:flex-row">
@@ -160,7 +157,6 @@ export function TagsManagement({ locale, user }: TagsManagementProps) {
         </CardContent>
       </Card>
 
-      {/* Tags Grid */}
       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {tags.map(tag => (
           <Card key={tag.id} className="overflow-hidden">

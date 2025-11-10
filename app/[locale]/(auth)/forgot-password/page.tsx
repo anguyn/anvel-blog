@@ -13,6 +13,27 @@ export const generateStaticParams = getStaticParams;
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const params = await props.params;
+  const { locale } = params;
+
+  setStaticParamsLocale(locale);
+
+  const { translate } = await getTranslate();
+
+  const dictionaries = {
+    en: (await import('@/translations/dictionaries/en.json')).default,
+    vi: (await import('@/translations/dictionaries/vi.json')).default,
+  };
+
+  const t = await translate(dictionaries);
+
+  return {
+    title: t.auth.forgotPassword.title || 'Forgot Password',
+    description: t.auth.forgotPassword.description || 'Reset your password',
+  };
+}
+
+export default async function ForgotPasswordPage(props: PageProps) {
+  const params = await props.params;
   const searchParams = await props.searchParams;
   const { locale } = params;
 
@@ -31,6 +52,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   }
 
   setStaticParamsLocale(locale);
+
   const { translate } = await getTranslate();
 
   const dictionaries = {
@@ -38,23 +60,6 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
     vi: (await import('@/translations/dictionaries/vi.json')).default,
   };
 
-  const t = await translate(dictionaries);
-
-  return {
-    title: t.auth.forgotPassword.title || 'Forgot Password',
-    description: t.auth.forgotPassword.description || 'Reset your password',
-  };
-}
-
-export default async function ForgotPasswordPage(props: PageProps) {
-  const params = await props.params;
-  const { locale } = params;
-  setStaticParamsLocale(locale);
-  const { translate } = await getTranslate();
-  const dictionaries = {
-    en: (await import('@/translations/dictionaries/en.json')).default,
-    vi: (await import('@/translations/dictionaries/vi.json')).default,
-  };
   const t = await translate(dictionaries);
 
   const translations = {

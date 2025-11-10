@@ -24,14 +24,12 @@ export function MobileSearch({ isOpen, onClose, locale }: MobileSearchProps) {
   const [isSearching, setIsSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus search input when opened
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [isOpen]);
 
-  // Search logic
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults(null);
@@ -40,7 +38,6 @@ export function MobileSearch({ isOpen, onClose, locale }: MobileSearchProps) {
 
     setIsSearching(true);
     const timer = setTimeout(async () => {
-      // TODO: Replace with actual API call
       // Mock data for now
       const mockResults: SearchResult[] = [
         {

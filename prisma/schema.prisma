@@ -881,8 +881,6 @@ enum MessageRole {
   SYSTEM
 }
 
-// Tối ưu cho 1GB: Không lưu embeddings trong PostgreSQL
-// Dùng external vector DB (Pinecone free tier: 100k vectors)
 model ContentIndex {
   id          String @id @default(cuid())
   contentType String
@@ -916,7 +914,6 @@ model ActivityLog {
   userAgent String?
   metadata  Json?
 
-  // Retention management
   retentionDays Int      @default(30)
   importance    LogLevel @default(INFO)
 

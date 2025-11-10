@@ -109,7 +109,6 @@ export default function EditorToolbar({
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showHtmlContent, setShowHtmlContent] = useState(false);
 
-  // State để track styles hiện tại
   const [currentStyles, setCurrentStyles] = useState<CurrentStyles>({
     fontSize: '',
     lineHeight: '',
@@ -118,11 +117,9 @@ export default function EditorToolbar({
     fontFamily: '',
   });
 
-  // Ref để lưu selection khi dialog mở
   const savedSelectionRef = useRef<any>(null);
   const isDialogOpenRef = useRef(false);
 
-  // Function để cập nhật current styles
   const updateCurrentStyles = useCallback(() => {
     if (!editor) return;
 
@@ -145,7 +142,6 @@ export default function EditorToolbar({
     });
   }, [editor]);
 
-  // Update styles khi selection hoặc content thay đổi
   useEffect(() => {
     if (!editor) return;
 
@@ -163,7 +159,6 @@ export default function EditorToolbar({
     };
   }, [editor, updateCurrentStyles]);
 
-  // Preserve selection khi dialog mở
   const saveSelection = useCallback(() => {
     if (!editor) return;
 
@@ -175,7 +170,6 @@ export default function EditorToolbar({
     isDialogOpenRef.current = true;
   }, [editor]);
 
-  // Restore selection khi dialog đóng
   const restoreSelection = useCallback(() => {
     if (!editor || !savedSelectionRef.current) return;
 
@@ -362,7 +356,6 @@ export default function EditorToolbar({
   return (
     <>
       <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b border-[var(--color-border)] bg-[var(--color-muted)] p-2">
-        {/* Headings */}
         <div className="flex items-center gap-1">
           <ToolbarButton
             onClick={() =>
@@ -395,7 +388,6 @@ export default function EditorToolbar({
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
 
-        {/* Basic Formatting */}
         <div className="flex items-center gap-1">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -428,7 +420,6 @@ export default function EditorToolbar({
         </div>
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
-        {/* Font Family */}
         <select
           value={currentStyles.fontFamily}
           onChange={handleFontFamilyChange}
@@ -442,7 +433,6 @@ export default function EditorToolbar({
           ))}
         </select>
 
-        {/* Font Size */}
         <div className="flex items-center gap-1">
           <input
             ref={fontSizeInputRef}
@@ -472,7 +462,6 @@ export default function EditorToolbar({
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
 
-        {/* Line Height */}
         <div className="flex items-center gap-1">
           <LineChart className="h-4 w-4 text-[var(--color-muted-foreground)]" />
           <input
@@ -500,7 +489,6 @@ export default function EditorToolbar({
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
 
-        {/* Indent */}
         <div className="flex items-center gap-1">
           <ToolbarButton
             onClick={() => editor.chain().focus().indent().run()}
@@ -518,7 +506,6 @@ export default function EditorToolbar({
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
 
-        {/* Alignment */}
         <div className="flex items-center gap-1">
           <ToolbarButton
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
@@ -545,7 +532,6 @@ export default function EditorToolbar({
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
 
-        {/* Lists */}
         <div className="flex items-center gap-1">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -572,7 +558,6 @@ export default function EditorToolbar({
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
 
-        {/* Insert */}
         <div className="flex items-center gap-1">
           <ToolbarButton
             onClick={setLink}
@@ -613,7 +598,6 @@ export default function EditorToolbar({
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
 
-        {/* Color Buttons */}
         <div className="flex items-center gap-1">
           <button
             onClick={() => handleTextColorOpen()}
@@ -649,7 +633,6 @@ export default function EditorToolbar({
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
 
-        {/* History */}
         <div className="flex items-center gap-1">
           <ToolbarButton
             onClick={() => editor.chain().focus().undo().run()}
@@ -669,7 +652,6 @@ export default function EditorToolbar({
 
         <div className="mx-1 h-8 w-px bg-[var(--color-border)]" />
 
-        {/* Utilities */}
         <div className="ml-auto flex items-center gap-1">
           <button
             onClick={onToggleHtml}
@@ -678,7 +660,6 @@ export default function EditorToolbar({
           >
             <Code className="h-4 w-4" />
           </button>
-          {/* Export Menu */}
           <div className="relative">
             <button
               onClick={() => setShowExportMenu(!showExportMenu)}
@@ -750,7 +731,6 @@ export default function EditorToolbar({
         </div>
       </div>
 
-      {/* Image Dialog */}
       {showImageDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-[var(--color-background)] p-6">
@@ -818,7 +798,6 @@ export default function EditorToolbar({
         </div>
       )}
 
-      {/* Link Dialog */}
       {showLinkDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-[var(--color-background)] p-6">
@@ -850,7 +829,6 @@ export default function EditorToolbar({
         </div>
       )}
 
-      {/* Table Dialog */}
       {showTableDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-[var(--color-background)] p-6">
@@ -902,7 +880,6 @@ export default function EditorToolbar({
         </div>
       )}
 
-      {/* Code Block Dialog */}
       {showCodeBlockDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-[var(--color-background)] p-6">
@@ -942,7 +919,6 @@ export default function EditorToolbar({
         </div>
       )}
 
-      {/* Text Color Picker */}
       {showTextColorPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <ColorPicker
@@ -954,7 +930,6 @@ export default function EditorToolbar({
         </div>
       )}
 
-      {/* Highlight Color Picker */}
       {showHighlightColorPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <ColorPicker

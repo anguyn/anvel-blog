@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 
 interface BlogSidebarProps {
   post: Post;
+  tableOfContents: Array<{ id: string; text: string; level: number }>;
   locale: string;
   translations: {
     share: string;
@@ -26,6 +27,7 @@ interface BlogSidebarProps {
 
 export function BlogSidebar({
   post,
+  tableOfContents,
   locale,
   translations,
   session,
@@ -45,10 +47,13 @@ export function BlogSidebar({
         }}
         className="sticky space-y-6"
       >
-        <TableOfContentsWrapper
-          content={post.content}
-          title={translations.tableOfContents}
-        />
+        {tableOfContents && (
+          <TableOfContentsWrapper
+            headings={tableOfContents}
+            title="Table of Contents"
+          />
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Share This Post</CardTitle>

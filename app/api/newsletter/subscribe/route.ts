@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, locale } = subscribeSchema.parse(body);
 
-    // Check if already subscribed
     const existing = await prisma.emailSubscription.findFirst({
       where: {
         email: email.toLowerCase(),
@@ -27,7 +26,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get admin user (author for newsletters)
     const adminUser = await prisma.user.findFirst({
       where: {
         role: {
@@ -44,7 +42,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create subscription
     const subscription = await prisma.emailSubscription.create({
       data: {
         email: email.toLowerCase(),
@@ -55,13 +52,7 @@ export async function POST(request: NextRequest) {
     });
 
     // TODO: Send confirmation email
-    // await sendNewsletterConfirmationEmail({
-    //   email: subscription.email,
-    //   token: subscription.token,
-    //   locale,
-    // });
 
-    // Log activity
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 90);
 

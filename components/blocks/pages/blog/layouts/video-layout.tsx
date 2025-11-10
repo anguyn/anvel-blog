@@ -27,9 +27,7 @@ export function VideoLayout({
   return (
     <article className="mx-auto px-4 py-8">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Main Content */}
         <div className="lg:col-span-2">
-          {/* Video Player */}
           {videoMedia && (
             <div className="relative mb-6 aspect-video overflow-hidden rounded-lg bg-black">
               <video
@@ -43,9 +41,7 @@ export function VideoLayout({
             </div>
           )}
 
-          {/* Post Info */}
           <div className="space-y-4">
-            {/* Category */}
             {post.category && (
               <Link
                 href={`/blog/category/${post.category.slug}`}
@@ -55,12 +51,10 @@ export function VideoLayout({
               </Link>
             )}
 
-            {/* Title */}
             <h1 className="text-3xl leading-tight font-bold md:text-4xl">
               {post.title}
             </h1>
 
-            {/* Meta Info */}
             <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 {post.author.image && (
@@ -99,7 +93,6 @@ export function VideoLayout({
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex items-center gap-2 border-y py-4">
               <Button
                 variant="outline"
@@ -124,7 +117,6 @@ export function VideoLayout({
               </Button>
             </div>
 
-            {/* Tags */}
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {post.tags.map(postTag => (
@@ -139,12 +131,10 @@ export function VideoLayout({
               </div>
             )}
 
-            {/* Excerpt */}
             {post.excerpt && (
               <p className="text-muted-foreground text-lg">{post.excerpt}</p>
             )}
 
-            {/* Content/Description */}
             {post.content && (
               <div
                 className="prose prose-lg prose-slate dark:prose-invert max-w-none"
@@ -152,7 +142,6 @@ export function VideoLayout({
               />
             )}
 
-            {/* Author Bio */}
             <div className="bg-muted/30 mt-8 flex items-start gap-4 rounded-lg p-6">
               {post.author.image && (
                 <Image
@@ -177,7 +166,6 @@ export function VideoLayout({
           </div>
         </div>
 
-        {/* Sidebar - Related Videos */}
         <div className="lg:col-span-1">
           <div className="sticky top-4">
             <h2 className="mb-4 text-xl font-bold">Related Videos</h2>

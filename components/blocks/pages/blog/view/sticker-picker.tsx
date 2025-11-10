@@ -285,7 +285,6 @@ export function StickerPicker({
         className,
       )}
     >
-      {/* Header */}
       <div className="bg-background flex items-center justify-between border-b px-4 py-3">
         <h3 className="text-sm font-semibold">Chọn sticker</h3>
         <button
@@ -296,7 +295,6 @@ export function StickerPicker({
         </button>
       </div>
 
-      {/* Stickers Grid */}
       <div className="bg-background max-h-64 overflow-y-auto p-3">
         <div className="grid grid-cols-3 gap-2">
           {STICKER_CATEGORIES[activeCategory].map(sticker => (

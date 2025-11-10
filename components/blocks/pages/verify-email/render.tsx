@@ -75,7 +75,6 @@ export default function VerifyEmailBlock({
     verifyEmail(token);
   }, [token]);
 
-  // Resend timer
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
@@ -241,7 +240,7 @@ export default function VerifyEmailBlock({
             <CardContent className="space-y-4">
               {(status === 'success' || status === 'already_verified') && (
                 <div className="space-y-3">
-                  <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-4 leading-normal dark:border-green-900 dark:bg-green-950">
                     {typeof translations.redirectingLogin === 'function'
                       ? translations.redirectingLogin({
                           second: redirectCountdown.toString(),
@@ -268,7 +267,7 @@ export default function VerifyEmailBlock({
             >
               {t('tos')}
             </Link>{' '}
-            and{' '}
+            {t('and') + ' '}
             <Link
               href={`/${locale}/privacy-policy`}
               prefetch

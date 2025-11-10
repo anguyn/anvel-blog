@@ -19,7 +19,6 @@ export function SEOPreview({
 }: SEOPreviewProps) {
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
 
-  // Truncate helpers
   const truncateTitle = (text: string, max: number) => {
     if (!text) return 'Untitled Page';
     return text.length > max ? text.substring(0, max) + '...' : text;
@@ -35,7 +34,6 @@ export function SEOPreview({
 
   return (
     <div className={cn('space-y-3', className)}>
-      {/* Device Toggle */}
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -65,10 +63,8 @@ export function SEOPreview({
         </button>
       </div>
 
-      {/* Preview Box */}
       <div className="bg-background rounded-lg border p-4">
         <div className="space-y-1">
-          {/* URL */}
           <div className="flex items-center gap-1 text-xs">
             <div className="bg-muted flex h-4 w-4 items-center justify-center rounded-full">
               <div className="bg-primary h-2 w-2 rounded-full" />
@@ -78,19 +74,16 @@ export function SEOPreview({
             </span>
           </div>
 
-          {/* Title */}
           <h3 className="text-primary cursor-pointer text-lg leading-tight font-medium hover:underline">
             {truncateTitle(title, titleMaxLength)}
           </h3>
 
-          {/* Description */}
           <p className="text-muted-foreground text-sm leading-snug">
             {truncateDescription(description, descMaxLength)}
           </p>
         </div>
       </div>
 
-      {/* Character Counts */}
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
           <span className="text-muted-foreground">Title: </span>

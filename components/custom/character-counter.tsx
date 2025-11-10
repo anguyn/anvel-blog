@@ -32,7 +32,6 @@ export function CharacterCounter({
         {current} / {max}
       </span>
 
-      {/* Progress Bar */}
       <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
         <div
           className={cn(

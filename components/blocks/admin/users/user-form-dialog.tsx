@@ -128,12 +128,10 @@ export function UserFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Basic Information</h3>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
                 <Input id="name" placeholder="John Doe" {...register('name')} />
@@ -142,7 +140,6 @@ export function UserFormDialog({
                 )}
               </div>
 
-              {/* Username Field */}
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <Input
@@ -158,7 +155,6 @@ export function UserFormDialog({
               </div>
             </div>
 
-            {/* Email Field */}
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
               <Input
@@ -178,7 +174,6 @@ export function UserFormDialog({
               )}
             </div>
 
-            {/* Bio Field */}
             <div className="space-y-2">
               <Label htmlFor="bio">Bio</Label>
               <Textarea
@@ -195,7 +190,6 @@ export function UserFormDialog({
             </div>
           </div>
 
-          {/* Security */}
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Security</h3>
 
@@ -224,12 +218,10 @@ export function UserFormDialog({
             </div>
           </div>
 
-          {/* Permissions */}
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Role & Status</h3>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Role Field */}
               <div className="space-y-2">
                 <Label htmlFor="roleId">Role</Label>
                 <Select
@@ -265,7 +257,6 @@ export function UserFormDialog({
                 )}
               </div>
 
-              {/* Status Field */}
               <div className="space-y-2">
                 <Label htmlFor="status">Status *</Label>
                 <Select

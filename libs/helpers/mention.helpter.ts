@@ -11,13 +11,12 @@ export interface MentionData {
 export function extractMentions(content: string): MentionData[] {
   const mentions: MentionData[] = [];
 
-  // Match @username pattern (alphanumeric + underscore, 2-30 chars)
   const mentionRegex = /@([a-zA-Z0-9_]{2,30})\b/g;
   let match;
 
   while ((match = mentionRegex.exec(content)) !== null) {
     mentions.push({
-      userId: '', // Will be populated from API response
+      userId: '',
       username: match[1],
       position: match.index,
     });
@@ -26,26 +25,17 @@ export function extractMentions(content: string): MentionData[] {
   return mentions;
 }
 
-/**
- * Validate mention format
- */
 export function isValidMention(username: string): boolean {
-  // Username must be 2-30 chars, alphanumeric + underscore
   const usernameRegex = /^[a-zA-Z0-9_]{2,30}$/;
   return usernameRegex.test(username);
 }
 
-/**
- * Parse content and convert mentions to user IDs
- * This should be called after getting user data from API
- */
 export async function parseMentionsWithUserData(
   content: string,
-  userLookup: Map<string, string>, // username -> userId
+  userLookup: Map<string, string>,
 ): Promise<MentionData[]> {
   const mentions = extractMentions(content);
 
-  // Filter to only include mentions where we have user data
   return mentions
     .filter(m => userLookup.has(m.username))
     .map(m => ({
@@ -67,22 +57,18 @@ export function highlightMentions(
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
 
-  // Sort mentions by position
   const sortedMentions = [...mentions].sort((a, b) => a.position - b.position);
 
   sortedMentions.forEach((mention, idx) => {
-    // Add text before mention
     if (mention.position > lastIndex) {
       parts.push(content.slice(lastIndex, mention.position));
     }
 
-    // Add mention
     parts.push(renderMention(mention.username));
 
     lastIndex = mention.position + mention.username.length + 1; // +1 for @
   });
 
-  // Add remaining text
   if (lastIndex < content.length) {
     parts.push(content.slice(lastIndex));
   }
@@ -92,7 +78,6 @@ export function highlightMentions(
 
 /**
  * Resolve mentions before submitting comment
- * Fetches user IDs for mentioned usernames
  */
 export async function resolveMentions(
   content: string,
@@ -105,16 +90,14 @@ export async function resolveMentions(
   }
 
   try {
-    // Get unique usernames
     const uniqueUsernames = [...new Set(rawMentions.map(m => m.username))];
 
-    // Fetch user data for these usernames
     const response = await fetch(`/api/users/resolve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         usernames: uniqueUsernames,
-        postId, // For context/permission checking
+        postId,
       }),
     });
 
@@ -124,18 +107,16 @@ export async function resolveMentions(
 
     const { users } = await response.json();
 
-    // Create username -> userId map (use lowercase for case-insensitive matching)
     const userMap = new Map(
       users.map((u: any) => [u.username.toLowerCase(), u.id]),
     );
 
-    // Return only valid mentions with user IDs
     return rawMentions
       .filter(m => userMap.has(m.username.toLowerCase()))
       .map(m => {
         const userId = userMap.get(m.username.toLowerCase());
         return {
-          userId: userId as string, // Type assertion since we filtered above
+          userId: userId as string,
           username: m.username,
           position: m.position,
         };

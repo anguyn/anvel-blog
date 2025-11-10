@@ -19,7 +19,6 @@ import Gapcursor from '@tiptap/extension-gapcursor';
 import { common, createLowlight } from 'lowlight';
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 
-// Import components
 import EditorToolbar from './tiptap-editor/editor-toolbar';
 import TableToolbar from './tiptap-editor/table-toolbar';
 import FindReplace from './tiptap-editor/find-replace';
@@ -27,7 +26,6 @@ import BubbleMenu from './tiptap-editor/bubble-menu';
 import ImageBubbleMenu from './tiptap-editor/image-bubble-menu';
 import DrawTool from './tiptap-editor/draw-tool';
 
-// Import extensions
 import {
   HtmlView,
   FontSize,
@@ -84,7 +82,6 @@ export default function TiptapEditor({
     [],
   );
 
-  // Debounced onChange to prevent excessive updates
   const debouncedOnChange = useMemo(() => {
     let timeoutId: NodeJS.Timeout;
     const isInDialog = false;
@@ -107,7 +104,7 @@ export default function TiptapEditor({
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
         },
-        gapcursor: false, // Disable default, use extension below
+        gapcursor: false,
       }),
       HtmlView,
       Gapcursor,
@@ -163,7 +160,6 @@ export default function TiptapEditor({
       const html = editor.getHTML();
       debouncedOnChange(html);
 
-      // Update table toolbar instantly
       setShowTableToolbar(editor.isActive('table'));
     },
     editorProps: {
@@ -172,17 +168,14 @@ export default function TiptapEditor({
         spellcheck: 'false',
       },
       handleKeyDown: (view, event) => {
-        // Custom hotkeys
         const isMod = event.ctrlKey || event.metaKey;
 
-        // Indent with Tab (in lists)
         if (event.key === 'Tab' && !event.shiftKey) {
           if (editor?.isActive('listItem')) {
             event.preventDefault();
             editor.chain().focus().sinkListItem('listItem').run();
             return true;
           }
-          // Regular indent for paragraphs
           event.preventDefault();
           editor
             ?.chain()
@@ -193,7 +186,6 @@ export default function TiptapEditor({
               const node = $from.parent;
 
               if (node.type.name === 'paragraph') {
-                // Add margin-left
                 tr.setNodeMarkup($from.before(), null, {
                   ...node.attrs,
                   style: `margin-left: ${parseInt(node.attrs.style?.match(/margin-left:\s*(\d+)px/)?.[1] || '0') + 30}px`,
@@ -205,14 +197,12 @@ export default function TiptapEditor({
           return true;
         }
 
-        // Outdent with Shift+Tab
         if (event.key === 'Tab' && event.shiftKey) {
           if (editor?.isActive('listItem')) {
             event.preventDefault();
             editor.chain().focus().liftListItem('listItem').run();
             return true;
           }
-          // Regular outdent for paragraphs
           event.preventDefault();
           editor
             ?.chain()
@@ -239,7 +229,6 @@ export default function TiptapEditor({
           return true;
         }
 
-        // Find & Replace (Ctrl+F)
         if (isMod && event.key === 'f') {
           event.preventDefault();
           setShowFindReplace(true);
@@ -254,9 +243,6 @@ export default function TiptapEditor({
   useEffect(() => {
     if (!autoSave || !onSave) return;
 
-    // console.log("Dô dây: ", onSave)
-    // return;
-
     const interval = setInterval(() => {
       const currentContent = editor?.getHTML() || '';
       if (currentContent !== lastSavedContent.current && !isSaving) {
@@ -264,7 +250,6 @@ export default function TiptapEditor({
         onSave(currentContent);
         lastSavedContent.current = currentContent;
 
-        // Reset saving state after 1 second
         setTimeout(() => setIsSaving(false), 1000);
       }
     }, autoSaveInterval);
@@ -278,7 +263,6 @@ export default function TiptapEditor({
     }
   }, [value, editor]);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
@@ -330,7 +314,6 @@ export default function TiptapEditor({
 
     const content = editor.getHTML();
 
-    // Create a simple Word document structure
     const docContent = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
       <head><meta charset='utf-8'><title>Export</title></head>
@@ -351,8 +334,7 @@ export default function TiptapEditor({
   const exportToPDF = async () => {
     if (!editor) return;
 
-    // Note: This is a basic implementation
-    // For better PDF generation, you should use a library like jsPDF or html2pdf
+    // TODO: use PDF lib to adjust
     const content = editor.getHTML();
 
     const printWindow = window.open('', '', 'height=600,width=800');
@@ -464,7 +446,6 @@ export default function TiptapEditor({
         </div>
       )}
 
-      {/* Draw Tool Modal */}
       {showDrawTool && (
         <DrawTool
           onInsert={handleDrawToolInsert}

@@ -45,9 +45,7 @@ export function GalleryLayout({
 
   return (
     <article className="mx-auto px-4 py-8">
-      {/* Header */}
       <header className="mb-8">
-        {/* Category */}
         {post.category && (
           <div className="mb-4">
             <Link
@@ -59,17 +57,14 @@ export function GalleryLayout({
           </div>
         )}
 
-        {/* Title */}
         <h1 className="mb-4 text-4xl leading-tight font-bold md:text-5xl">
           {post.title}
         </h1>
 
-        {/* Excerpt */}
         {post.excerpt && (
           <p className="text-muted-foreground mb-6 text-xl">{post.excerpt}</p>
         )}
 
-        {/* Meta Info */}
         <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
             {post.author.image && (
@@ -115,7 +110,6 @@ export function GalleryLayout({
           </div>
         </div>
 
-        {/* Tags */}
         {post.tags && post.tags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {post.tags.map(postTag => (
@@ -131,10 +125,8 @@ export function GalleryLayout({
         )}
       </header>
 
-      {/* Main Gallery */}
       {images.length > 0 && (
         <div className="mb-8">
-          {/* Large Image */}
           <div className="bg-muted relative mb-4 aspect-[16/9] overflow-hidden rounded-lg">
             <Image
               src={images[selectedImageIndex].url}
@@ -144,7 +136,6 @@ export function GalleryLayout({
               priority
             />
 
-            {/* Navigation Arrows */}
             {images.length > 1 && (
               <>
                 <button
@@ -162,12 +153,10 @@ export function GalleryLayout({
               </>
             )}
 
-            {/* Counter */}
             <div className="bg-background/80 absolute right-4 bottom-4 rounded-full px-3 py-1 text-sm backdrop-blur-sm">
               {selectedImageIndex + 1} / {images.length}
             </div>
 
-            {/* Caption */}
             {images[selectedImageIndex].caption && (
               <div className="bg-background/80 absolute right-20 bottom-4 left-4 rounded-lg px-3 py-2 text-sm backdrop-blur-sm">
                 {images[selectedImageIndex].caption}
@@ -175,7 +164,6 @@ export function GalleryLayout({
             )}
           </div>
 
-          {/* Thumbnail Grid */}
           <div className="grid grid-cols-4 gap-2 md:grid-cols-6 lg:grid-cols-8">
             {images.map((image, index) => (
               <button
@@ -199,7 +187,6 @@ export function GalleryLayout({
         </div>
       )}
 
-      {/* Content */}
       {post.content && (
         <div
           className="prose prose-lg prose-slate dark:prose-invert mb-12"
@@ -207,7 +194,6 @@ export function GalleryLayout({
         />
       )}
 
-      {/* Action Bar */}
       <div className="bg-background/95 sticky top-0 z-10 mb-8 flex items-center justify-between border-y py-3 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <Button
@@ -238,7 +224,6 @@ export function GalleryLayout({
         </Button>
       </div>
 
-      {/* Related Posts */}
       {relatedPosts && relatedPosts.length > 0 && (
         <div className="mt-16 border-t pt-8">
           <h2 className="mb-6 text-2xl font-bold">More Galleries</h2>

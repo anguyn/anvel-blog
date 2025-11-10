@@ -3,6 +3,60 @@ import { PostService } from '@/libs/services/post.service';
 import { getCurrentUser } from '@/libs/server/rbac';
 import { getApiTranslations } from '@/i18n/i18n';
 
+function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
+function injectHeadingIds(htmlContent: string): {
+  content: string;
+  headings: Array<{ id: string; text: string; level: number }>;
+} {
+  const headings: Array<{ id: string; text: string; level: number }> = [];
+  const headingCounters = new Map<string, number>();
+
+  const contentWithIds = htmlContent.replace(
+    /<h([2-4])([^>]*)>(.*?)<\/h\1>/gi,
+    (match, level, attributes, text) => {
+      const plainText = text.replace(/<[^>]*>/g, '').trim();
+
+      const baseSlug = generateSlug(plainText);
+
+      const count = headingCounters.get(baseSlug) || 0;
+      headingCounters.set(baseSlug, count + 1);
+
+      const id = count > 0 ? `${baseSlug}-${count}` : baseSlug;
+
+      headings.push({
+        id,
+        text: plainText,
+        level: parseInt(level),
+      });
+
+      const hasId = /id\s*=\s*["'][^"']*["']/i.test(attributes);
+
+      if (hasId) {
+        return `<h${level}${attributes.replace(/id\s*=\s*["'][^"']*["']/i, `id="${id}"`)}>${text}</h${level}>`;
+      } else {
+        return `<h${level} id="${id}"${attributes}>${text}</h${level}>`;
+      }
+    },
+  );
+
+  return {
+    content: contentWithIds,
+    headings,
+  };
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
@@ -12,7 +66,6 @@ export async function GET(
     const { slug } = await params;
     const user = await getCurrentUser();
 
-    // Get post with translations, passing preferred language
     const result = await PostService.getPostBySlug(slug, user?.id, locale);
 
     if (!result) {
@@ -21,8 +74,8 @@ export async function GET(
 
     const { post, relatedPosts, translations, contentInfo } = result;
 
-    const originalLang = post.language; // 'en' or 'vi'
-    const requestedLang = locale; // from URL: /en/blog or /vi/blog
+    const originalLang = post.language;
+    const requestedLang = locale;
 
     let displayContent = {
       title: post.title,
@@ -36,7 +89,6 @@ export async function GET(
       currentLanguage: originalLang,
     };
 
-    // If requested language is different from original, use translation
     if (requestedLang !== originalLang) {
       const translation = translations.find(t => t.language === requestedLang);
 
@@ -58,13 +110,19 @@ export async function GET(
       }
     }
 
+    const { content: processedContent, headings } = injectHeadingIds(
+      displayContent.content,
+    );
+
     return NextResponse.json({
       post: {
         ...post,
         ...displayContent,
+        content: processedContent,
       },
       relatedPosts,
       translations,
+      tableOfContents: headings,
       contentInfo: {
         isTranslated: displayContent.isTranslated,
         originalLanguage: originalLang,

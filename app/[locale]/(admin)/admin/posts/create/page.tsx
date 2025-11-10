@@ -36,7 +36,6 @@ export default async function CreatePostPage({
     redirect(`/${locale}/admin/posts`);
   }
 
-  // Get categories
   const categories = await prisma.category.findMany({
     where: { isActive: true },
     orderBy: { name: 'asc' },
@@ -55,7 +54,6 @@ export default async function CreatePostPage({
     language: 'vi' | 'en';
   }[];
 
-  // Get tags
   const tags = await prisma.tag.findMany({
     orderBy: { name: 'asc' },
     select: {

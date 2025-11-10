@@ -43,7 +43,6 @@ export function DocumentViewer({ media }: DocumentViewerProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Document Info */}
         <div className="bg-muted/50 flex items-start gap-4 rounded-lg border p-4">
           <div className="text-4xl">{getFileIcon()}</div>
           <div className="min-w-0 flex-1">
@@ -59,7 +58,6 @@ export function DocumentViewer({ media }: DocumentViewerProps) {
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex flex-wrap gap-2">
           <Button asChild>
             <a
@@ -80,7 +78,6 @@ export function DocumentViewer({ media }: DocumentViewerProps) {
           </Button>
         </div>
 
-        {/* PDF Viewer */}
         {isPDF && (
           <div className="aspect-[8.5/11] w-full overflow-hidden rounded-lg border">
             <iframe
@@ -91,7 +88,6 @@ export function DocumentViewer({ media }: DocumentViewerProps) {
           </div>
         )}
 
-        {/* Google Docs Viewer for Office files */}
         {!isPDF &&
           (media.mimeType.includes('word') ||
             media.mimeType.includes('excel') ||

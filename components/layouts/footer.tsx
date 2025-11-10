@@ -59,7 +59,6 @@ export function Footer({ locale, translations }: FooterProps) {
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-background)]">
       <div className="container mx-auto p-4 pt-10">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-6">
-          {/* Brand */}
           <div className="lg:col-span-2">
             <Link
               href={`/${locale}`}
@@ -93,7 +92,6 @@ export function Footer({ locale, translations }: FooterProps) {
             </div>
           </div>
 
-          {/* Product */}
           <div>
             <h3 className="mb-4 font-semibold">{translations.product}</h3>
             <ul className="space-y-3">
@@ -110,7 +108,6 @@ export function Footer({ locale, translations }: FooterProps) {
             </ul>
           </div>
 
-          {/* Company */}
           <div>
             <h3 className="mb-4 font-semibold">{translations.company}</h3>
             <ul className="space-y-3">
@@ -127,7 +124,6 @@ export function Footer({ locale, translations }: FooterProps) {
             </ul>
           </div>
 
-          {/* Legal */}
           <div className="lg:col-span-2">
             <h3 className="mb-4 font-semibold">{translations.legal}</h3>
             <ul className="space-y-3">
@@ -146,7 +142,6 @@ export function Footer({ locale, translations }: FooterProps) {
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-[var(--color-border)] pt-4 sm:flex-row">
           <p className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
             © {currentYear} Anvel. {translations.copyright}

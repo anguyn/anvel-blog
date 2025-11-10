@@ -76,7 +76,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     totalPages: 0,
   });
 
-  // Load users
   const loadUsers = async () => {
     setIsLoading(true);
     try {
@@ -101,7 +100,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     }
   };
 
-  // Load roles
   const loadRoles = async () => {
     const result = await getAllRoles();
     if (result.success && result.data) {
@@ -117,13 +115,11 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     loadRoles();
   }, []);
 
-  // Handle filter change
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
     setPagination({ ...pagination, page: 1 });
   };
 
-  // Handle sort
   const handleSort = (field: string) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -133,7 +129,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     }
   };
 
-  // Handle select user
   const handleSelectUser = (userId: string) => {
     setSelectedUsers(prev =>
       prev.includes(userId)
@@ -142,12 +137,10 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     );
   };
 
-  // Handle select all
   const handleSelectAll = (selected: boolean) => {
     setSelectedUsers(selected ? users.map(u => u.id) : []);
   };
 
-  // Handle create user
   const handleCreateUser = async (data: any) => {
     setIsFormLoading(true);
     try {
@@ -166,7 +159,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     }
   };
 
-  // Handle update user
   const handleUpdateUser = async (data: any) => {
     if (!editingUser) return;
 
@@ -188,7 +180,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     }
   };
 
-  // Handle delete user
   const handleDeleteUser = async () => {
     if (!deletingUser) return;
 
@@ -206,7 +197,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     }
   };
 
-  // Handle bulk status update
   const handleBulkStatusUpdate = async (status: UserStatus) => {
     if (selectedUsers.length === 0) return;
 
@@ -224,7 +214,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
     }
   };
 
-  // Handle open create form
   const handleOpenCreateForm = () => {
     setEditingUser(null);
     setIsFormOpen(true);
@@ -250,10 +239,8 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
         </Button>
       </div>
 
-      {/* Filters */}
       <UserFiltersBar onFilterChange={handleFilterChange} roles={roles} />
 
-      {/* Bulk Actions */}
       {selectedUsers.length > 0 && (
         <div className="bg-muted/50 flex items-center gap-2 rounded-lg border p-4">
           <span className="text-sm font-medium">
@@ -301,7 +288,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
         </div>
       )}
 
-      {/* Table */}
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
@@ -320,7 +306,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
             sortOrder={sortOrder}
           />
 
-          {/* Pagination */}
           {pagination.totalPages > 1 && (
             <Pagination
               currentPage={pagination.page}
@@ -331,7 +316,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
         </>
       )}
 
-      {/* Form Dialog */}
       <UserFormDialog
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
@@ -341,7 +325,6 @@ export function AdminUserRender({ locale }: AdminUserRenderProps) {
         isLoading={isFormLoading}
       />
 
-      {/* Delete Confirmation */}
       <AlertDialog
         open={!!deletingUser}
         onOpenChange={() => setDeletingUser(null)}

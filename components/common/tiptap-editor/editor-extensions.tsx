@@ -897,7 +897,6 @@ export const EmbedMedia = Node.create({
     return [
       {
         tag: 'div[data-embed]',
-        // Đảm bảo parse đúng attributes
         getAttrs: dom => {
           const iframe = dom.querySelector('iframe');
           const src =

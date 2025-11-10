@@ -21,7 +21,7 @@ export class PostService {
    */
   static calculateReadingTime(content: string): number {
     const wordsPerMinute = 200;
-    const text = content.replace(/<[^>]*>/g, ''); // Strip HTML
+    const text = content.replace(/<[^>]*>/g, '');
     const words = text.trim().split(/\s+/).length;
     return Math.ceil(words / wordsPerMinute);
   }
@@ -235,9 +235,8 @@ export class PostService {
   static async getPostBySlug(
     slug: string,
     userId?: string,
-    preferredLanguage?: string, // 'en' or 'vi' from locale
+    preferredLanguage?: string,
   ): Promise<PostDetailResponse | null> {
-    // First, try to find post by slug (could be original or translation slug)
     let post = await prisma.post.findUnique({
       where: { slug },
       include: {
@@ -304,7 +303,6 @@ export class PostService {
       },
     });
 
-    // If not found by post slug, try to find by translation slug
     if (!post) {
       const translation = await prisma.postTranslation.findUnique({
         where: { slug },
@@ -383,16 +381,13 @@ export class PostService {
 
     if (!post) return null;
 
-    // Check access
     const hasAccess = await this.checkPostAccess(post, userId);
     if (!hasAccess) {
       throw new Error('ACCESS_DENIED');
     }
 
-    // Get related posts
     const relatedPosts = await this.getRelatedPosts(post.id, post.categoryId);
 
-    // Get all translations
     const translations = await prisma.postTranslation.findMany({
       where: { postId: post.id },
       select: {
@@ -407,7 +402,6 @@ export class PostService {
       },
     });
 
-    // Determine content to display based on preferred language
     const originalLang = post.language;
     const requestedLang = preferredLanguage || originalLang;
 
@@ -423,7 +417,6 @@ export class PostService {
     let isTranslated = false;
     let currentLanguage = originalLang;
 
-    // If requested language differs from original, use translation
     if (requestedLang !== originalLang) {
       const translation = translations.find(t => t.language === requestedLang);
 
@@ -444,7 +437,6 @@ export class PostService {
       }
     }
 
-    // Build content info
     const contentInfo = {
       isTranslated,
       originalLanguage: originalLang,
@@ -460,7 +452,7 @@ export class PostService {
     return {
       post: {
         ...post,
-        ...displayContent, // Override with translated content if applicable
+        ...displayContent,
       } as PostWithRelations,
       relatedPosts,
       translations: translations.map(t => ({
@@ -685,7 +677,6 @@ export class PostService {
       },
     });
 
-    // Connect tags
     if (data.tags && data.tags.length > 0) {
       await Promise.all(
         data.tags.map(tagId =>
@@ -699,7 +690,6 @@ export class PostService {
       );
     }
 
-    // Connect media
     if (data.mediaIds && data.mediaIds.length > 0) {
       await Promise.all(
         data.mediaIds.map((mediaId, index) =>
@@ -714,7 +704,6 @@ export class PostService {
       );
     }
 
-    // Grant access to specific users
     if (
       data.visibility === PostVisibility.RESTRICTED &&
       data.allowedUserEmails &&
@@ -751,7 +740,6 @@ export class PostService {
     data: Partial<PostFormData>,
     userId: string,
   ): Promise<PostWithRelations> {
-    // Verify ownership
     const existingPost = await prisma.post.findUnique({
       where: { id: postId },
       select: { authorId: true, slug: true },
@@ -765,14 +753,11 @@ export class PostService {
       throw new Error('UNAUTHORIZED');
     }
 
-    // Build update data
     const updateData: Prisma.PostUpdateInput = {};
 
-    // ========== BASIC FIELDS ==========
     if (data.title !== undefined) {
       updateData.title = data.title;
 
-      // Auto-update slug if title changed
       const slug = data.slug
         ? await this.generateSlug(data.slug, existingPost.slug)
         : await this.generateSlug(data.title, existingPost.slug);
@@ -791,14 +776,12 @@ export class PostService {
     if (data.visibility !== undefined) updateData.visibility = data.visibility;
     if (data.language !== undefined) updateData.language = data.language;
 
-    // ========== BOOLEAN FIELDS ==========
     if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
     if (data.isPinned !== undefined) updateData.isPinned = data.isPinned;
     if (data.isPasswordProtected !== undefined) {
       updateData.isPasswordProtected = data.isPasswordProtected;
     }
 
-    // ========== DATE FIELDS ==========
     if (data.publishedAt !== undefined) {
       updateData.publishedAt = data.publishedAt;
     }
@@ -806,12 +789,10 @@ export class PostService {
       updateData.scheduledFor = data.scheduledFor;
     }
 
-    // ========== IMAGE FIELDS ==========
     if (data.featuredImage !== undefined) {
       updateData.featuredImage = data.featuredImage;
     }
 
-    // ========== SEO FIELDS ==========
     if (data.metaTitle !== undefined) updateData.metaTitle = data.metaTitle;
     if (data.metaDescription !== undefined) {
       updateData.metaDescription = data.metaDescription;
@@ -821,17 +802,14 @@ export class PostService {
     }
     if (data.ogImage !== undefined) updateData.ogImage = data.ogImage;
 
-    // ========== CONTENT FORMAT ==========
     if (data.contentFormat !== undefined) {
       updateData.contentFormat = data.contentFormat;
     }
 
-    // ========== PASSWORD HANDLING ==========
     if (data.password) {
       updateData.passwordHash = await bcrypt.hash(data.password, 10);
     }
 
-    // ========== CATEGORY RELATIONSHIP ==========
     if (data.categoryId !== undefined) {
       if (
         !data.categoryId ||
@@ -844,7 +822,6 @@ export class PostService {
       }
     }
 
-    // Update post
     const post = await prisma.post.update({
       where: { id: postId },
       data: updateData,
@@ -912,7 +889,6 @@ export class PostService {
       },
     });
 
-    // ========== UPDATE TAGS ==========
     if (data.tagIds !== undefined) {
       await prisma.postTag.deleteMany({
         where: { postId },
@@ -928,7 +904,6 @@ export class PostService {
       }
     }
 
-    // ========== UPDATE MEDIA ==========
     if (data.mediaIds !== undefined) {
       await prisma.postMedia.deleteMany({
         where: { postId },
@@ -945,7 +920,6 @@ export class PostService {
       }
     }
 
-    // ========== UPDATE RESTRICTED ACCESS ==========
     if (
       data.visibility === PostVisibility.RESTRICTED &&
       data.allowedUserEmails !== undefined

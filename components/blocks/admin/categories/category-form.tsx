@@ -94,7 +94,6 @@ export function CategoryFormDialog({
         isActive: category.isActive,
       });
 
-      // Load translations
       if (category.translations && category.translations.length > 0) {
         setTranslations(
           category.translations.map(t => ({
@@ -208,9 +207,7 @@ export function CategoryFormDialog({
               </TabsTrigger>
             </TabsList>
 
-            {/* Main Info Tab */}
             <TabsContent value="main" className="mt-4 space-y-4">
-              {/* Language */}
               <div className="space-y-2">
                 <Label htmlFor="language">
                   {t('form.language')} <span className="text-red-500">*</span>
@@ -237,7 +234,6 @@ export function CategoryFormDialog({
                 )}
               </div>
 
-              {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">
                   {t('form.name')} <span className="text-red-500">*</span>
@@ -253,7 +249,6 @@ export function CategoryFormDialog({
                 />
               </div>
 
-              {/* Slug */}
               <div className="space-y-2">
                 <Label htmlFor="slug">{t('form.slug')}</Label>
                 <Input
@@ -269,7 +264,6 @@ export function CategoryFormDialog({
                 </p>
               </div>
 
-              {/* Description */}
               <div className="space-y-2">
                 <Label htmlFor="description">{t('form.description')}</Label>
                 <Textarea
@@ -283,7 +277,6 @@ export function CategoryFormDialog({
                 />
               </div>
 
-              {/* Icon & Color */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="icon">{t('form.icon')}</Label>
@@ -320,7 +313,6 @@ export function CategoryFormDialog({
                 </div>
               </div>
 
-              {/* Parent Category */}
               <div className="space-y-2">
                 <Label htmlFor="parent">{t('form.parent')}</Label>
                 <Select
@@ -346,7 +338,6 @@ export function CategoryFormDialog({
                 </Select>
               </div>
 
-              {/* Is Active */}
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <input
@@ -368,7 +359,6 @@ export function CategoryFormDialog({
               </div>
             </TabsContent>
 
-            {/* Translations Tab */}
             <TabsContent value="translations" className="mt-4 space-y-4">
               <div className="space-y-4 rounded-lg border p-4">
                 <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -376,7 +366,6 @@ export function CategoryFormDialog({
                   <span>Manage translations for other languages</span>
                 </div>
 
-                {/* Vietnamese Translation */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 font-semibold">
                     <span className="text-lg">🇻🇳</span>
@@ -414,7 +403,6 @@ export function CategoryFormDialog({
 
                 <div className="border-t pt-4" />
 
-                {/* English Translation */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 font-semibold">
                     <span className="text-lg">🇬🇧</span>
@@ -458,7 +446,6 @@ export function CategoryFormDialog({
             </TabsContent>
           </Tabs>
 
-          {/* Actions */}
           <div className="flex justify-end gap-3 border-t pt-4">
             <Button
               type="button"

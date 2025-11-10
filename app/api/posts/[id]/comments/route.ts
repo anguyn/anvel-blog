@@ -3,9 +3,10 @@ import { auth } from '@/libs/server/auth';
 import { prisma } from '@/libs/prisma';
 import { z } from 'zod';
 
-const COMMENTS_PER_PAGE = 20;
+const COMMENTS_PER_PAGE = 2;
+const INITIAL_REPLIES_PER_COMMENT = 3;
+const REPLIES_PER_PAGE = 3;
 
-// GET - Fetch comments with pagination and cursor
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -23,7 +24,6 @@ export async function GET(
     const session = await auth();
     const currentUserId = session?.user?.id;
 
-    // Build where clause
     const where: any = {
       postId,
       status: 'PUBLISHED',
@@ -37,7 +37,10 @@ export async function GET(
       where.parentId = parentId;
     }
 
-    // Base include structure
+    const totalComments = isTopLevel
+      ? await prisma.comment.count({ where })
+      : null;
+
     const baseInclude = {
       author: {
         select: {
@@ -78,7 +81,6 @@ export async function GET(
       },
     };
 
-    // Reply include with likes if user is authenticated
     const replyInclude = {
       ...baseInclude,
       ...(currentUserId && {
@@ -89,26 +91,25 @@ export async function GET(
       }),
     };
 
-    // Fetch comments
-    const comments = await prisma.comment.findMany({
+    console.log('📝 Fetching:', {
+      isTopLevel,
+      cursor,
+      limit,
+      parentId,
+    });
+
+    const effectiveLimit = isTopLevel
+      ? limit
+      : cursor
+        ? REPLIES_PER_PAGE
+        : INITIAL_REPLIES_PER_COMMENT;
+
+    const findManyArgs: any = {
       where,
-      take: limit + 1,
-      ...(cursor && {
-        cursor: { id: cursor },
-        skip: 1,
-      }),
-      orderBy: { createdAt: 'desc' },
+      take: effectiveLimit + 1,
+      orderBy: { createdAt: isTopLevel ? 'desc' : 'asc' },
       include: {
         ...baseInclude,
-        // Only include replies if fetching top-level comments
-        ...(isTopLevel && {
-          replies: {
-            where: { status: 'PUBLISHED' },
-            orderBy: { createdAt: 'asc' },
-            include: replyInclude,
-          },
-        }),
-        // Include likes for current user
         ...(currentUserId && {
           likes: {
             where: { userId: currentUserId },
@@ -116,13 +117,18 @@ export async function GET(
           },
         }),
       },
-    });
+    };
 
-    // Check if there are more comments
-    const hasMore = comments.length > limit;
+    if (cursor) {
+      findManyArgs.cursor = { id: cursor };
+      findManyArgs.skip = 1;
+    }
+
+    const comments = await prisma.comment.findMany(findManyArgs);
+
+    const hasMore = comments.length > effectiveLimit;
     const returnComments = hasMore ? comments.slice(0, -1) : comments;
 
-    // Helper function to format a single comment
     const formatComment = (comment: any) => ({
       id: comment.id,
       content: comment.content,
@@ -144,19 +150,73 @@ export async function GET(
         : undefined,
     });
 
-    // Format response with replies
-    const formattedComments = returnComments.map(comment => ({
-      ...formatComment(comment),
-      replies: comment.replies?.map((reply: any) => formatComment(reply)) ?? [],
-    }));
+    let formattedComments: any[];
 
-    return NextResponse.json({
+    if (isTopLevel) {
+      const commentIds = returnComments.map(c => c.id);
+
+      const allReplies = await prisma.comment.findMany({
+        where: {
+          parentId: { in: commentIds },
+          status: 'PUBLISHED',
+        },
+        orderBy: { createdAt: 'asc' },
+        take: INITIAL_REPLIES_PER_COMMENT * commentIds.length,
+        include: replyInclude,
+      });
+
+      const repliesByParentId = new Map<string, any[]>();
+      allReplies.forEach(reply => {
+        if (!repliesByParentId.has(reply.parentId!)) {
+          repliesByParentId.set(reply.parentId!, []);
+        }
+        repliesByParentId.get(reply.parentId!)!.push(reply);
+      });
+
+      formattedComments = returnComments.map(comment => {
+        const allRepliesForComment = repliesByParentId.get(comment.id) || [];
+
+        const replies = allRepliesForComment.slice(
+          0,
+          INITIAL_REPLIES_PER_COMMENT,
+        );
+
+        const hasMoreReplies = comment.replyCount > INITIAL_REPLIES_PER_COMMENT;
+
+        const nextRepliesCursor =
+          hasMoreReplies && replies.length > 0
+            ? replies[replies.length - 1].id
+            : null;
+
+        return {
+          ...formatComment(comment),
+          replies: replies.map(formatComment),
+          hasMoreReplies,
+          nextRepliesCursor,
+        };
+      });
+    } else {
+      formattedComments = returnComments.map(formatComment);
+    }
+
+    const nextCursor =
+      hasMore && returnComments.length > 0
+        ? returnComments[returnComments.length - 1].id
+        : null;
+
+    const response: any = {
       comments: formattedComments,
-      nextCursor: hasMore ? returnComments[returnComments.length - 1].id : null,
+      nextCursor,
       hasMore,
-    });
+    };
+
+    if (isTopLevel && totalComments !== null) {
+      response.totalComments = totalComments;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching comments:', error);
+    console.error('❌ Error fetching comments:', error);
     return NextResponse.json(
       { error: 'Failed to fetch comments' },
       { status: 500 },
@@ -200,10 +260,8 @@ export async function POST(
     const validated = createCommentSchema.parse(body);
     const { content, parentId, mentions, stickerId } = validated;
 
-    // Validate mentions - verify users exist and extract exact usernames
     let validatedMentions: any[] = [];
     if (mentions && mentions.length > 0) {
-      // Get unique user IDs
       const uniqueUserIds = [...new Set(mentions.map(m => m.userId))];
 
       const mentionedUsers = await prisma.user.findMany({
@@ -214,20 +272,18 @@ export async function POST(
         select: { id: true, username: true },
       });
 
-      // Only include mentions for users that exist
       validatedMentions = mentions
         .filter(m => mentionedUsers.some(u => u.id === m.userId))
         .map(m => {
           const user = mentionedUsers.find(u => u.id === m.userId)!;
           return {
             userId: m.userId,
-            username: user.username, // Use actual username from DB
+            username: user.username,
             position: m.position,
           };
         });
     }
 
-    // Create comment
     const comment = await prisma.$transaction(async tx => {
       const newComment = await tx.comment.create({
         data: {

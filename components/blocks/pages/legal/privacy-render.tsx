@@ -105,7 +105,6 @@ export function PrivacyPolicyRender({
       variants={stagger}
       className="mx-auto max-w-4xl"
     >
-      {/* Header */}
       <motion.div variants={fadeInUp} className="mb-12 text-center">
         <motion.div
           transition={{ duration: 0.5 }}
@@ -122,7 +121,6 @@ export function PrivacyPolicyRender({
         </p>
       </motion.div>
 
-      {/* Sections */}
       <div className="space-y-8">
         {sections.map((section, index) => (
           <motion.div
@@ -167,7 +165,6 @@ export function PrivacyPolicyRender({
         ))}
       </div>
 
-      {/* Contact Section */}
       <motion.div
         variants={fadeInUp}
         className="mt-12 rounded-xl border-2 border-[var(--color-primary)]/20 bg-[var(--color-primary)]/5 p-6 text-center"

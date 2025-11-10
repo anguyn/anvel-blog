@@ -11,7 +11,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if 2FA is already enabled
     if (session.user.twoFactorEnabled) {
       return NextResponse.json(
         { error: '2FA is already enabled' },
@@ -19,25 +18,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate 2FA secret and QR code
     const { secret, qrCode } = await generate2FASecret(
       session.user.email!,
       process.env.NEXT_PUBLIC_APP_NAME || 'Anvel',
     );
 
-    // Store secret temporarily in user's pending2FASecret field
-    // This will be moved to twoFactorSecret after verification
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
-        pending2FASecret: secret, // Add this field to schema
+        pending2FASecret: secret,
       },
     });
 
-    // Return QR code (don't return the secret to client for security)
     return NextResponse.json({
       qrCode,
-      // Only return secret for manual entry display
       secretForDisplay: secret,
     });
   } catch (error) {

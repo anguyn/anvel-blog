@@ -604,8 +604,6 @@ async function main() {
   //   },
   // });
 
-  // console.log('✅ Created system configs');
-
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Default Credentials:');
   console.log('   Email: admin@anvel.com');

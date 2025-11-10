@@ -121,7 +121,8 @@
     "dontHaveAccount": "Don't have an account?",
     "followTerms": "By continuing, you agree to our",
     "tos": "Terms of Service",
-    "pp": "Privacy Policy"
+    "pp": "Privacy Policy",
+    "and": "and"
   },
   "register": {
     "email": "Email",

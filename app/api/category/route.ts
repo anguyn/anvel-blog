@@ -20,7 +20,6 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    // Validate
     const schema = z.object({
       name: z.string().min(1, 'Name is required').max(100),
       slug: z.string().min(1).max(100).optional(),
@@ -31,13 +30,12 @@ export async function POST(request: Request) {
         .regex(/^#[0-9A-F]{6}$/i)
         .optional(),
       parentId: z.string().optional(),
-      language: z.enum(['vi', 'en']), // Required
+      language: z.enum(['vi', 'en']),
       isActive: z.boolean().optional(),
     });
 
     const data = schema.parse(body);
 
-    // Generate slug if not provided
     const slug =
       data.slug ||
       data.name
@@ -50,7 +48,6 @@ export async function POST(request: Request) {
         .replace(/-+/g, '-')
         .trim();
 
-    // Check if slug already exists in this language
     const existing = await prisma.category.findFirst({
       where: {
         slug,
@@ -65,7 +62,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // If parentId provided, check if parent exists
     if (data.parentId) {
       const parent = await prisma.category.findUnique({
         where: { id: data.parentId },
@@ -79,7 +75,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Create category
     const category = await prisma.category.create({
       data: {
         name: data.name,
@@ -102,17 +97,14 @@ export async function POST(request: Request) {
       },
     });
 
-    // Auto-create translation for other language
     const targetLanguage = data.language === 'vi' ? 'en' : 'vi';
 
     try {
-      // Queue translation job (you can implement this later)
-      // For now, create empty translation
       await prisma.categoryTranslation.create({
         data: {
           categoryId: category.id,
           language: targetLanguage,
-          name: data.name, // Will be translated later
+          name: data.name,
           description: data.description || null,
         },
       });
@@ -138,7 +130,6 @@ export async function POST(request: Request) {
   }
 }
 
-// GET /api/category - List categories
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -148,7 +139,7 @@ export async function GET(request: Request) {
     const language = (searchParams.get('language') as Language) || 'vi';
 
     const where: any = {
-      language, // Filter by language
+      language,
     };
 
     if (search) {

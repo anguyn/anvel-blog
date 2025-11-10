@@ -14,12 +14,16 @@ export const generateStaticParams = getStaticParams;
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const params = await props.params;
   const { locale } = params;
+
   setStaticParamsLocale(locale);
+
   const { translate } = await getTranslate();
+
   const dictionaries = {
     en: (await import('@/translations/dictionaries/en.json')).default,
     vi: (await import('@/translations/dictionaries/vi.json')).default,
   };
+
   const t = await translate(dictionaries);
 
   return {

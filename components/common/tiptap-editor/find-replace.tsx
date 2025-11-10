@@ -72,7 +72,7 @@ const createFindPlugin = (
                       matchCount === currentIndex
                         ? 'find-match-current'
                         : 'find-match',
-                    nodeName: 'span', // Force tạo span element
+                    nodeName: 'span',
                   }),
                 );
                 matchCount++;
@@ -87,7 +87,7 @@ const createFindPlugin = (
                     matchCount === currentIndex
                       ? 'find-match-current'
                       : 'find-match',
-                  nodeName: 'span', // Force tạo span element
+                  nodeName: 'span',
                 }),
               );
               matchCount++;
@@ -230,7 +230,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
         to: position + findText.length,
       });
 
-      // Scroll vào view
       const { node } = editor.view.domAtPos(position);
       const element = node instanceof HTMLElement ? node : node.parentElement;
 
@@ -274,14 +273,12 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
       .insertContent(replaceText)
       .run();
 
-    // Re-find sau khi replace
     setTimeout(() => {
       const newMatches = findMatches(findText);
       matchesRef.current = newMatches;
       setTotalMatches(newMatches.length);
 
       if (newMatches.length > 0) {
-        // Giữ nguyên index hoặc về đầu nếu hết
         const newIndex = Math.min(currentMatch, newMatches.length);
         setCurrentMatch(newIndex);
         scrollToMatch(newMatches[newIndex - 1]);
@@ -295,7 +292,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
   const handleReplaceAll = () => {
     if (!findText || matchesRef.current.length === 0) return;
 
-    // Replace từ cuối lên đầu để không ảnh hưởng vị trí
     const matches = [...matchesRef.current].reverse();
 
     editor.chain().focus().run();
@@ -308,7 +304,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
         .run();
     });
 
-    // Clear find
     matchesRef.current = [];
     setTotalMatches(0);
     setCurrentMatch(0);
@@ -326,7 +321,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Prevent Enter from submitting form
     if (e.key === 'Enter') {
       e.preventDefault();
       handleNext();
@@ -343,7 +337,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
   return (
     <div className="border-b border-[var(--color-border)] bg-[var(--color-background)] p-3 shadow-sm">
       <div className="flex items-center gap-2">
-        {/* Find Input */}
         <div className="flex flex-1 items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
@@ -357,7 +350,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
             />
           </div>
 
-          {/* Navigation */}
           <div className="flex items-center gap-1">
             <button
               onClick={handlePrevious}
@@ -380,7 +372,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
             </span>
           </div>
 
-          {/* Options */}
           <div className="flex items-center gap-2">
             <label className="flex items-center gap-1 text-xs">
               <input
@@ -402,7 +393,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
             </label>
           </div>
 
-          {/* Toggle Replace */}
           <button
             onClick={() => setShowReplace(!showReplace)}
             className={`rounded p-1.5 hover:bg-[var(--color-accent)] ${showReplace ? 'bg-[var(--color-accent)]' : ''}`}
@@ -411,7 +401,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
             <Replace className="h-4 w-4" />
           </button>
 
-          {/* Close */}
           <button
             onClick={handleClose}
             className="rounded p-1.5 hover:bg-[var(--color-accent)]"
@@ -422,7 +411,6 @@ export default function FindReplace({ editor, onClose }: FindReplaceProps) {
         </div>
       </div>
 
-      {/* Replace Row */}
       {showReplace && (
         <div className="mt-2 flex items-center gap-2">
           <div className="relative flex-1">

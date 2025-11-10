@@ -132,7 +132,6 @@ export function TwoFactorSetup({ onClose, translations }: TwoFactorSetupProps) {
           className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-[var(--color-card)] shadow-xl"
           onClick={e => e.stopPropagation()}
         >
-          {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--color-border)] p-6">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-[var(--color-secondary)] p-2">
@@ -152,7 +151,6 @@ export function TwoFactorSetup({ onClose, translations }: TwoFactorSetupProps) {
             </Button>
           </div>
 
-          {/* Content */}
           <div className="p-6">
             {step === 'qr' && (
               <motion.div
@@ -182,7 +180,6 @@ export function TwoFactorSetup({ onClose, translations }: TwoFactorSetupProps) {
                       fill
                     />
 
-                    {/* Hiệu ứng fade từ trên xuống khi loading */}
                     {isLoading && (
                       <motion.div
                         className="absolute inset-0 bg-gradient-to-b from-[var(--color-muted-foreground)]/50 to-transparent"

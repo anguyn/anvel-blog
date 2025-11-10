@@ -33,7 +33,6 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateUserSchema.parse(body);
 
-    // Check if trying to change own role/status
     if (userId === session.user.id) {
       if (validatedData.roleId || validatedData.status) {
         return NextResponse.json(
@@ -43,7 +42,6 @@ export async function PATCH(
       }
     }
 
-    // Check unique constraints
     if (validatedData.email || validatedData.username) {
       const existingUser = await prisma.user.findFirst({
         where: {
@@ -71,7 +69,6 @@ export async function PATCH(
       }
     }
 
-    // Hash password if provided
     const updateData: any = { ...validatedData };
     if (validatedData.password) {
       const bcrypt = await import('bcryptjs');
@@ -90,7 +87,6 @@ export async function PATCH(
       },
     });
 
-    // Log activity
     await prisma.activityLog.create({
       data: {
         userId: session.user.id,
@@ -145,7 +141,6 @@ export async function DELETE(
       );
     }
 
-    // Cannot delete yourself
     if (userId === session.user.id) {
       return NextResponse.json(
         { error: 'Cannot delete your own account' },
@@ -153,7 +148,6 @@ export async function DELETE(
       );
     }
 
-    // Check if user is system admin
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { role: true },
@@ -164,7 +158,6 @@ export async function DELETE(
     }
 
     if (user.role?.name === 'ADMIN' && user.role?.isSystem) {
-      // Count other admins
       const adminCount = await prisma.user.count({
         where: {
           role: { name: 'ADMIN' },
@@ -184,7 +177,6 @@ export async function DELETE(
       where: { id: userId },
     });
 
-    // Log activity
     await prisma.activityLog.create({
       data: {
         userId: session.user.id,

@@ -5,7 +5,7 @@ import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/common/button';
 
 interface FeatureImageUploaderProps {
-  value?: string; // Current featured image URL
+  value?: string;
   onChange: (file: File | null, previewUrl: string | null) => void;
   onRemove: () => void;
 }
@@ -20,24 +20,20 @@ export function FeatureImageUploader({
 
   const handleFileSelect = useCallback(
     (file: File) => {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         alert('Please select an image file');
         return;
       }
 
-      // Validate file size (max 10MB)
       const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
         alert('File size must be less than 10MB');
         return;
       }
 
-      // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
 
-      // Pass file to parent (will upload on save)
       onChange(file, url);
     },
     [onChange],
@@ -118,7 +114,6 @@ export function FeatureImageUploader({
     );
   }
 
-  // Show upload zone
   return (
     <div
       onClick={handleClick}

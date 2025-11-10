@@ -290,7 +290,6 @@ export function LoginForm({
       return;
     }
 
-    // Check if turnstile token is still valid, if not get new one
     if (!turnstileToken || !turnstileReady) {
       toast.warning(translations.turnstileWaiting);
       resetTurnstile();
@@ -313,7 +312,6 @@ export function LoginForm({
       if (!result.success) {
         if (result.code?.includes('2F')) {
           setOtpError(true);
-          // Focus vào input tương ứng khi có lỗi 2FA
           setTimeout(() => {
             if (useBackup) {
               backupCodeRef.current?.focusIndex(6);
@@ -331,7 +329,6 @@ export function LoginForm({
           result.code === 'TURNSTILE_EXPIRED' ||
           result.code === 'INVALID_TURNSTILE'
         ) {
-          // Nếu Turnstile hết hạn, reset để user verify lại
           toast.error('Security verification expired. Please verify again.');
           resetTurnstile();
           setIsLoading(false);
@@ -350,7 +347,6 @@ export function LoginForm({
       console.error('2FA verification error:', error);
       toast.error(translations.somethingWentWrong);
       setOtpError(true);
-      // Focus vào input khi có exception
       setTimeout(() => {
         if (useBackup) {
           backupCodeRef.current?.focusIndex(6);
@@ -474,7 +470,6 @@ export function LoginForm({
           </div>
         )}
 
-        {/* Banned Account Alert */}
         {error === 'banned' && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
             <div className="flex items-start gap-3">
@@ -492,7 +487,6 @@ export function LoginForm({
           </div>
         )}
 
-        {/* Suspended Account Alert */}
         {error === 'suspended' && (
           <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950">
             <div className="flex items-start gap-3">
@@ -680,10 +674,8 @@ export function LoginForm({
   // Render 2FA step
   return (
     <div className="space-y-6">
-      {/* Hidden Turnstile - still mounted to allow refresh */}
       {renderTurnstile()}
 
-      {/* 2FA Header */}
       <div className="space-y-2 text-center">
         <div className="bg-primary/10 mx-auto flex h-12 w-12 items-center justify-center rounded-full">
           <ShieldCheck className="text-primary h-6 w-6" />
@@ -758,7 +750,6 @@ export function LoginForm({
               setOtpValue('');
               setBackupCodeValue('');
               setOtpError(false);
-              // Focus vào input mới sau khi chuyển đổi
               setTimeout(() => {
                 if (!useBackup) {
                   backupCodeRef.current?.focusIndex(6);

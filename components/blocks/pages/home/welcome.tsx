@@ -69,12 +69,10 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-      {/* Animated grid background */}
       <div className="absolute inset-0 opacity-20 dark:opacity-10">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:4rem_4rem]" />
       </div>
 
-      {/* Floating orbs - hidden on mobile */}
       <div className="absolute inset-0 hidden md:block">
         {[...Array(15)].map((_, i) => (
           <motion.div
@@ -126,7 +124,6 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
         ))}
       </div>
 
-      {/* Sparkle particles - fewer on mobile */}
       <div className="absolute inset-0">
         {[...Array(window.innerWidth < 768 ? 8 : 25)].map((_, i) => (
           <motion.div
@@ -167,7 +164,6 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
           className="relative z-10 px-4"
           style={{ perspective: '1000px' }}
         >
-          {/* Main welcome card with enhanced effects */}
           <motion.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -178,14 +174,12 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
             }}
             className="relative mx-auto w-full max-w-md overflow-hidden rounded-3xl bg-white/90 p-8 shadow-2xl backdrop-blur-2xl md:p-12 dark:bg-gray-900/90 dark:shadow-indigo-500/20"
           >
-            {/* Animated border gradient */}
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
               className="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-20 blur-sm dark:opacity-30"
             />
 
-            {/* Inner glow effect */}
             <motion.div
               animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
@@ -203,9 +197,7 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
             />
 
             <div className="relative z-10">
-              {/* Success checkmark with ring effects */}
               <div className="relative mx-auto mb-6 h-24 w-24 md:mb-8 md:h-28 md:w-28">
-                {/* Ripple rings */}
                 {[...Array(3)].map((_, i) => (
                   <motion.div
                     key={i}
@@ -232,7 +224,6 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
                   }}
                   className="relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500 shadow-lg shadow-green-500/50 dark:from-green-500 dark:via-emerald-600 dark:to-teal-600"
                 >
-                  {/* Shine effect */}
                   <motion.div
                     animate={{ x: ['-100%', '200%'] }}
                     transition={{
@@ -266,7 +257,6 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
                 </motion.div>
               </div>
 
-              {/* Welcome text with stagger effect */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -352,7 +342,6 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
                   {t('redirecting')}
                 </motion.p>
 
-                {/* Enhanced loading animation */}
                 <div className="flex items-center justify-center gap-1.5">
                   {[0, 1, 2, 3, 4].map(i => (
                     <motion.div
@@ -389,7 +378,6 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
               </motion.div>
             </div>
 
-            {/* Corner decorations */}
             <motion.div
               initial={{ scale: 0, rotate: 0 }}
               animate={{ scale: 1, rotate: 180 }}
@@ -404,7 +392,6 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
             />
           </motion.div>
 
-          {/* Floating decorative elements - hidden on mobile */}
           <div className="hidden md:block">
             <motion.div
               initial={{ scale: 0, y: 0 }}
@@ -435,7 +422,6 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
               className="absolute -bottom-20 -left-20 h-32 w-32 rounded-full bg-gradient-to-br from-blue-400/30 to-indigo-400/30 blur-2xl"
             />
 
-            {/* Animated circles */}
             {[...Array(4)].map((_, i) => (
               <motion.div
                 key={i}
@@ -467,7 +453,6 @@ export function WelcomeRenderBlock({ locale }: WelcomeRenderBlockProps) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Bottom wave decoration - simplified on mobile */}
       <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

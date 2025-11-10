@@ -159,7 +159,6 @@ export default async function BlogPage(props: PageProps) {
     document: t.blog.types.document || 'Document',
   };
 
-  // Separate featured and regular posts
   const featuredPost = posts.find(post => post.isFeatured);
   const regularPosts = posts.filter(post => !post.isFeatured);
 

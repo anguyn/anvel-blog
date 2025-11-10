@@ -52,7 +52,6 @@ export function CreateCategoryDialog({
   const [parentId, setParentId] = useState('');
   const [language, setLanguage] = useState<'vi' | 'en'>(defaultLanguage);
 
-  // Filter parent categories by selected language
   const filteredCategories = categories.filter(
     cat => cat.language === language,
   );
@@ -76,10 +75,8 @@ export function CreateCategoryDialog({
     }
   };
 
-  // Reset parent category when language changes
   const handleLanguageChange = (value: 'vi' | 'en') => {
     setLanguage(value);
-    // Reset parent if current parent is not in the new language
     const currentParent = categories.find(c => c.id === parentId);
     if (currentParent && currentParent.language !== value) {
       setParentId('');
@@ -107,7 +104,7 @@ export function CreateCategoryDialog({
           icon: icon.trim() || undefined,
           color,
           parentId: parentId || undefined,
-          language, // NEW: Include language
+          language,
         }),
       });
 
@@ -121,7 +118,6 @@ export function CreateCategoryDialog({
       onCategoryCreated(data.category);
       onOpenChange(false);
 
-      // Reset form
       setName('');
       setSlug('');
       setDescription('');
@@ -154,7 +150,6 @@ export function CreateCategoryDialog({
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {/* Language - NEW */}
             <div className="space-y-2">
               <Label
                 htmlFor="category-language"
@@ -182,7 +177,6 @@ export function CreateCategoryDialog({
               </p>
             </div>
 
-            {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="category-name">
                 Category Name <span className="text-destructive">*</span>
@@ -201,7 +195,6 @@ export function CreateCategoryDialog({
               />
             </div>
 
-            {/* Slug */}
             <div className="space-y-2">
               <Label htmlFor="category-slug">Slug</Label>
               <Input
@@ -216,7 +209,6 @@ export function CreateCategoryDialog({
               </p>
             </div>
 
-            {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="category-description">
                 Description{' '}
@@ -236,7 +228,6 @@ export function CreateCategoryDialog({
               />
             </div>
 
-            {/* Icon & Color */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category-icon">
@@ -274,7 +265,6 @@ export function CreateCategoryDialog({
               </div>
             </div>
 
-            {/* Parent Category */}
             {categories.length > 0 && (
               <div className="space-y-2">
                 <Label htmlFor="parent-category">
